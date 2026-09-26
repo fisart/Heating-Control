@@ -1,0 +1,279 @@
+{
+  "elements": [
+    {
+      "type": "CheckBox",
+      "name": "Enabled",
+      "caption": "Enable controller (only after legacy script is disabled)"
+    },
+    {
+      "type": "CheckBox",
+      "name": "DryRun",
+      "caption": "Dry run: show commands without switching actuators"
+    },
+    {
+      "type": "CheckBox",
+      "name": "DebugEnabled",
+      "caption": "Write debug log under instance"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "IntervalSeconds",
+      "caption": "Fallback timer (seconds)",
+      "minimum": 5,
+      "maximum": 3600
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MaxSensorAgeSeconds",
+      "caption": "Max temperature age (0 = disabled)",
+      "minimum": 0,
+      "maximum": 86400
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "ResidualMinOutgoingTemp",
+      "caption": "Minimum outgoing air for residual heat (°C)",
+      "digits": 1,
+      "minimum": 0,
+      "maximum": 50
+    },
+    {
+      "type": "Label",
+      "label": "--- Conditions ---"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "MasterDisableID",
+      "caption": "Master disable (true = disabled)"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "WinterID",
+      "caption": "Winter state (true = winter)"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "NightDisableID",
+      "caption": "Night switch (true = heating off)"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HolidayID",
+      "caption": "Holiday state"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "AtHomeID",
+      "caption": "At home (reference only)"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "OperatingModeID",
+      "caption": "Operating mode"
+    },
+    {
+      "type": "Label",
+      "label": "--- Temperatures ---"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HysteresisID",
+      "caption": "Hysteresis setting"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "ResidualDeltaID",
+      "caption": "Residual heat delta setting"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "OutsideTempID",
+      "caption": "Outside temperature (reference only)"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "OutgoingAirTempID",
+      "caption": "Outgoing air temperature"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "IncomingAirTempID",
+      "caption": "Incoming air temperature"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HeatExchangerTempID",
+      "caption": "Heat exchanger temperature"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HeatPumpTempID",
+      "caption": "Heat pump temperature"
+    },
+    {
+      "type": "Label",
+      "label": "--- Fan ---"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "FanOnID",
+      "caption": "Fan on/off"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "FanSpeedID",
+      "caption": "Fan speed command"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "FanDesiredSpeedID",
+      "caption": "Desired fan speed"
+    },
+    {
+      "type": "Label",
+      "label": "--- Heat pump ---"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HeatPumpOnID",
+      "caption": "Heat pump on/off"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HeatPumpPowerID",
+      "caption": "Heat pump power command"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HeatPumpDesiredPowerID",
+      "caption": "Desired heat pump power"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "HeatPumpHeatModeID",
+      "caption": "Heat pump heat/cool mode"
+    },
+    {
+      "type": "Label",
+      "label": "--- Gas ---"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "GasMixerID",
+      "caption": "Gas mixer"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "GasPumpID",
+      "caption": "Gas exchanger pump"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "GasFlowTargetID",
+      "caption": "Gas flow temperature command"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "GasFlowHeatingID",
+      "caption": "Gas heating flow setpoint"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "GasFlowIdleID",
+      "caption": "Gas idle flow setpoint"
+    },
+    {
+      "type": "Label",
+      "label": "--- Operating mode values and mixer ---"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "CoolingModeValue",
+      "caption": "Cooling mode value",
+      "minimum": 0,
+      "maximum": 100
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "HeatPumpModeValue",
+      "caption": "Heat pump mode value",
+      "minimum": 0,
+      "maximum": 100
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "GasModeValue",
+      "caption": "Gas mode value",
+      "minimum": 0,
+      "maximum": 100
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MixerOpen",
+      "caption": "Gas mixer open",
+      "minimum": 0,
+      "maximum": 100
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MixerClosed",
+      "caption": "Gas mixer closed",
+      "minimum": 0,
+      "maximum": 100
+    },
+    {
+      "type": "Label",
+      "label": "--- Rooms: JSON array with name, sensors, targetID, flapID, open and closed ---"
+    },
+    {
+      "type": "ScriptEditor",
+      "name": "Rooms",
+      "caption": "Room configuration",
+      "rowCount": 15
+    }
+  ],
+  "actions": [
+    {
+      "type": "Button",
+      "caption": "Evaluate now",
+      "onClick": "HC_ProcessHeating($id);"
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Configuration backup / restore",
+      "expanded": false,
+      "items": [
+        {
+          "type": "ScriptEditor",
+          "name": "BackupJson",
+          "caption": "Backup JSON",
+          "value": "",
+          "rowCount": 15
+        },
+        {
+          "type": "RowLayout",
+          "items": [
+            {
+              "type": "Button",
+              "caption": "Export configuration",
+              "onClick": "HC_ExportConfig($id);"
+            },
+            {
+              "type": "Button",
+              "caption": "Restore configuration (leaves controller disabled)",
+              "onClick": "echo HC_ImportConfig($id, $BackupJson);",
+              "confirm": "Replace configuration and leave controller disabled?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "status": [
+    {
+      "code": 102,
+      "icon": "active",
+      "caption": "Ready"
+    }
+  ]
+}
