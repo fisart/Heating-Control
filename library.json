@@ -1,0 +1,12 @@
+{
+  "id": "{F1BCF0B7-28A2-429A-AB0D-FCF2B54CC159}",
+  "author": "Artur Fischer",
+  "name": "HeatingControl",
+  "url": "",
+  "compatibility": {
+    "version": "8.0"
+  },
+  "version": "0.1.0",
+  "build": 1,
+  "date": 0
+}
