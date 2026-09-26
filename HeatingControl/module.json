@@ -1,0 +1,13 @@
+{
+  "id": "{8B333AC9-EE67-4D24-8CE7-433BBB391E6C}",
+  "name": "HeatingControl",
+  "type": 3,
+  "vendor": "Artur Fischer",
+  "aliases": [
+    "Berlin Heating Control"
+  ],
+  "parentRequirements": [],
+  "childRequirements": [],
+  "implemented": [],
+  "prefix": "HC"
+}
