@@ -38,6 +38,18 @@
       "maximum": 50
     },
     {
+      "type": "SelectVariable",
+      "name": "RecoveryEnableID",
+      "caption": "Residual heat recovery enable (true = enabled)",
+      "validVariableTypes": [
+        0
+      ]
+    },
+    {
+      "type": "Label",
+      "caption": "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled."
+    },
+    {
       "type": "Label",
       "label": "--- Conditions ---"
     },

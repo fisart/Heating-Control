@@ -61,6 +61,7 @@ class HeatingControl extends IPSModule
         foreach (self::DEFAULT_STATUS_IDS as $name => $id) {
             $this->RegisterPropertyInteger($name, $id);
         }
+        $this->RegisterPropertyInteger('RecoveryEnableID', 0); // Unselected retains existing recovery behavior.
         $this->RegisterPropertyString('Rooms', json_encode(self::DEFAULT_ROOMS, JSON_UNESCAPED_UNICODE));
         $this->RegisterPropertyInteger('IntervalSeconds', 60);
         $this->RegisterPropertyInteger('MaxSensorAgeSeconds', 0); // 0 retains legacy behavior
@@ -209,14 +210,20 @@ class HeatingControl extends IPSModule
             return;
         }
 
-        $outgoing = $this->temperature($this->ReadPropertyInteger('OutgoingAirTempID'));
-        $delta = $this->floatValue('ResidualDeltaID');
-        $this->debug(sprintf('RESIDUAL outgoing=%.2f minimum=%.2f delta=%.2f',
-            $outgoing, $this->ReadPropertyFloat('ResidualMinOutgoingTemp'), $delta));
+        $recoveryEnabled = $this->recoveryEnabled();
+        $outgoing = $delta = 0.0;
+        if ($recoveryEnabled) {
+            $outgoing = $this->temperature($this->ReadPropertyInteger('OutgoingAirTempID'));
+            $delta = $this->floatValue('ResidualDeltaID');
+            $this->debug(sprintf('RESIDUAL enabled=1 outgoing=%.2f minimum=%.2f delta=%.2f',
+                $outgoing, $this->ReadPropertyFloat('ResidualMinOutgoingTemp'), $delta));
+        } else {
+            $this->debug('RESIDUAL enabled=0: recovery disabled');
+        }
         $candidates = $cutoffRooms ?: [$this->ReadAttributeString('LastDemandRoom')];
         $purge = [];
         foreach ($rooms as $room) {
-            $useful = $outgoing >= $this->ReadPropertyFloat('ResidualMinOutgoingTemp')
+            $useful = $recoveryEnabled && $outgoing >= $this->ReadPropertyFloat('ResidualMinOutgoingTemp')
                 && $outgoing > $this->temperature((int)$room['targetID'], false) + $delta
                 && in_array($room['name'], $candidates, true);
             $this->queue($queue, (int)$room['flapID'], $useful ? $room['open'] : $room['closed']);
@@ -228,7 +235,8 @@ class HeatingControl extends IPSModule
         $this->dispatch($queue, $log);
         $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         $this->SetValue('ResidualHeating', (bool)$purge);
-        $decision = $purge ? 'Residual heat: ' . implode(', ', $purge) : 'Idle';
+        $decision = $purge ? 'Residual heat: ' . implode(', ', $purge) :
+            ($recoveryEnabled ? 'Idle' : 'Idle: residual heat recovery disabled');
         $this->publish($decision, $log);
         $this->mirrorLegacyStatus($rooms, $nextLatch, (bool)$purge, null, $decision, $log);
     }
@@ -420,6 +428,7 @@ class HeatingControl extends IPSModule
 
     private function validateConfiguration(array $rooms): void
     {
+        $this->recoveryEnabled(); // Validate the optional switch before sending any commands.
         foreach (self::DEFAULT_IDS as $property => $_) {
             $id = $this->id($property);
             if (!IPS_VariableExists($id)) throw new \RuntimeException('Missing input/output ' . $property . ': ' . $id);
@@ -437,6 +446,9 @@ class HeatingControl extends IPSModule
                 if (!is_int($id) || !IPS_VariableExists($id)) throw new \RuntimeException('Missing room variable ' . $id);
             }
             $type = IPS_GetVariable((int)$room['flapID'])['VariableType'];
+            if ($this->id('RecoveryEnableID') > 0 && $this->id('RecoveryEnableID') === $room['flapID']) {
+                throw new \RuntimeException('Recovery switch must not also be a room flap command');
+            }
             if (($type === 0 && (!is_bool($room['open']) || !is_bool($room['closed'])))
                 || ($type === 1 && (!is_int($room['open']) || !is_int($room['closed'])))
                 || !in_array($type, [0, 1], true) || $room['open'] === $room['closed']) {
@@ -449,6 +461,7 @@ class HeatingControl extends IPSModule
     private function validateLegacyOutputs(array $rooms): void
     {
         $protected = [];
+        $protected[$this->id('RecoveryEnableID')] = true;
         foreach (array_keys(self::DEFAULT_IDS) as $property) $protected[$this->id($property)] = true;
         foreach ($rooms as $room) {
             foreach (array_merge($room['sensors'], [$room['targetID'], $room['flapID']]) as $id) $protected[$id] = true;
@@ -528,7 +541,19 @@ class HeatingControl extends IPSModule
 
     private function id(string $property): int {
         $id = $this->ReadPropertyInteger($property);
-        return array_key_exists($property, self::DEFAULT_STATUS_IDS) && $id === 1 ? 0 : $id;
+        return (array_key_exists($property, self::DEFAULT_STATUS_IDS) || $property === 'RecoveryEnableID') && $id === 1 ? 0 : $id;
+    }
+    private function recoveryEnabled(): bool
+    {
+        $id = $this->id('RecoveryEnableID');
+        if ($id === 0) return true;
+        if ($id < 0 || !IPS_VariableExists($id) || IPS_GetVariable($id)['VariableType'] !== 0) {
+            throw new \RuntimeException('Residual heat recovery switch must be a Boolean variable: ' . $id);
+        }
+        foreach (['FanOnID', 'HeatPumpOnID', 'HeatPumpHeatModeID', 'GasPumpID'] as $property) {
+            if ($id === $this->id($property)) throw new \RuntimeException('Recovery switch must not also be an actuator command: ' . $id);
+        }
+        return GetValueBoolean($id);
     }
     private function boolValue(string $property): bool { return GetValueBoolean($this->id($property)); }
     private function intValue(string $property): int { return GetValueInteger($this->id($property)); }
@@ -567,6 +592,8 @@ class HeatingControl extends IPSModule
             $id = $this->id($property);
             if ($id > 0 && IPS_VariableExists($id)) $ids[$id] = true;
         }
+        $recoveryID = $this->id('RecoveryEnableID');
+        if ($recoveryID > 0 && IPS_VariableExists($recoveryID)) $ids[$recoveryID] = true;
         try {
             $rooms = $this->decodeRoomRows($this->ReadPropertyString('Rooms'));
         } catch (\Throwable $e) {
@@ -607,7 +634,7 @@ class HeatingControl extends IPSModule
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
         $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS),
-            ['Enabled', 'DryRun', 'DebugEnabled', 'Rooms', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
+            ['Enabled', 'DryRun', 'DebugEnabled', 'Rooms', 'RecoveryEnableID', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
@@ -616,7 +643,7 @@ class HeatingControl extends IPSModule
                 throw new \InvalidArgumentException('Expected Boolean ' . $name);
             }
         }
-        foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
+        foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS, ['RecoveryEnableID' => 0]) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
             throw new \InvalidArgumentException('Expected integer ID: ' . $name);
         }
         foreach (['IntervalSeconds', 'MaxSensorAgeSeconds', 'MixerOpen', 'MixerClosed',

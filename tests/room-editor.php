@@ -199,6 +199,51 @@ check(GetValue(57844) === true, 'Residual heat must be mirrored');
 foreach ($canonical as $room) check(GetValue($room['statusID']) === false, 'Residual heat must not be reported as room heating demand');
 check(GetValue(52602) === 36698, 'Residual heat must preserve last heated group');
 
+// The external Boolean switch ends an active purge immediately via MessageSink,
+// without disabling normal heating or its source-temperature fan control.
+$instance->properties['RecoveryEnableID'] = 61003;
+$GLOBALS['variables'][61003] = ['VariableType' => 0, 'value' => true];
+$instance->ApplyChanges();
+check(isset($instance->messages[61003]), 'Recovery switch must be monitored');
+$GLOBALS['variables'][61003]['value'] = false;
+$instance->MessageSink(1, 61003, VM_UPDATE, [false, true]);
+check(!$instance->values['ResidualHeating'] && GetValue(57844) === false, 'Switching off must clear internal and legacy residual states');
+foreach ($canonical as $room) check(GetValue($room['flapID']) === $room['closed'], 'Switching off recovery must close purge flaps');
+check(GetValue($instance->properties['FanOnID']) === false && GetValue($instance->properties['FanSpeedID']) === 0, 'Switching off recovery must stop the purge fan');
+check(str_contains($instance->values['DecisionStatus'], 'recovery disabled'), 'Disabled recovery must be visible in the decision');
+$GLOBALS['variables'][61003]['value'] = true;
+$instance->MessageSink(2, 61003, VM_UPDATE, [true, true]);
+check($instance->values['ResidualHeating'] && GetValue(57844) === true, 'Switching on must resume eligible residual heat');
+$instance->properties['DryRun'] = true;
+$GLOBALS['commands'] = $GLOBALS['directWrites'] = [];
+$GLOBALS['variables'][61003]['value'] = false;
+$instance->MessageSink(3, 61003, VM_UPDATE, [false, true]);
+check(!$GLOBALS['commands'] && !$GLOBALS['directWrites'] && !$instance->values['ResidualHeating'], 'Switch must respect dry-run');
+$instance->properties['DryRun'] = false;
+foreach ($canonical as $room) foreach ($room['sensors'] as $id) $GLOBALS['variables'][$id]['value'] = 18.0;
+$GLOBALS['variables'][$instance->properties['HeatPumpTempID']]['value'] = 40.0;
+$GLOBALS['variables'][$instance->properties['IncomingAirTempID']]['value'] = 22.0;
+$instance->ProcessHeating();
+check(str_contains($instance->values['DecisionStatus'], 'Heating demand:') && GetValue($instance->properties['HeatPumpOnID']) === true, 'Recovery switch must not disable normal heating');
+check(GetValue($instance->properties['FanOnID']) === true, 'Normal heating fan must remain active when its temperature condition is satisfied');
+$GLOBALS['commands'] = $GLOBALS['directWrites'] = [];
+$GLOBALS['variables'][61003]['VariableType'] = 1;
+$instance->ProcessHeating();
+check(!$GLOBALS['commands'] && !$GLOBALS['directWrites'] && str_starts_with($instance->values['DecisionStatus'], 'ERROR:'), 'Non-Boolean switch must be rejected before commands');
+$GLOBALS['variables'][61003]['VariableType'] = 0;
+$instance->properties['RecoveryEnableID'] = $instance->properties['HeatPumpOnID'];
+rejects(fn() => privateCall($instance, 'recoveryEnabled'), 'Recovery switch must not be an actuator command');
+$instance->properties['RecoveryEnableID'] = $canonical[1]['flapID'];
+rejects(fn() => privateCall($instance, 'validateConfiguration', $canonical), 'Recovery switch must not be a room flap command');
+$instance->properties['RecoveryEnableID'] = 61003;
+$switchConflict = $canonical;
+$switchConflict[0]['statusID'] = 61003;
+rejects(fn() => privateCall($instance, 'validateLegacyOutputs', $switchConflict), 'Status output must not overwrite the recovery switch');
+$instance->properties['RecoveryEnableID'] = 1;
+$instance->ApplyChanges();
+check(privateCall($instance, 'recoveryEnabled') === true && !isset($instance->messages[61003]), 'Unselected switch must retain legacy behavior and remove old subscription');
+$instance->properties['RecoveryEnableID'] = 61003;
+
 // Night shutdown clears legacy demand/residual indicators. Summer and the
 // master bypass leave every external variable untouched.
 $GLOBALS['variables'][$instance->properties['NightDisableID']]['value'] = true;
@@ -244,8 +289,10 @@ $instance->properties['Enabled'] = false;
 $customBackup = $instance->ExportConfig();
 $instance->properties['Rooms'] = json_encode($canonical);
 $instance->properties['LegacyActionLogID'] = 21945;
+$instance->properties['RecoveryEnableID'] = 0;
 $instance->ImportConfig($customBackup);
 check(privateCall($instance, 'rooms') === $custom && $instance->properties['LegacyActionLogID'] === 61000, 'Custom status mappings must survive backup/restore');
+check($instance->properties['RecoveryEnableID'] === 61003, 'Recovery switch ID must survive backup/restore');
 check(!$GLOBALS['directWrites'] && !$instance->properties['Enabled'] && $instance->properties['DryRun'], 'Restore must not publish status outputs');
 
 $bad = $editor;
@@ -261,4 +308,4 @@ $instance->properties['Rooms'] = '{invalid';
 $form = json_decode($instance->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
 $popup = array_values(array_filter($form['elements'], fn($element) => ($element['name'] ?? '') === 'RoomConfigurationPopup'))[0];
 check($popup['popup']['items'][1]['type'] === 'ScriptEditor' && $instance->properties['Rooms'] === '{invalid', 'Malformed configuration must remain available for repair');
-echo "PASS: room editor, legacy migration, sensor watchers, dry-run decisions, backup/restore, status outputs and invalid input\n";
+echo "PASS: room editor, legacy migration, sensor watchers, recovery switch, dry-run decisions, backup/restore, status outputs and invalid input\n";

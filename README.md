@@ -41,6 +41,17 @@ room target variables. Their current values are read during each evaluation.
 - Residual heat uses outgoing air at least 22 °C and above the room target
   by more than the configured delta. The mixer positions are explicitly
   configured as 0 open and 100 closed.
+- **Residual heat recovery enable** (German: **Freigabe Restwärmenutzung**,
+  added in 0.1.3) selects an optional external Boolean variable. `true` permits
+  residual heat recovery when its normal conditions are met; `false` stops it.
+  When no room requests heating, switching it off closes purge flaps, stops
+  the fan and clears internal/external residual status on the next evaluation.
+  Normal room heating and its fan-temperature condition are unaffected.
+  Changes to the variable trigger evaluation immediately when the controller
+  is enabled. DryRun still suppresses all external writes; summer and master
+  disable retain their bypass behavior. No variable selected (ID 0 or 1)
+  preserves the existing behavior, with recovery permitted. The selected ID
+  is included in configuration backups; the module never writes to the switch.
 - Temperature freshness validation is optional and defaults to 0 (off) for
   compatibility with the script. A configured age limit prevents decisions
   from stale temperature readings.
@@ -153,6 +164,6 @@ legacy status variables, charts, helper scripts and script events.
 
 Run `php tests/room-editor.php` with PHP 8.1 or newer. The test uses a small
 Symcon stub to check legacy conversion, multiple sensor subscriptions, typed
-flap commands, unchanged dry-run decisions, backup/restore, external status
+flap commands, recovery switch transitions, normal fan control, unchanged dry-run decisions, backup/restore, external status
 publishing, shutdown/bypass behavior and invalid input.
 It does not replace a visual check of the native popup in the Symcon console.

@@ -78,7 +78,9 @@
       "LastHeatedGroupID variable (optional)": "LastHeatedGroupID variable (optional)",
       "Heating action log variable (HTML, optional)": "Heating action log variable (HTML, optional)",
       "Configuration snapshot variable (updated on export, optional)": "Configuration snapshot variable (updated on export, optional)",
-      "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor."
+      "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.",
+      "Residual heat recovery enable (true = enabled)": "Residual heat recovery enable (true = enabled)",
+      "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled.": "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled."
     },
     "de": {
       "Replace configuration and leave controller disabled?": "Konfiguration ersetzen und Regler deaktiviert lassen?",
@@ -158,7 +160,9 @@
       "LastHeatedGroupID variable (optional)": "Variable LastHeatedGroupID (optional)",
       "Heating action log variable (HTML, optional)": "Variable Heizungsprotokoll (HTML, optional)",
       "Configuration snapshot variable (updated on export, optional)": "Variable Konfigurationssicherung (bei Export aktualisiert, optional)",
-      "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID enthält die gewählte ursprüngliche Kategorie-ID des letzten Raums mit Heizbedarf. Die Raumstatusausgänge werden im Raumeditor konfiguriert."
+      "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID enthält die gewählte ursprüngliche Kategorie-ID des letzten Raums mit Heizbedarf. Die Raumstatusausgänge werden im Raumeditor konfiguriert.",
+      "Residual heat recovery enable (true = enabled)": "Freigabe Restwärmenutzung (true = aktiviert)",
+      "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled.": "Optionaler Boolean-Schalter: false beendet die Restwärmenutzung. Normale Heizung und deren Lüftersteuerung bleiben aktiv. Keine Variable ausgewählt = Restwärmenutzung aktiviert."
     }
   }
 }
