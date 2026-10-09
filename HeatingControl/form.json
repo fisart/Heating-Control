@@ -222,14 +222,195 @@
       "maximum": 100
     },
     {
-      "type": "Label",
-      "label": "--- Rooms: JSON array with name, sensors, targetID, flapID, open and closed ---"
-    },
-    {
-      "type": "ScriptEditor",
-      "name": "Rooms",
-      "caption": "Room configuration",
-      "rowCount": 15
+      "type": "PopupButton",
+      "name": "RoomConfigurationPopup",
+      "caption": "Configure rooms...",
+      "popup": {
+        "caption": "Room configuration",
+        "closeCaption": "Done",
+        "items": [
+          {
+            "type": "Label",
+            "caption": "Use the pencil icon to edit a room or Add to create one. Close this window and apply changes to save."
+          },
+          {
+            "type": "List",
+            "name": "Rooms",
+            "caption": "Rooms",
+            "rowCount": 5,
+            "add": true,
+            "delete": true,
+            "loadValuesFromConfiguration": false,
+            "columns": [
+              {
+                "name": "name",
+                "caption": "Room name",
+                "width": "auto",
+                "add": "",
+                "edit": {
+                  "type": "ValidationTextBox"
+                }
+              },
+              {
+                "name": "targetID",
+                "caption": "Target temperature variable",
+                "width": "200px",
+                "add": 0,
+                "edit": {
+                  "type": "SelectVariable"
+                }
+              },
+              {
+                "name": "flapID",
+                "caption": "Air flap variable",
+                "width": "200px",
+                "add": 0,
+                "edit": {
+                  "type": "SelectVariable"
+                }
+              },
+              {
+                "name": "flapType",
+                "caption": "Flap command type",
+                "width": "100px",
+                "visible": false,
+                "add": 1,
+                "edit": {
+                  "type": "Select",
+                  "options": [
+                    {
+                      "caption": "Boolean (0 = off, 1 = on)",
+                      "value": 0
+                    },
+                    {
+                      "caption": "Percentage (0 to 100)",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "open",
+                "caption": "Open command",
+                "width": "80px",
+                "visible": false,
+                "add": 0,
+                "edit": {
+                  "type": "NumberSpinner",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              {
+                "name": "closed",
+                "caption": "Closed command",
+                "width": "80px",
+                "visible": false,
+                "add": 100,
+                "edit": {
+                  "type": "NumberSpinner",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              {
+                "name": "sensors",
+                "caption": "Temperature sensors",
+                "width": "100px",
+                "visible": false,
+                "add": [],
+                "edit": {
+                  "type": "List",
+                  "rowCount": 3,
+                  "add": true,
+                  "delete": true,
+                  "columns": [
+                    {
+                      "name": "id",
+                      "caption": "Temperature sensor",
+                      "width": "auto",
+                      "add": 0,
+                      "edit": {
+                        "type": "SelectVariable"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "values": [],
+            "form": [
+              {
+                "type": "ValidationTextBox",
+                "name": "name",
+                "caption": "Room name"
+              },
+              {
+                "type": "List",
+                "name": "sensors",
+                "caption": "Temperature sensors (average of all selected sensors)",
+                "rowCount": 3,
+                "add": true,
+                "delete": true,
+                "columns": [
+                  {
+                    "name": "id",
+                    "caption": "Temperature sensor",
+                    "width": "auto",
+                    "add": 0,
+                    "edit": {
+                      "type": "SelectVariable"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "SelectVariable",
+                "name": "targetID",
+                "caption": "Target temperature variable"
+              },
+              {
+                "type": "SelectVariable",
+                "name": "flapID",
+                "caption": "Air flap variable"
+              },
+              {
+                "type": "Select",
+                "name": "flapType",
+                "caption": "Flap command type",
+                "options": [
+                  {
+                    "caption": "Boolean (0 = off, 1 = on)",
+                    "value": 0
+                  },
+                  {
+                    "caption": "Percentage (0 to 100)",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "type": "Label",
+                "caption": "Boolean flaps: enter 0 or 1. Percentage flaps: enter values from 0 to 100."
+              },
+              {
+                "type": "NumberSpinner",
+                "name": "open",
+                "caption": "Open command",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "NumberSpinner",
+                "name": "closed",
+                "caption": "Closed command",
+                "minimum": 0,
+                "maximum": 100
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "actions": [

@@ -10,11 +10,11 @@ room target variables. Their current values are read during each evaluation.
 
 ## Installation and safe handover
 
-1. Install the directory as an IP-Symcon module library (or add its repository
-   once published). Create one **HeatingControl** instance. `Enabled` defaults
+1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.
+   Create one **HeatingControl** instance. `Enabled` defaults
    to **false** and `DryRun` defaults to **true**; no actuator command is sent
    by a newly created instance.
-2. Check each variable selector and the `Rooms` JSON. The four room flaps are
+2. Check each variable selector and open **Configure rooms...**. The four room flaps are
    seeded with their observed semantics: the two KNX percentage flaps use
    **open=0, closed=100**; the two Boolean flaps use **open=true,
    closed=false**. Confirm this on the installed hardware.
@@ -51,6 +51,28 @@ room target variables. Their current values are read during each evaluation.
 
 ## Debug and backup
 
+### Room editor (0.1.1)
+
+Open **Configure rooms...** (German: **Räume konfigurieren ...**) and use the
+pencil icon to edit a room or **Add** to create one. Each room dialog provides:
+
+- Room name.
+- A list of temperature sensors selected from the object tree; multiple sensors
+  are averaged. Add/remove sensor rows as needed.
+- Variable selectors for the target temperature and the air flap.
+- Flap command type: Boolean or percentage.
+- Open and closed commands. For a Boolean flap enter 0=off or 1=on; for a
+  percentage flap enter values from 0 to 100. The two commands must differ.
+
+Confirm the room dialog, close the room list, then **Apply changes** in the
+instance editor. Opening or editing the popup does not apply configuration or
+send actuator commands. Applied changes follow the current Enabled/DryRun
+settings. Existing room JSON loads automatically, including both Boolean
+directions and arbitrary sensor counts. Old backups remain importable; exports
+retain the original room schema with scalar sensor IDs and typed Boolean
+commands. Invalid JSON is preserved and displayed for repair instead of being
+silently replaced with defaults.
+
 The form checkbox `DebugEnabled` controls writes to the **Heating debug log**
 string variable beneath the instance. The log includes input states, room
 decisions, residual/fan calculations, skipped equal values, commands and
@@ -83,3 +105,10 @@ using the backup elsewhere.
 The module has not been executed against the live Berlin IP-Symcon system.
 See [MIGRATION.md](MIGRATION.md) for the cross-check of external object IDs,
 legacy status variables, charts, helper scripts and script events.
+
+## Room editor checks
+
+Run `php tests/room-editor.php` with PHP 8.1 or newer. The test uses a small
+Symcon stub to check legacy conversion, multiple sensor subscriptions, typed
+flap commands, unchanged dry-run decisions, backup/restore and invalid input.
+It does not replace a visual check of the native popup in the Symcon console.

@@ -50,7 +50,25 @@
       "At home (reference only)": "At home (reference only)",
       "Minimum outgoing air for residual heat (°C)": "Minimum outgoing air for residual heat (°C)",
       "Master disable (true = disabled)": "Master disable (true = disabled)",
-      "Dry run: show commands without switching actuators": "Dry run: show commands without switching actuators"
+      "Dry run: show commands without switching actuators": "Dry run: show commands without switching actuators",
+      "Configure rooms...": "Configure rooms...",
+      "Rooms": "Rooms",
+      "Done": "Done",
+      "Room name": "Room name",
+      "Temperature sensors (average of all selected sensors)": "Temperature sensors (average of all selected sensors)",
+      "Temperature sensors": "Temperature sensors",
+      "Temperature sensor": "Temperature sensor",
+      "Target temperature variable": "Target temperature variable",
+      "Air flap variable": "Air flap variable",
+      "Flap command type": "Flap command type",
+      "Boolean (0 = off, 1 = on)": "Boolean (0 = off, 1 = on)",
+      "Percentage (0 to 100)": "Percentage (0 to 100)",
+      "Open command": "Open command",
+      "Closed command": "Closed command",
+      "Boolean flaps: enter 0 or 1. Percentage flaps: enter values from 0 to 100.": "Boolean flaps: enter 0 or 1. Percentage flaps: enter values from 0 to 100.",
+      "Use the pencil icon to edit a room or Add to create one. Close this window and apply changes to save.": "Use the pencil icon to edit a room or Add to create one. Close this window and apply changes to save.",
+      "Room configuration could not be loaded:": "Room configuration could not be loaded:",
+      "Repair room configuration": "Repair room configuration"
     },
     "de": {
       "Replace configuration and leave controller disabled?": "Konfiguration ersetzen und Regler deaktiviert lassen?",
@@ -102,7 +120,25 @@
       "At home (reference only)": "At home (reference only)",
       "Minimum outgoing air for residual heat (°C)": "Mindesttemperatur der Ausblasluft für Restwärme (°C)",
       "Master disable (true = disabled)": "Hauptschalter (true = deaktiviert)",
-      "Dry run: show commands without switching actuators": "Trockenlauf: Befehle anzeigen, ohne Aktoren zu schalten"
+      "Dry run: show commands without switching actuators": "Trockenlauf: Befehle anzeigen, ohne Aktoren zu schalten",
+      "Configure rooms...": "Räume konfigurieren ...",
+      "Rooms": "Räume",
+      "Done": "Fertig",
+      "Room name": "Raumname",
+      "Temperature sensors (average of all selected sensors)": "Temperatursensoren (Mittelwert aller ausgewählten Sensoren)",
+      "Temperature sensors": "Temperatursensoren",
+      "Temperature sensor": "Temperatursensor",
+      "Target temperature variable": "Variable für die Solltemperatur",
+      "Air flap variable": "Variable für die Luftklappe",
+      "Flap command type": "Befehlstyp der Luftklappe",
+      "Boolean (0 = off, 1 = on)": "Boolean (0 = aus, 1 = an)",
+      "Percentage (0 to 100)": "Prozentwert (0 bis 100)",
+      "Open command": "Befehl zum Öffnen",
+      "Closed command": "Befehl zum Schließen",
+      "Boolean flaps: enter 0 or 1. Percentage flaps: enter values from 0 to 100.": "Boolean-Klappen: 0 oder 1 eingeben. Prozent-Klappen: Werte von 0 bis 100 eingeben.",
+      "Use the pencil icon to edit a room or Add to create one. Close this window and apply changes to save.": "Räume über das Stiftsymbol bearbeiten oder mit Hinzufügen anlegen. Zum Speichern dieses Fenster schließen und Änderungen übernehmen.",
+      "Room configuration could not be loaded:": "Raumkonfiguration konnte nicht geladen werden:",
+      "Repair room configuration": "Raumkonfiguration reparieren"
     }
   }
 }

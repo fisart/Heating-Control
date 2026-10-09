@@ -70,6 +70,27 @@ class HeatingControl extends IPSModule
         $this->RegisterTimer('HeatingTimer', 0, 'HC_ProcessHeating($_IPS[\'TARGET\']);');
     }
 
+    public function GetConfigurationForm()
+    {
+        $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true, 512, JSON_THROW_ON_ERROR);
+        foreach ($form['elements'] as &$element) {
+            if (($element['name'] ?? '') !== 'RoomConfigurationPopup') continue;
+            try {
+                // Render both legacy JSON and saved popup rows without modifying properties.
+                $rows = $this->decodeRoomRows($this->ReadPropertyString('Rooms'));
+                $element['popup']['items'][1]['values'] = $this->roomEditorRows($rows);
+            } catch (\Throwable $e) {
+                // Keep malformed configuration available for repair; never replace it with defaults.
+                $element['popup']['items'] = [
+                    ['type' => 'Label', 'caption' => $this->Translate('Room configuration could not be loaded:') . ' ' . $e->getMessage()],
+                    ['type' => 'ScriptEditor', 'name' => 'Rooms', 'caption' => 'Repair room configuration', 'rowCount' => 15],
+                ];
+            }
+        }
+        unset($element);
+        return json_encode($form, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    }
+
     public function ApplyChanges()
     {
         parent::ApplyChanges();
@@ -303,9 +324,63 @@ class HeatingControl extends IPSModule
 
     private function rooms(): array
     {
-        $rooms = json_decode($this->ReadPropertyString('Rooms'), true, 512, JSON_THROW_ON_ERROR);
-        if (!is_array($rooms) || !array_is_list($rooms) || !$rooms) throw new \RuntimeException('Rooms must be a nonempty JSON array');
+        $rooms = $this->decodeRoomRows($this->ReadPropertyString('Rooms'));
+        if (!$rooms) throw new \RuntimeException('Configure at least one room');
         return $rooms;
+    }
+
+    private function decodeRoomRows(string $json): array
+    {
+        $rows = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($rows) || !array_is_list($rows)) throw new \InvalidArgumentException('Rooms must be an array');
+        $rooms = [];
+        foreach ($rows as $row) {
+            if (!is_array($row) || !isset($row['name'], $row['sensors'], $row['targetID'], $row['flapID'], $row['open'], $row['closed'])
+                || !is_string($row['name']) || !is_array($row['sensors']) || !array_is_list($row['sensors'])
+                || !is_int($row['targetID']) || !is_int($row['flapID'])) {
+                throw new \InvalidArgumentException('Invalid room configuration');
+            }
+            $sensors = [];
+            foreach ($row['sensors'] as $sensor) {
+                $sensorID = is_array($sensor) ? ($sensor['id'] ?? null) : $sensor;
+                if (!is_int($sensorID)) throw new \InvalidArgumentException('Invalid room temperature sensor');
+                $sensors[] = $sensorID;
+            }
+            $open = $row['open'];
+            $closed = $row['closed'];
+            if (array_key_exists('flapType', $row)) {
+                if (!in_array($row['flapType'], [0, 1], true) || !is_int($open) || !is_int($closed)) {
+                    throw new \InvalidArgumentException('Invalid flap command type');
+                }
+                $maximum = $row['flapType'] === 0 ? 1 : 100;
+                if ($open < 0 || $open > $maximum || $closed < 0 || $closed > $maximum) {
+                    throw new \InvalidArgumentException('Flap commands outside allowed range for ' . $row['name']);
+                }
+                if ($row['flapType'] === 0) {
+                    $open = (bool)$open;
+                    $closed = (bool)$closed;
+                }
+            }
+            if (!((is_bool($open) && is_bool($closed)) || (is_int($open) && is_int($closed)))) {
+                throw new \InvalidArgumentException('Flap open and closed commands must have the same type');
+            }
+            $rooms[] = ['name' => $row['name'], 'sensors' => $sensors, 'targetID' => $row['targetID'],
+                'flapID' => $row['flapID'], 'open' => $open, 'closed' => $closed];
+        }
+        return $rooms;
+    }
+
+    private function roomEditorRows(array $rooms): array
+    {
+        $rows = [];
+        foreach ($rooms as $room) {
+            $rows[] = ['name' => $room['name'],
+                'sensors' => array_map(static fn(int $id): array => ['id' => $id], $room['sensors']),
+                'targetID' => $room['targetID'], 'flapID' => $room['flapID'],
+                'flapType' => is_bool($room['open']) ? 0 : 1,
+                'open' => (int)$room['open'], 'closed' => (int)$room['closed']];
+        }
+        return $rows;
     }
 
     private function validateConfiguration(array $rooms): void
@@ -314,12 +389,15 @@ class HeatingControl extends IPSModule
             $id = $this->id($property);
             if (!IPS_VariableExists($id)) throw new \RuntimeException('Missing input/output ' . $property . ': ' . $id);
         }
+        $names = [];
         foreach ($rooms as $room) {
             if (!is_array($room) || !isset($room['name'], $room['sensors'], $room['targetID'], $room['flapID'], $room['open'], $room['closed'])
-                || !is_string($room['name']) || $room['name'] === ''
+                || !is_string($room['name']) || trim($room['name']) === ''
                 || !is_array($room['sensors']) || !$room['sensors']) {
                 throw new \RuntimeException('Invalid room configuration');
             }
+            if (isset($names[$room['name']])) throw new \RuntimeException('Duplicate room name: ' . $room['name']);
+            $names[$room['name']] = true;
             foreach (array_merge($room['sensors'], [$room['targetID'], $room['flapID']]) as $id) {
                 if (!is_int($id) || !IPS_VariableExists($id)) throw new \RuntimeException('Missing room variable ' . $id);
             }
@@ -384,11 +462,13 @@ class HeatingControl extends IPSModule
             $id = $this->id($property);
             if ($id > 0 && IPS_VariableExists($id)) $ids[$id] = true;
         }
-        $rooms = json_decode($this->ReadPropertyString('Rooms'), true);
-        if (is_array($rooms)) foreach ($rooms as $room) {
-            if (!is_array($room)) continue;
-            foreach (array_merge((array)($room['sensors'] ?? []), [(int)($room['targetID'] ?? 0)]) as $id) {
-                $id = (int)$id;
+        try {
+            $rooms = $this->decodeRoomRows($this->ReadPropertyString('Rooms'));
+        } catch (\Throwable $e) {
+            $rooms = []; // Evaluation reports invalid configuration before sending any commands.
+        }
+        foreach ($rooms as $room) {
+            foreach (array_merge($room['sensors'], [$room['targetID']]) as $id) {
                 if ($id > 0 && IPS_VariableExists($id)) $ids[$id] = true;
             }
         }
@@ -399,6 +479,8 @@ class HeatingControl extends IPSModule
     public function ExportConfig(): string
     {
         $config = json_decode(IPS_GetConfiguration($this->InstanceID), true, 512, JSON_THROW_ON_ERROR);
+        // Keep backups compatible with the original room schema and Boolean commands.
+        $config['Rooms'] = json_encode($this->rooms(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         $json = json_encode([
             'schema' => 'HeatingControl.Config.v1',
             'exportedAt' => date(DATE_ATOM),
@@ -437,8 +519,9 @@ class HeatingControl extends IPSModule
         }
         if (isset($incoming['Rooms'])) {
             if (!is_string($incoming['Rooms'])) throw new \InvalidArgumentException('Invalid Rooms property');
-            $rooms = json_decode($incoming['Rooms'], true, 512, JSON_THROW_ON_ERROR);
-            if (!is_array($rooms) || !array_is_list($rooms)) throw new \InvalidArgumentException('Rooms must be an array');
+            $rooms = $this->decodeRoomRows($incoming['Rooms']);
+            if (!$rooms) throw new \InvalidArgumentException('Configure at least one room');
+            $incoming['Rooms'] = json_encode($rooms, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
         // Importing never starts a second controller automatically.
         $incoming['Enabled'] = false;
@@ -449,3 +532,4 @@ class HeatingControl extends IPSModule
         return 'Configuration imported. Controller is disabled; verify IDs before enabling.';
     }
 }
+

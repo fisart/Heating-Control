@@ -2,11 +2,11 @@
   "id": "{F1BCF0B7-28A2-429A-AB0D-FCF2B54CC159}",
   "author": "Artur Fischer",
   "name": "HeatingControl",
-  "url": "",
+  "url": "https://github.com/fisart/Heating-Control",
   "compatibility": {
     "version": "8.0"
   },
-  "version": "0.1.0",
-  "build": 1,
-  "date": 0
+  "version": "0.1.1",
+  "build": 2,
+  "date": 1791548651
 }
