@@ -68,7 +68,17 @@
       "Boolean flaps: enter 0 or 1. Percentage flaps: enter values from 0 to 100.": "Boolean flaps: enter 0 or 1. Percentage flaps: enter values from 0 to 100.",
       "Use the pencil icon to edit a room or Add to create one. Close this window and apply changes to save.": "Use the pencil icon to edit a room or Add to create one. Close this window and apply changes to save.",
       "Room configuration could not be loaded:": "Room configuration could not be loaded:",
-      "Repair room configuration": "Repair room configuration"
+      "Repair room configuration": "Repair room configuration",
+      "Room demand status variable (optional)": "Room demand status variable (optional)",
+      "Original room group category (for LastHeatedGroupID)": "Original room group category (for LastHeatedGroupID)",
+      "Room status means heating demand, not flap position or residual heat. Leave optional outputs unselected to disable them.": "Room status means heating demand, not flap position or residual heat. Leave optional outputs unselected to disable them.",
+      "Existing status outputs": "Existing status outputs",
+      "These variables are updated only when Enabled is on and DryRun is off. Select the existing variables to preserve IPSView and chart references.": "These variables are updated only when Enabled is on and DryRun is off. Select the existing variables to preserve IPSView and chart references.",
+      "Residual heating status variable (optional)": "Residual heating status variable (optional)",
+      "LastHeatedGroupID variable (optional)": "LastHeatedGroupID variable (optional)",
+      "Heating action log variable (HTML, optional)": "Heating action log variable (HTML, optional)",
+      "Configuration snapshot variable (updated on export, optional)": "Configuration snapshot variable (updated on export, optional)",
+      "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor."
     },
     "de": {
       "Replace configuration and leave controller disabled?": "Konfiguration ersetzen und Regler deaktiviert lassen?",
@@ -138,7 +148,17 @@
       "Boolean flaps: enter 0 or 1. Percentage flaps: enter values from 0 to 100.": "Boolean-Klappen: 0 oder 1 eingeben. Prozent-Klappen: Werte von 0 bis 100 eingeben.",
       "Use the pencil icon to edit a room or Add to create one. Close this window and apply changes to save.": "Räume über das Stiftsymbol bearbeiten oder mit Hinzufügen anlegen. Zum Speichern dieses Fenster schließen und Änderungen übernehmen.",
       "Room configuration could not be loaded:": "Raumkonfiguration konnte nicht geladen werden:",
-      "Repair room configuration": "Raumkonfiguration reparieren"
+      "Repair room configuration": "Raumkonfiguration reparieren",
+      "Room demand status variable (optional)": "Raumstatusvariable für Heizbedarf (optional)",
+      "Original room group category (for LastHeatedGroupID)": "Ursprüngliche Raumgruppenkategorie (für LastHeatedGroupID)",
+      "Room status means heating demand, not flap position or residual heat. Leave optional outputs unselected to disable them.": "Raumstatus bedeutet Heizbedarf, nicht Klappenstellung oder Restwärme. Optionale Ausgänge ohne Auswahl werden nicht aktualisiert.",
+      "Existing status outputs": "Vorhandene Statusausgänge",
+      "These variables are updated only when Enabled is on and DryRun is off. Select the existing variables to preserve IPSView and chart references.": "Diese Variablen werden nur bei aktiviertem Regler und ausgeschaltetem DryRun aktualisiert. Wählen Sie die vorhandenen Variablen, um IPSView- und Diagrammverweise zu erhalten.",
+      "Residual heating status variable (optional)": "Statusvariable Restwärmenutzung (optional)",
+      "LastHeatedGroupID variable (optional)": "Variable LastHeatedGroupID (optional)",
+      "Heating action log variable (HTML, optional)": "Variable Heizungsprotokoll (HTML, optional)",
+      "Configuration snapshot variable (updated on export, optional)": "Variable Konfigurationssicherung (bei Export aktualisiert, optional)",
+      "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID enthält die gewählte ursprüngliche Kategorie-ID des letzten Raums mit Heizbedarf. Die Raumstatusausgänge werden im Raumeditor konfiguriert."
     }
   }
 }

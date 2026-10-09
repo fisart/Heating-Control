@@ -336,6 +336,29 @@
                     }
                   ]
                 }
+              },
+              {
+                "name": "statusID",
+                "caption": "Room demand status variable (optional)",
+                "width": "180px",
+                "visible": false,
+                "add": 0,
+                "edit": {
+                  "type": "SelectVariable",
+                  "validVariableTypes": [
+                    0
+                  ]
+                }
+              },
+              {
+                "name": "legacyGroupID",
+                "caption": "Original room group category (for LastHeatedGroupID)",
+                "width": "180px",
+                "visible": false,
+                "add": 0,
+                "edit": {
+                  "type": "SelectCategory"
+                }
               }
             ],
             "values": [],
@@ -406,11 +429,75 @@
                 "caption": "Closed command",
                 "minimum": 0,
                 "maximum": 100
+              },
+              {
+                "type": "SelectVariable",
+                "name": "statusID",
+                "caption": "Room demand status variable (optional)",
+                "validVariableTypes": [
+                  0
+                ]
+              },
+              {
+                "type": "SelectCategory",
+                "name": "legacyGroupID",
+                "caption": "Original room group category (for LastHeatedGroupID)"
+              },
+              {
+                "type": "Label",
+                "caption": "Room status means heating demand, not flap position or residual heat. Leave optional outputs unselected to disable them."
               }
             ]
           }
         ]
       }
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Existing status outputs",
+      "expanded": false,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "These variables are updated only when Enabled is on and DryRun is off. Select the existing variables to preserve IPSView and chart references."
+        },
+        {
+          "type": "SelectVariable",
+          "name": "LegacyResidualHeatingID",
+          "caption": "Residual heating status variable (optional)",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "LegacyLastHeatedGroupID",
+          "caption": "LastHeatedGroupID variable (optional)",
+          "validVariableTypes": [
+            1
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "LegacyActionLogID",
+          "caption": "Heating action log variable (HTML, optional)",
+          "validVariableTypes": [
+            3
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "LegacyConfigSnapshotID",
+          "caption": "Configuration snapshot variable (updated on export, optional)",
+          "validVariableTypes": [
+            3
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor."
+        }
+      ]
     }
   ],
   "actions": [

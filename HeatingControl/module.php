@@ -36,10 +36,17 @@ class HeatingControl extends IPSModule
     ];
 
     private const DEFAULT_ROOMS = [
-        ['name' => 'Living and Dining Room', 'sensors' => [57694], 'targetID' => 12594, 'flapID' => 36911, 'open' => 0, 'closed' => 100],
-        ['name' => 'Guest Bedrooms', 'sensors' => [44502], 'targetID' => 40975, 'flapID' => 22150, 'open' => true, 'closed' => false],
-        ['name' => 'Master Bedroom', 'sensors' => [15880], 'targetID' => 30481, 'flapID' => 40259, 'open' => true, 'closed' => false],
-        ['name' => 'Blue Room and Kitchen', 'sensors' => [57255], 'targetID' => 37341, 'flapID' => 27527, 'open' => 0, 'closed' => 100],
+        ['name' => 'Living and Dining Room', 'sensors' => [57694], 'targetID' => 12594, 'flapID' => 36911, 'open' => 0, 'closed' => 100, 'statusID' => 43898, 'legacyGroupID' => 25055],
+        ['name' => 'Guest Bedrooms', 'sensors' => [44502], 'targetID' => 40975, 'flapID' => 22150, 'open' => true, 'closed' => false, 'statusID' => 50623, 'legacyGroupID' => 38782],
+        ['name' => 'Master Bedroom', 'sensors' => [15880], 'targetID' => 30481, 'flapID' => 40259, 'open' => true, 'closed' => false, 'statusID' => 36744, 'legacyGroupID' => 16188],
+        ['name' => 'Blue Room and Kitchen', 'sensors' => [57255], 'targetID' => 37341, 'flapID' => 27527, 'open' => 0, 'closed' => 100, 'statusID' => 53400, 'legacyGroupID' => 36698],
+    ];
+
+    private const DEFAULT_STATUS_IDS = [
+        'LegacyActionLogID' => 21945,
+        'LegacyResidualHeatingID' => 57844,
+        'LegacyLastHeatedGroupID' => 52602,
+        'LegacyConfigSnapshotID' => 29352,
     ];
 
     public function Create()
@@ -49,6 +56,9 @@ class HeatingControl extends IPSModule
         $this->RegisterPropertyBoolean('DryRun', true);
         $this->RegisterPropertyBoolean('DebugEnabled', false);
         foreach (self::DEFAULT_IDS as $name => $id) {
+            $this->RegisterPropertyInteger($name, $id);
+        }
+        foreach (self::DEFAULT_STATUS_IDS as $name => $id) {
             $this->RegisterPropertyInteger($name, $id);
         }
         $this->RegisterPropertyString('Rooms', json_encode(self::DEFAULT_ROOMS, JSON_UNESCAPED_UNICODE));
@@ -149,7 +159,9 @@ class HeatingControl extends IPSModule
             $this->queueOff($queue);
             $this->dispatch($queue, $log);
             $this->SetValue('ResidualHeating', false);
-            $this->publish(($night && !$holiday) ? 'Night shutdown' : 'Cooling mode: heating shutdown', $log);
+            $decision = ($night && !$holiday) ? 'Night shutdown' : 'Cooling mode: heating shutdown';
+            $this->publish($decision, $log);
+            $this->mirrorLegacyStatus($rooms, [], false, null, $decision, $log);
             return;
         }
         if ($mode !== $this->ReadPropertyInteger('HeatPumpModeValue') && $mode !== $this->ReadPropertyInteger('GasModeValue')) {
@@ -191,7 +203,9 @@ class HeatingControl extends IPSModule
             $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
             $this->WriteAttributeString('LastDemandRoom', end($demandRooms));
             $this->SetValue('ResidualHeating', false);
-            $this->publish('Heating demand: ' . implode(', ', $demandRooms), $log);
+            $decision = 'Heating demand: ' . implode(', ', $demandRooms);
+            $this->publish($decision, $log);
+            $this->mirrorLegacyStatus($rooms, $nextLatch, false, end($demandRooms), $decision, $log);
             return;
         }
 
@@ -214,7 +228,9 @@ class HeatingControl extends IPSModule
         $this->dispatch($queue, $log);
         $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         $this->SetValue('ResidualHeating', (bool)$purge);
-        $this->publish($purge ? 'Residual heat: ' . implode(', ', $purge) : 'Idle', $log);
+        $decision = $purge ? 'Residual heat: ' . implode(', ', $purge) : 'Idle';
+        $this->publish($decision, $log);
+        $this->mirrorLegacyStatus($rooms, $nextLatch, (bool)$purge, null, $decision, $log);
     }
 
     private function queueHeatSource(array &$q, int $mode): void
@@ -364,8 +380,26 @@ class HeatingControl extends IPSModule
             if (!((is_bool($open) && is_bool($closed)) || (is_int($open) && is_int($closed)))) {
                 throw new \InvalidArgumentException('Flap open and closed commands must have the same type');
             }
+            // Old backups and existing properties have no status fields. Only apply
+            // Berlin defaults when the original target/flap wiring still matches.
+            $defaults = ['statusID' => 0, 'legacyGroupID' => 0];
+            foreach (self::DEFAULT_ROOMS as $original) {
+                if ($original['targetID'] === $row['targetID'] && $original['flapID'] === $row['flapID']) {
+                    $defaults = $original;
+                    break;
+                }
+            }
+            $statusID = $row['statusID'] ?? $defaults['statusID'];
+            $groupID = $row['legacyGroupID'] ?? $defaults['legacyGroupID'];
+            if (!is_int($statusID) || $statusID < 0 || !is_int($groupID) || $groupID < 0) {
+                throw new \InvalidArgumentException('Invalid room status or original group ID');
+            }
+            // Symcon selectors can represent "not selected" as either 0 or 1.
+            if ($statusID === 1) $statusID = 0;
+            if ($groupID === 1) $groupID = 0;
             $rooms[] = ['name' => $row['name'], 'sensors' => $sensors, 'targetID' => $row['targetID'],
-                'flapID' => $row['flapID'], 'open' => $open, 'closed' => $closed];
+                'flapID' => $row['flapID'], 'open' => $open, 'closed' => $closed,
+                'statusID' => $statusID, 'legacyGroupID' => $groupID];
         }
         return $rooms;
     }
@@ -378,7 +412,8 @@ class HeatingControl extends IPSModule
                 'sensors' => array_map(static fn(int $id): array => ['id' => $id], $room['sensors']),
                 'targetID' => $room['targetID'], 'flapID' => $room['flapID'],
                 'flapType' => is_bool($room['open']) ? 0 : 1,
-                'open' => (int)$room['open'], 'closed' => (int)$room['closed']];
+                'open' => (int)$room['open'], 'closed' => (int)$room['closed'],
+                'statusID' => $room['statusID'], 'legacyGroupID' => $room['legacyGroupID']];
         }
         return $rows;
     }
@@ -408,6 +443,73 @@ class HeatingControl extends IPSModule
                 throw new \RuntimeException('Invalid flap values for ' . $room['name']);
             }
         }
+        $this->validateLegacyOutputs($rooms);
+    }
+
+    private function validateLegacyOutputs(array $rooms): void
+    {
+        $protected = [];
+        foreach (array_keys(self::DEFAULT_IDS) as $property) $protected[$this->id($property)] = true;
+        foreach ($rooms as $room) {
+            foreach (array_merge($room['sensors'], [$room['targetID'], $room['flapID']]) as $id) $protected[$id] = true;
+        }
+        $outputs = [];
+        $check = function (int $id, int $type, string $label) use (&$outputs, $protected): void {
+            if ($id === 0) return; // Optional output is not configured.
+            if ($id < 0 || !IPS_VariableExists($id) || IPS_GetVariable($id)['VariableType'] !== $type) {
+                throw new \RuntimeException('Invalid status variable for ' . $label . ': ' . $id);
+            }
+            if (isset($protected[$id]) || isset($outputs[$id])) {
+                throw new \RuntimeException('Status variable conflicts with another input/output: ' . $id);
+            }
+            $outputs[$id] = true;
+        };
+        foreach ($rooms as $room) {
+            $check($room['statusID'], 0, $room['name']);
+            if ($this->id('LegacyLastHeatedGroupID') > 0 && $room['legacyGroupID'] > 0
+                && (!IPS_ObjectExists($room['legacyGroupID']) || IPS_GetObject($room['legacyGroupID'])['ObjectType'] !== 0)) {
+                throw new \RuntimeException('Invalid original room group category: ' . $room['legacyGroupID']);
+            }
+        }
+        $check($this->id('LegacyResidualHeatingID'), 0, 'Residual heating');
+        $check($this->id('LegacyLastHeatedGroupID'), 1, 'Last heated group');
+        $check($this->id('LegacyActionLogID'), 3, 'Heating action log');
+        $check($this->id('LegacyConfigSnapshotID'), 3, 'Configuration snapshot');
+    }
+
+    private function mayWriteLegacyStatus(): bool
+    {
+        return $this->ReadPropertyBoolean('Enabled') && !$this->ReadPropertyBoolean('DryRun');
+    }
+
+    private function mirrorLegacyStatus(array $rooms, array $demand, bool $residual, ?string $lastRoom, string $decision, array $log): void
+    {
+        if (!$this->mayWriteLegacyStatus()) return;
+        foreach ($rooms as $room) {
+            if ($room['statusID'] > 0) $this->writeLegacyValue($room['statusID'], (bool)($demand[$room['name']] ?? false));
+            if ($lastRoom === $room['name'] && $room['legacyGroupID'] > 0 && $this->id('LegacyLastHeatedGroupID') > 0) {
+                $this->writeLegacyValue($this->id('LegacyLastHeatedGroupID'), $room['legacyGroupID']);
+            }
+        }
+        if ($this->id('LegacyResidualHeatingID') > 0) $this->writeLegacyValue($this->id('LegacyResidualHeatingID'), $residual);
+        if ($this->id('LegacyActionLogID') > 0) {
+            // Preserve the HTML list used by existing IPSView displays.
+            $lines = array_merge(['Timestamp: ' . date('d.m.Y H:i:s'), $decision], $log);
+            $html = '<ul><li>' . implode('</li><li>', array_map(
+                static fn(string $line): string => htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $lines)) . '</li></ul>';
+            $this->writeLegacyValue($this->id('LegacyActionLogID'), $html);
+        }
+    }
+
+    private function writeLegacyValue(int $id, $value): void
+    {
+        if (GetValue($id) === $value) return;
+        // Status variables may have custom actions. Set their values directly;
+        // never execute an action script or a device command for a status update.
+        if (is_bool($value)) SetValueBoolean($id, $value);
+        elseif (is_int($value)) SetValueInteger($id, $value);
+        else SetValueString($id, $value);
+        $this->debug('STATUS ' . $id . ' = ' . json_encode($value, JSON_UNESCAPED_UNICODE));
     }
 
     private function temperature(int $id, bool $checkAge = true): float
@@ -424,7 +526,10 @@ class HeatingControl extends IPSModule
         return $value;
     }
 
-    private function id(string $property): int { return $this->ReadPropertyInteger($property); }
+    private function id(string $property): int {
+        $id = $this->ReadPropertyInteger($property);
+        return array_key_exists($property, self::DEFAULT_STATUS_IDS) && $id === 1 ? 0 : $id;
+    }
     private function boolValue(string $property): bool { return GetValueBoolean($this->id($property)); }
     private function intValue(string $property): int { return GetValueInteger($this->id($property)); }
     private function floatValue(string $property): float {
@@ -488,6 +593,10 @@ class HeatingControl extends IPSModule
             'config' => $config,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $this->UpdateFormField('BackupJson', 'value', $json);
+        if ($this->mayWriteLegacyStatus() && $this->id('LegacyConfigSnapshotID') > 0) {
+            $this->validateLegacyOutputs($this->rooms());
+            $this->writeLegacyValue($this->id('LegacyConfigSnapshotID'), $json);
+        }
         return $json;
     }
 
@@ -497,7 +606,7 @@ class HeatingControl extends IPSModule
         if (!is_array($backup) || ($backup['schema'] ?? '') !== 'HeatingControl.Config.v1' || !is_array($backup['config'] ?? null)) {
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
-        $allowed = array_merge(array_keys(self::DEFAULT_IDS),
+        $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS),
             ['Enabled', 'DryRun', 'DebugEnabled', 'Rooms', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
@@ -507,7 +616,7 @@ class HeatingControl extends IPSModule
                 throw new \InvalidArgumentException('Expected Boolean ' . $name);
             }
         }
-        foreach (self::DEFAULT_IDS as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
+        foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
             throw new \InvalidArgumentException('Expected integer ID: ' . $name);
         }
         foreach (['IntervalSeconds', 'MaxSensorAgeSeconds', 'MixerOpen', 'MixerClosed',
@@ -532,4 +641,3 @@ class HeatingControl extends IPSModule
         return 'Configuration imported. Controller is disabled; verify IDs before enabling.';
     }
 }
-

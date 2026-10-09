@@ -29,9 +29,9 @@ the snapshot value into a fixed setting.
 | 14665, 46039, 53777, 10485 | `DemandActive` latches in the four room groups | The module keeps its own latch attribute. Its first decision inside the hysteresis band can differ until a threshold is crossed. |
 | 14234, 27988, 20059, 11839 | `PreviousTemp` variables | Preserved beneath the old script; the supplied script does not update them. |
 | 49037, 51626, 57981, 39468 | `PurgeActive` variables | Preserved beneath the old script; the supplied script does not update them. |
-| 53400, 50623, 43898, 36744 | Four room status variables | New instance calculates demand but does not update the old status IDs. Repoint dependent charts/views/scripts during handover. |
-| 57844, 52602, 21945 | Residual heating, last heated group, action log | New instance has its own residual state and action log; it does not update the old IDs. |
-| 29352 | Configuration snapshot JSON | Inventory artifact for migration; not a live control input. |
+| 53400, 50623, 43898, 36744 | Blue/Kitchen, Guest, Living/Dining, Master room demand statuses | Since 0.1.2 these are optional default outputs in the room editor. Updated only in live operation, preserving existing views/charts. |
+| 57844, 52602, 21945 | Residual heating, last heated group, action log | Since 0.1.2 configurable default outputs, in addition to internal instance state. The external log retains HTML formatting. |
+| 29352 | Configuration snapshot JSON | Since 0.1.2 optional default backup destination; live-mode exports replace the one-time inventory with portable module configuration. Not a live control input. |
 | 32844 | Separate `Heating Status Report` script with an error marker in the screenshot | Inspect its references and error before retiring old status variables. |
 | 16528, 49690 | Heating and residual heat charts | Check their data sources after handover. |
 | 52453, 52255 | Action scripts below the fan speed and residual delta settings | Continue to belong to the external settings; their IDs are not module properties. |
@@ -45,3 +45,17 @@ it is not an event of script 30716.
 The old mixer variable is an integer with 0=open and 100=closed in the
 configuration. Confirm actual hardware behavior before enabling writes,
 because the old heat-pump path supplied Boolean `true` to that integer output.
+
+## Original room category IDs for status compatibility
+
+`LastHeatedGroupID` stores a room category ID, not a sensor or status-variable
+ID. Verified categories are Blue/Kitchen **36698**, Guest **38782**,
+Living/Dining **25055**, and Master **16188**. They are configurable per room.
+The status objects above are variables, not links; their action markers do not
+mean that custom action scripts should be called to publish status.
+
+In DryRun, no old status variables or snapshots are changed. Night/cooling
+shutdown clears external room-demand and residual Booleans; summer and master
+bypasses leave them untouched. Missing/wrong-type mappings or collisions with
+live inputs/actuators cause evaluation to stop before commands. Clear optional
+selectors to disable individual outputs.

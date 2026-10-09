@@ -63,14 +63,16 @@ pencil icon to edit a room or **Add** to create one. Each room dialog provides:
 - Flap command type: Boolean or percentage.
 - Open and closed commands. For a Boolean flap enter 0=off or 1=on; for a
   percentage flap enter values from 0 to 100. The two commands must differ.
+- Optional existing Boolean demand-status variable and the original room group
+  category used by `LastHeatedGroupID` (added in 0.1.2).
 
 Confirm the room dialog, close the room list, then **Apply changes** in the
 instance editor. Opening or editing the popup does not apply configuration or
 send actuator commands. Applied changes follow the current Enabled/DryRun
 settings. Existing room JSON loads automatically, including both Boolean
 directions and arbitrary sensor counts. Old backups remain importable; exports
-retain the original room schema with scalar sensor IDs and typed Boolean
-commands. Invalid JSON is preserved and displayed for repair instead of being
+retain scalar sensor IDs and typed Boolean commands, plus the optional status
+and original group IDs. Invalid JSON is preserved and displayed for repair instead of being
 silently replaced with defaults.
 
 The form checkbox `DebugEnabled` controls writes to the **Heating debug log**
@@ -88,6 +90,47 @@ room list, then forces `Enabled=false` so an import cannot start the heater.
 It does not restore runtime demand latches, actuator states or debug history.
 Object IDs are specific to the source installation and must be checked before
 using the backup elsewhere.
+
+## Existing status outputs (0.1.2)
+
+Open **Existing status outputs** (German: **Vorhandene Statusausgänge**) for
+the shared outputs. Per-room mappings are in **Configure rooms...**. The
+default mappings verified against the installation screenshots are:
+
+| Room | Boolean demand status | Original room group category |
+| --- | --- | --- |
+| Living and Dining Room | 43898 | 25055 |
+| Guest Bedrooms | 50623 | 38782 |
+| Master Bedroom | 36744 | 16188 |
+| Blue Room and Kitchen | 53400 | 36698 |
+
+| Shared output | Default ID | Updated when |
+| --- | --- | --- |
+| Residual Heating | 57844 | After a successful active evaluation |
+| LastHeatedGroupID | 52602 | There is heating demand; stores the original category ID of the last demanding room |
+| Heating Action Log | 21945 | After a successful active evaluation; HTML list for existing IPSView displays |
+| Configuration snapshot | 29352 | **Export configuration** is pressed; contains the portable module backup, replacing the one-time installation inventory |
+
+All external status writes require `Enabled=true` and `DryRun=false`. A preview
+updates only the module's own variables and attributes, so it can coexist with
+the original script. Summer and master-disable bypasses leave external statuses
+untouched. Night/cooling shutdown clears room-demand and residual indicators;
+the last heated group is retained. Room Booleans mean **heating demand**, not
+flap position: during residual heat they are false even if a flap is open.
+
+Clear an optional selector (0 or 1 means unselected) to disable its output. If
+the last demanding room has no original group category selected, the legacy
+last-group value is retained. Status variables are written directly with
+`SetValue`, even if they have custom actions; they do not receive `RequestAction`
+and are not subscribed as controller inputs. Missing variables, wrong types,
+duplicate status destinations and collisions with control inputs/actuators are
+reported before any heating command is sent. Debug logging includes status writes.
+
+Existing room configurations acquire the above defaults only when their target
+and flap IDs still match the original Berlin wiring; other rooms default to no
+external status mapping. Explicit mappings, including unselected outputs, are
+preserved in backups. The old `DemandActive`, `PreviousTemp` and `PurgeActive`
+variables beneath the room groups are not updated by this compatibility feature.
 
 ## Important differences from the old script
 
@@ -110,5 +153,6 @@ legacy status variables, charts, helper scripts and script events.
 
 Run `php tests/room-editor.php` with PHP 8.1 or newer. The test uses a small
 Symcon stub to check legacy conversion, multiple sensor subscriptions, typed
-flap commands, unchanged dry-run decisions, backup/restore and invalid input.
+flap commands, unchanged dry-run decisions, backup/restore, external status
+publishing, shutdown/bypass behavior and invalid input.
 It does not replace a visual check of the native popup in the Symcon console.
