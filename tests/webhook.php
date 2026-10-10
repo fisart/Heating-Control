@@ -43,6 +43,17 @@ $GLOBALS['profiles']['RoomProfile']=['MinValue'=>18,'MaxValue'=>25];$GLOBALS['va
 check(response($m,'POST',[],['control'=>'room:0','value'=>26])['status']===422,'Native variable profile bounds respected');
 $r=response($m,'POST',[],['control'=>'room:0','value'=>24.0]);check($r['status']===200&&GetValue(12594)===24.0,'Room target written through configured variable');
 check((json_decode($m->attributes['DemandLatch'],true)['Living and Dining Room'] ?? false)===true && count($GLOBALS['directWrites'])>1,'New room target evaluated by original heating controller');
+$r=response($m,'POST',[],['control'=>'room:0','value'=>24.5],['CONTENT_TYPE'=>null,'HTTP_CONTENT_TYPE'=>'application/json; charset=utf-8']);
+check($r['status']===200&&GetValue(12594)===24.5,'Symcon HTTP_CONTENT_TYPE accepts the page JSON and applies the target');
+$r=response($m,'POST',[],['control'=>'room:0','value'=>24.0],['CONTENT_TYPE'=>'','HTTP_CONTENT_TYPE'=>'Application/JSON']);
+check($r['status']===200&&GetValue(12594)===24.0,'Empty standard content type falls back to the Symcon header');
+$before=[$GLOBALS['directWrites'],$GLOBALS['commands']];
+foreach ([['CONTENT_TYPE'=>null,'HTTP_CONTENT_TYPE'=>'text/plain'],['CONTENT_TYPE'=>null,'HTTP_CONTENT_TYPE'=>null],
+          ['CONTENT_TYPE'=>'text/plain','HTTP_CONTENT_TYPE'=>'application/json']] as $headers) {
+    check(response($m,'POST',[],['control'=>'room:0','value'=>24.5],$headers)['status']===415,'Missing/non-JSON/conflicting content type rejected');
+}
+check(response($m,'POST',[],'{oops',['CONTENT_TYPE'=>null,'HTTP_CONTENT_TYPE'=>'application/json'])['status']===422,'Symcon header still requires valid JSON');
+check([$GLOBALS['directWrites'],$GLOBALS['commands']]===$before,'Rejected header/body variants cannot change heating variables');
 $m=heatingFixture();$GLOBALS['authenticated']=true;$m->ProcessHeating();check($m->values['ResidualHeating'],'Eligible recovery active before switching');
 $r=response($m,'POST',[],['control'=>'RecoveryEnableID','value'=>false]);check($r['status']===200&&!GetValue(61003)&&!$m->values['ResidualHeating'],'Switch off stops recovery via existing controller');
 check(in_array([46921,false],$GLOBALS['directWrites'],true),'Recovery switch off stops fan');

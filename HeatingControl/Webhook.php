@@ -304,7 +304,10 @@ trait HeatingControlWebhook
             if ($method === 'POST') {
                 if (!$this->webValidPOST($server,$vault)) return $reply(403,['error'=>'Invalid origin or session-bound security token.']);
                 if (strlen($body)>16384) return $reply(413,['error'=>'Request too large.']);
-                if (strtolower(trim(explode(';',(string)($server['CONTENT_TYPE'] ?? ''),2)[0]))!=='application/json') return $reply(415,['error'=>'JSON body required.']);
+                // Symcon can expose Content-Type under HTTP_CONTENT_TYPE instead of PHP's standard key.
+                $contentType = trim((string)($server['CONTENT_TYPE'] ?? ''));
+                if ($contentType === '') $contentType = (string)($server['HTTP_CONTENT_TYPE'] ?? '');
+                if (strtolower(trim(explode(';',$contentType,2)[0]))!=='application/json') return $reply(415,['error'=>'JSON body required.']);
                 $payload = json_decode($body,true,8,JSON_THROW_ON_ERROR);
                 if (!is_array($payload)) throw new InvalidArgumentException('Invalid command body.');
                 return $reply(200,$this->webCommand($payload));

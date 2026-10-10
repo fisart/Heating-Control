@@ -118,6 +118,13 @@ Local checks: `php tests/room-editor.php`, `php tests/webhook.php`,
 Chromium: `PHP_BIN=/path/to/php node tests/webhook-ui.cjs`. It uses mocked fixture
 responses and never connects to your installed system or physical equipment.
 
+### Web control compatibility (0.2.3)
+
+JSON commands accept both PHP's `CONTENT_TYPE` and Symcon's `HTTP_CONTENT_TYPE`
+header representation. This fixes “JSON body required” when applying room target
+temperatures or other page controls. Requests still require a JSON content type,
+valid JSON, an authenticated portal session, the matching origin and CSRF token.
+
 ### Device status and sensor charts (0.2.2)
 
 **Controlled device status** separates three logical groups:
