@@ -5,8 +5,12 @@ declare(strict_types=1);
  * Berlin heating controller. This module is intentionally disabled on installation.
  * The legacy script must be deactivated before enabling this instance.
  */
+require_once __DIR__ . "/Webhook.php";
+
 class HeatingControl extends IPSModule
 {
+    use HeatingControlWebhook;
+
     private const DEFAULT_IDS = [
         'MasterDisableID' => 11098,
         'HysteresisID' => 58771,
@@ -55,6 +59,12 @@ class HeatingControl extends IPSModule
         $this->RegisterPropertyBoolean('Enabled', false);
         $this->RegisterPropertyBoolean('DryRun', true);
         $this->RegisterPropertyBoolean('DebugEnabled', false);
+        $this->RegisterPropertyBoolean('WebEnabled', false);
+        $this->RegisterPropertyInteger('VaultInstanceID', 0);
+        $this->RegisterAttributeString('WebCSRFKey', '');
+        if ($this->ReadAttributeString('WebCSRFKey') === '') $this->WriteAttributeString('WebCSRFKey', bin2hex(random_bytes(32)));
+        $this->RegisterVariableString('WebPath', 'Heating web page', '~TextBox', 50);
+        $this->RegisterTimer('HookSetup', 0, 'HC_SetupHook($_IPS[\'TARGET\']);');
         foreach (self::DEFAULT_IDS as $name => $id) {
             $this->RegisterPropertyInteger($name, $id);
         }
@@ -106,6 +116,8 @@ class HeatingControl extends IPSModule
     {
         parent::ApplyChanges();
         $this->replaceWatchers();
+        // Defer cross-instance changes until after the current ApplyChanges lifecycle.
+        $this->SetTimerInterval('HookSetup', IPS_GetKernelRunlevel() === KR_READY ? 1000 : 0);
         $active = $this->ReadPropertyBoolean('Enabled') && IPS_GetKernelRunlevel() === KR_READY;
         $this->SetTimerInterval('HeatingTimer', $active ? max(5, $this->ReadPropertyInteger('IntervalSeconds')) * 1000 : 0);
     }
@@ -634,16 +646,16 @@ class HeatingControl extends IPSModule
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
         $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS),
-            ['Enabled', 'DryRun', 'DebugEnabled', 'Rooms', 'RecoveryEnableID', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
+            ['Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
-        foreach (['DryRun', 'DebugEnabled'] as $name) {
+        foreach (['DryRun', 'DebugEnabled', 'WebEnabled'] as $name) {
             if (isset($incoming[$name]) && !is_bool($incoming[$name])) {
                 throw new \InvalidArgumentException('Expected Boolean ' . $name);
             }
         }
-        foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS, ['RecoveryEnableID' => 0]) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
+        foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS, ['RecoveryEnableID' => 0, 'VaultInstanceID' => 0]) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
             throw new \InvalidArgumentException('Expected integer ID: ' . $name);
         }
         foreach (['IntervalSeconds', 'MaxSensorAgeSeconds', 'MixerOpen', 'MixerClosed',
@@ -662,9 +674,11 @@ class HeatingControl extends IPSModule
         // Importing never starts a second controller automatically.
         $incoming['Enabled'] = false;
         $incoming['DryRun'] = true;
+        $incoming['WebEnabled'] = false; // Restores require an explicit web-access review.
         $current = json_decode(IPS_GetConfiguration($this->InstanceID), true, 512, JSON_THROW_ON_ERROR);
         IPS_SetConfiguration($this->InstanceID, json_encode(array_replace($current, $incoming), JSON_THROW_ON_ERROR));
         IPS_ApplyChanges($this->InstanceID);
         return 'Configuration imported. Controller is disabled; verify IDs before enabling.';
     }
 }
+

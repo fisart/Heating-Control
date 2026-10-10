@@ -16,6 +16,29 @@
       "caption": "Write debug log under instance"
     },
     {
+      "type": "ExpansionPanel",
+      "caption": "Heating web page",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "WebEnabled",
+          "caption": "Enable passkey-protected heating web page"
+        },
+        {
+          "type": "SelectInstance",
+          "name": "VaultInstanceID",
+          "caption": "Authentication SecretsManager (none = automatic)",
+          "validModules": [
+            "{7C5A3841-3F7B-4D2A-9E1C-5B6D8F9A0E12}"
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only."
+        }
+      ]
+    },
+    {
       "type": "NumberSpinner",
       "name": "IntervalSeconds",
       "caption": "Fallback timer (seconds)",
@@ -513,6 +536,11 @@
     }
   ],
   "actions": [
+    {
+      "type": "Button",
+      "caption": "Register / repair heating webhook",
+      "onClick": "HC_SetupHook($id);"
+    },
     {
       "type": "Button",
       "caption": "Evaluate now",

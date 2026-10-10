@@ -80,7 +80,12 @@
       "Configuration snapshot variable (updated on export, optional)": "Configuration snapshot variable (updated on export, optional)",
       "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.",
       "Residual heat recovery enable (true = enabled)": "Residual heat recovery enable (true = enabled)",
-      "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled.": "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled."
+      "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled.": "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled.",
+      "Heating web page": "Heating web page",
+      "Enable passkey-protected heating web page": "Enable passkey-protected heating web page",
+      "Authentication SecretsManager (none = automatic)": "Authentication SecretsManager (none = automatic)",
+      "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only.": "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only.",
+      "Register / repair heating webhook": "Register / repair heating webhook"
     },
     "de": {
       "Replace configuration and leave controller disabled?": "Konfiguration ersetzen und Regler deaktiviert lassen?",
@@ -162,7 +167,12 @@
       "Configuration snapshot variable (updated on export, optional)": "Variable Konfigurationssicherung (bei Export aktualisiert, optional)",
       "LastHeatedGroupID stores the original category ID selected for the last room with demand. Room status outputs are configured in the room editor.": "LastHeatedGroupID enthält die gewählte ursprüngliche Kategorie-ID des letzten Raums mit Heizbedarf. Die Raumstatusausgänge werden im Raumeditor konfiguriert.",
       "Residual heat recovery enable (true = enabled)": "Freigabe Restwärmenutzung (true = aktiviert)",
-      "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled.": "Optionaler Boolean-Schalter: false beendet die Restwärmenutzung. Normale Heizung und deren Lüftersteuerung bleiben aktiv. Keine Variable ausgewählt = Restwärmenutzung aktiviert."
+      "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled.": "Optionaler Boolean-Schalter: false beendet die Restwärmenutzung. Normale Heizung und deren Lüftersteuerung bleiben aktiv. Keine Variable ausgewählt = Restwärmenutzung aktiviert.",
+      "Heating web page": "Heizungs-Webseite",
+      "Enable passkey-protected heating web page": "Passkey-geschützte Heizungs-Webseite aktivieren",
+      "Authentication SecretsManager (none = automatic)": "SecretsManager zur Anmeldung (keine Auswahl = automatisch)",
+      "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only.": "/hook/heating_<Instanz-ID> über die HTTPS-Adresse des SecretsManager öffnen. Das Portal erkennt die Seite. Steuerung deaktiviert oder Testbetrieb = nur Lesen.",
+      "Register / repair heating webhook": "Heizungs-Webhook registrieren / reparieren"
     }
   }
 }

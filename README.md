@@ -51,7 +51,8 @@ room target variables. Their current values are read during each evaluation.
   is enabled. DryRun still suppresses all external writes; summer and master
   disable retain their bypass behavior. No variable selected (ID 0 or 1)
   preserves the existing behavior, with recovery permitted. The selected ID
-  is included in configuration backups; the module never writes to the switch.
+  is included in configuration backups; automatic heating evaluation never writes
+  to the switch. The authenticated web control page can change it explicitly.
 - Temperature freshness validation is optional and defaults to 0 (off) for
   compatibility with the script. A configured age limit prevents decisions
   from stale temperature readings.
@@ -59,6 +60,63 @@ room target variables. Their current values are read during each evaluation.
   Variables with a custom or standard action receive `RequestAction`;
   otherwise the matching `SetValue` method is used. The action log reports
   requested commands, not independently verified physical feedback.
+
+## Secured heating dashboard (0.2.0)
+
+Update both **Heating-Control** and **MyAlarmSystem** (for portal discovery).
+In the HeatingControl instance, expand **Heating web page**:
+
+1. Enable **Enable passkey-protected heating web page**.
+2. Select the existing **SecretsManager** used by your portal. With no selection,
+   exactly one enabled SecretsManager with a valid HTTPS `PortalOrigin` is required.
+3. Apply changes. The module registers `/hook/heating_<instanceID>` after the
+   instance lifecycle completes. **Register / repair heating webhook** retries
+   registration if needed. The child **Heating web page** variable shows the path
+   or registration error. Existing WebhookControl entries and pending edits are
+   preserved; conflicting ownership is never replaced.
+4. Refresh the existing portal. A **Heating Control** card appears in **Smart Home**.
+   Open it using the SecretsManager HTTPS origin; the configured backup HTTPS
+   origin is also supported. Anonymous visitors are sent to the existing
+   SecretsManager passkey login with a fixed return path.
+
+The responsive page groups room temperatures and targets, air/heat-source
+measurements, equipment feedback and residual recovery, operating switches,
+heating parameters and the latest evaluation. State refreshes every ten seconds.
+Room demand is the last evaluated latch; dry-run recovery/demand are explicitly
+marked as simulated. Equipment values always reflect the linked variables.
+The freshness warning uses `MaxSensorAgeSeconds`; 0 disables age checks.
+
+Controls update only configured room targets and the allowlisted mode, winter,
+master-disable, night, holiday, recovery, hysteresis, delta, desired fan/power
+and gas flow setpoints. There are no direct fan, pump, mixer or flap overrides.
+They retain `RequestAction` when the variable has an action, otherwise use typed
+`SetValue`. Values are type/range checked, including native numeric profile
+bounds. A confirmed variable value is not a guarantee of physical device response;
+commands awaiting feedback are shown as pending. Inputs aliased to sensors or
+actuator/status outputs are unavailable as web controls.
+
+**Disabled controller and dry run make all web controls read-only.** Web access
+is independent of the controller switch, so you can inspect a disabled instance.
+Existing winter/master bypass and holiday/night behavior still apply. True winter
+permits heating; false winter retains the existing summer bypass. The recovery
+switch affects residual heat only; the delta also affects the normal source fan
+threshold. Select `RecoveryEnableID` to control recovery through the page.
+
+Every HTML/state/control request rechecks `SEC_IsPortalAuthenticated`; authentication,
+passkey enrollment and revocation remain in SecretsManager. The page follows that
+vault's portal-session policy. Writes require the exact configured HTTPS origin,
+a session-bound CSRF token and JSON POST. No secret, cookie or passkey is placed
+in a URL or configuration backup. HTML uses a nonce Content Security Policy;
+labels and logs are rendered as text, and sensitive responses cannot be cached.
+
+Configuration backups include `WebEnabled` and `VaultInstanceID`, but exclude
+CSRF key material. Restoring a backup leaves web access and the controller disabled,
+with dry run on, so review the vault and object IDs before enabling them.
+
+Local checks: `php tests/room-editor.php`, `php tests/webhook.php`,
+`php tests/webhook.php --no-auth-api`. The optional UI suite needs Playwright and
+Chromium: `PHP_BIN=/path/to/php node tests/webhook-ui.cjs`. It uses mocked fixture
+responses and never connects to your installed system or physical equipment.
 
 ## Debug and backup
 
@@ -167,3 +225,4 @@ Symcon stub to check legacy conversion, multiple sensor subscriptions, typed
 flap commands, recovery switch transitions, normal fan control, unchanged dry-run decisions, backup/restore, external status
 publishing, shutdown/bypass behavior and invalid input.
 It does not replace a visual check of the native popup in the Symcon console.
+

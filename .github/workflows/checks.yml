@@ -1,0 +1,16 @@
+name: Heating Control checks
+on: [push, pull_request]
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          php -l HeatingControl/module.php
+          php -l HeatingControl/Webhook.php
+      - name: Heating behavior and web security
+        run: |
+          php tests/room-editor.php
+          php tests/webhook.php
+          php tests/webhook.php --no-auth-api
