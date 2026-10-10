@@ -19,6 +19,7 @@ const {chromium}=require('playwright');
    if(payload.control==='RecoveryEnableID')current.residual=payload.value;
    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,confirmed:true,state:current})});
   }
+  if(request.url().includes('?view=history')){const now=Math.floor(Date.now()/3600000)*3600;return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({name:'Outside',aggregation:'hourly',from:now-86400,to:now,points:[{time:now-3600,value:19,min:18,max:20,duration:3600},{time:now,value:20,min:19,max:21,duration:3600}],truncated:false})});}
   if(request.url().includes('?view=state'))return route.fulfill({status:revoked?401:200,contentType:'application/json',body:JSON.stringify(revoked?{error:'Passkey session expired.'}:current)});
   return route.fulfill({status:200,headers:fixture.page.headers,body:fixture.page.body});
  });
@@ -27,6 +28,15 @@ const {chromium}=require('playwright');
  assert.equal(await page.locator('#rooms article').count(),4);
  assert.equal(await page.locator('#portal').getAttribute('href'),'/hook/secrets_7?portal=1');
  assert.equal(await page.locator('#environment .reading').count(),6);
+ assert.equal(await page.locator('#heat-pump-devices .device-row').count(),4);
+ assert.equal(await page.locator('#gas-devices .device-row').count(),5);
+ assert.equal(await page.locator('#airflow-devices .device-row').count(),7);
+ assert.equal(await page.locator('#rooms article').nth(1).locator('.sensor-value').count(),0);
+ await page.locator('#environment [data-sensor-id="25911"]').click();
+ await page.locator('#chart-plot circle').first().waitFor();
+ assert.equal(await page.locator('#chart-plot circle').count(),2);
+ await page.locator('#chart-period').selectOption('7d');
+ await page.locator('#chart-close').click();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.screenshot({path:'/tmp/heating-dashboard-desktop.png',fullPage:true});
  await page.locator('#rooms article').first().locator('input').fill('24.5');

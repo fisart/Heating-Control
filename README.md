@@ -118,6 +118,48 @@ Local checks: `php tests/room-editor.php`, `php tests/webhook.php`,
 Chromium: `PHP_BIN=/path/to/php node tests/webhook-ui.cjs`. It uses mocked fixture
 responses and never connects to your installed system or physical equipment.
 
+### Device status and sensor charts (0.2.1)
+
+**Controlled device status** separates three logical groups:
+
+- **Heat pump:** activation, heating/cooling selection, current power and requested power.
+- **Gas heating:** circulation pump, mixer open/closed/intermediate position,
+  current flow target and heating/idle flow settings. Mixer interpretation uses
+  the configured `MixerOpen` and `MixerClosed` values.
+- **Airflow & room flaps:** fan activation, current/requested fan speed, and
+  each room's flap open/closed/intermediate state and percentage where applicable.
+
+These are the current linked variable values; viewing them never sends commands.
+
+Underlined temperature readings open a sensor-history popup. Charts are available
+only for configured heating temperature sensors whose logging is currently enabled
+in exactly one available **Archive Control** with standard aggregation. Unrecorded
+values stay plain text; the module does not enable logging. Missing archive APIs,
+archive errors, ambiguous archives and temperature sensors configured as counters
+make charts unavailable without disabling the rest of the page.
+
+A room with one sensor links its displayed actual temperature to that sensor.
+For multiple sensors, the calculated average stays plain text and individual sensor
+values appear below it. Only the individual recorded sensors are clickable.
+Calculated source-minus-incoming differences are not archived variables and stay
+plain text. Setpoints and actuator values do not expose temperature-history links.
+
+The popup offers 6 hours, 24 hours, 7 days and 30 days; short views use existing
+hourly averages and the 30-day view uses daily averages. The shaded area shows the
+recorded minimum/maximum range, with a table of recorded intervals. Timestamps
+use the browser timezone. Empty periods are shown explicitly; no live readings
+are inserted into history, and missing intervals are not connected across gaps.
+Archive reads and responses are bounded (at most 512 intervals), use pre-aggregation
+and do not scan unlimited raw data. Archive eligibility is rechecked on every
+chart request; stale links cannot bypass disabled logging. The same SecretsManager
+session and HTTPS-origin checks protect chart requests, including during dry run
+or with the controller disabled.
+
+Additional local checks: `php tests/archive.php`,
+`php tests/archive.php --no-archive-api`. `node tests/page-dom.cjs` requires jsdom
+and checks page interactions without a browser; it does not verify browser layout
+or CSP enforcement. The optional Playwright suite also exercises the chart popup.
+
 ## Debug and backup
 
 ### Room editor (0.1.1)

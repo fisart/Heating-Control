@@ -6,10 +6,12 @@ declare(strict_types=1);
  * The legacy script must be deactivated before enabling this instance.
  */
 require_once __DIR__ . "/Webhook.php";
+require_once __DIR__ . "/Archive.php";
 
 class HeatingControl extends IPSModule
 {
     use HeatingControlWebhook;
+    use HeatingControlArchive;
 
     private const DEFAULT_IDS = [
         'MasterDisableID' => 11098,

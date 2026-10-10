@@ -172,12 +172,13 @@ trait HeatingControlWebhook
         return $controls;
     }
 
-    private function webReading(int $id): array
+    private function webReading(int $id, bool $sensor = false): array
     {
-        if ($id <= 1 || !IPS_VariableExists($id)) return ['value'=>null, 'updated'=>null, 'stale'=>false];
+        if ($id <= 1 || !IPS_VariableExists($id)) return ['id'=>$id, 'name'=>'Unavailable', 'chart'=>false, 'value'=>null, 'updated'=>null, 'stale'=>false];
         $meta = IPS_GetVariable($id);
         $age = $this->ReadPropertyInteger('MaxSensorAgeSeconds');
-        return ['value'=>GetValue($id), 'updated'=>$meta['VariableUpdated'] ?? null,
+        return ['id'=>$id, 'name'=>IPS_GetName($id), 'chart'=>$sensor && $this->webArchiveForSensor($id) > 0,
+            'value'=>GetValue($id), 'updated'=>$meta['VariableUpdated'] ?? null,
             'stale'=>$age > 0 && time() - ($meta['VariableUpdated'] ?? 0) > $age];
     }
 
@@ -190,18 +191,18 @@ trait HeatingControlWebhook
         $latch = json_decode($this->ReadAttributeString('DemandLatch'), true) ?: [];
         $roomData = [];
         foreach ($rooms as $index=>$room) {
-            $sensors = array_map(fn($id)=>$this->webReading($id),$room['sensors']);
+            $sensors = array_map(fn($id)=>$this->webReading($id,true),$room['sensors']);
             $numbers = array_filter(array_column($sensors,'value'),fn($v)=>is_int($v)||is_float($v));
             $flap = $this->webReading($room['flapID']);
             $roomData[] = ['name'=>$room['name'], 'key'=>'room:'.$index,
                 'actual'=>count($numbers) === count($sensors) ? array_sum($numbers)/count($numbers) : null,
                 'sensors'=>$sensors, 'target'=>$controls['room:'.$index]['value'],
                 'demand'=>array_key_exists($room['name'],$latch) ? (bool)$latch[$room['name']] : null,
-                'flap'=>$flap, 'flapOpen'=>$flap['value'] === null ? null : $flap['value'] === $room['open']];
+                'flap'=>$flap, 'flapClosed'=>$flap['value'] === null ? null : $flap['value'] === $room['closed'], 'flapOpen'=>$flap['value'] === null ? null : $flap['value'] === $room['open']];
         }
         $environment = $equipment = [];
         foreach (['OutsideTempID','IncomingAirTempID','OutgoingAirTempID','HeatExchangerTempID','HeatPumpTempID'] as $key) {
-            $environment[$key] = $this->webReading($this->id($key));
+            $environment[$key] = $this->webReading($this->id($key),true);
         }
         foreach (['FanOnID','FanSpeedID','HeatPumpOnID','HeatPumpPowerID','HeatPumpHeatModeID',
                   'GasPumpID','GasMixerID','GasFlowTargetID','AtHomeID'] as $key) $equipment[$key] = $this->webReading($this->id($key));
@@ -211,6 +212,7 @@ trait HeatingControlWebhook
             'decision'=>$this->GetValue('DecisionStatus'), 'log'=>$this->GetValue('ActionLog'),
             'residual'=>$this->GetValue('ResidualHeating'), 'lastRoom'=>$this->ReadAttributeString('LastDemandRoom'),
             'recoveryMinimum'=>$this->ReadPropertyFloat('ResidualMinOutgoingTemp'),
+            'mixerOpen'=>$this->ReadPropertyInteger('MixerOpen'), 'mixerClosed'=>$this->ReadPropertyInteger('MixerClosed'),
             'rooms'=>$roomData, 'environment'=>$environment, 'equipment'=>$equipment, 'controls'=>$controls];
     }
 
@@ -309,6 +311,7 @@ trait HeatingControlWebhook
             }
             if (($query['view'] ?? '') === 'state') return $reply(200,array_merge($this->webState(),[
                 'csrf'=>$this->webCSRF($vault,(int)floor(time()/3600))]));
+            if (($query['view'] ?? '') === 'history') return $reply(200,$this->webHistory($query));
             if (isset($query['view'])) return $reply(404,['error'=>'Unknown view.']);
             $nonce = base64_encode(random_bytes(24));
             $escape = static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');

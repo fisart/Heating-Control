@@ -9,8 +9,23 @@ jobs:
         run: |
           php -l HeatingControl/module.php
           php -l HeatingControl/Webhook.php
+          php -l HeatingControl/Archive.php
       - name: Heating behavior and web security
         run: |
           php tests/room-editor.php
           php tests/webhook.php
           php tests/webhook.php --no-auth-api
+          php tests/archive.php
+          php tests/archive.php --no-archive-api
+
+  page-interactions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install DOM test dependency
+        run: npm install --no-save --no-package-lock --no-audit --no-fund jsdom
+      - name: Page interactions
+        run: node tests/page-dom.cjs
