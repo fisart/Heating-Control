@@ -118,7 +118,7 @@ Local checks: `php tests/room-editor.php`, `php tests/webhook.php`,
 Chromium: `PHP_BIN=/path/to/php node tests/webhook-ui.cjs`. It uses mocked fixture
 responses and never connects to your installed system or physical equipment.
 
-### Device status and sensor charts (0.2.1)
+### Device status and sensor charts (0.2.2)
 
 **Controlled device status** separates three logical groups:
 
@@ -144,13 +144,22 @@ values appear below it. Only the individual recorded sensors are clickable.
 Calculated source-minus-incoming differences are not archived variables and stay
 plain text. Setpoints and actuator values do not expose temperature-history links.
 
-The popup offers 6 hours, 24 hours, 7 days and 30 days; short views use existing
-hourly averages and the 30-day view uses daily averages. The shaded area shows the
-recorded minimum/maximum range, with a table of recorded intervals. Timestamps
-use the browser timezone. Empty periods are shown explicitly; no live readings
-are inserted into history, and missing intervals are not connected across gaps.
-Archive reads and responses are bounded (at most 512 intervals), use pre-aggregation
-and do not scan unlimited raw data. Archive eligibility is rechecked on every
+The popup names the sensor in its heading and chart caption, with the room or
+environmental role to distinguish generic variable names such as “Wert”.
+The period selector offers **Last hour**, 6 hours, 24 hours, 7 days and 30 days.
+A separate **Resolution** selector offers Automatic, Recorded readings, Hourly
+averages and Daily averages for each period. Automatic uses recorded readings for
+Last hour, hourly averages for 6 hours/24 hours/7 days, and daily averages for 30 days.
+The chart displays the selected rolling time window. Averaged edge intervals may
+extend beyond it because Symcon supplies whole hour/day intervals; their original
+timestamps remain visible in tooltips and the interval table.
+The shaded area in averaged views shows the recorded minimum/maximum range.
+Timestamps use the browser timezone. Empty periods are shown explicitly; no live
+readings are inserted into history, and missing intervals are not connected across gaps.
+Archive reads and responses are bounded (at most 800 records), including raw
+readings. This accommodates the full 30 days at hourly resolution. More densely
+recorded histories show the latest 800 readings and explicitly label truncation.
+Archive eligibility is rechecked on every
 chart request; stale links cannot bypass disabled logging. The same SecretsManager
 session and HTTPS-origin checks protect chart requests, including during dry run
 or with the controller disabled.

@@ -13,6 +13,7 @@ function IPS_GetVariableProfile($name) { return $GLOBALS['profiles'][$name]; }
 if (($argv[1] ?? '') !== '--no-archive-api') {
 function AC_GetLoggingStatus($archive,$id) { if (!empty($GLOBALS['archiveThrows'])) throw new RuntimeException('Archive unavailable'); return $GLOBALS['archiveLogging'][$archive][$id] ?? false; }
 function AC_GetAggregationType($archive,$id) { return $GLOBALS['archiveTypes'][$archive][$id] ?? 0; }
+function AC_GetLoggedValues($archive,$id,$from,$to,$limit) { $GLOBALS['historyCalls'][]=[$archive,$id,'recorded',$from,$to,$limit]; return $GLOBALS['loggedValues'][$id] ?? []; }
 function AC_GetAggregatedValues($archive,$id,$level,$from,$to,$limit) { $GLOBALS['historyCalls'][]=[$archive,$id,$level,$from,$to,$limit]; return $GLOBALS['archiveValues'][$id] ?? []; }
 }
 if (($argv[1] ?? '') !== '--no-auth-api') {
@@ -43,7 +44,7 @@ function heatingFixture(): HeatingControl {
     $m->properties['RecoveryEnableID']=61003;$m->properties['WebEnabled']=true;
     $m->properties['Enabled']=true;$m->properties['DryRun']=false;
     $m->attributes['LastDemandRoom']='Blue Room and Kitchen';
-    $GLOBALS['archiveLogging']=[];$GLOBALS['archiveTypes']=[];$GLOBALS['archiveValues']=[];$GLOBALS['historyCalls']=[];$GLOBALS['archiveThrows']=false;
+    $GLOBALS['archiveLogging']=[];$GLOBALS['archiveTypes']=[];$GLOBALS['archiveValues']=[];$GLOBALS['loggedValues']=[];$GLOBALS['historyCalls']=[];$GLOBALS['archiveThrows']=false;
     $GLOBALS['instanceModules'][9]='{43192F0B-135B-4CE7-A0A7-1475603F3060}';
     $GLOBALS['authenticated']=false;$GLOBALS['authThrows']=false;$GLOBALS['pendingChanges']=false;
     $_COOKIE=['SEC_PORTAL_V2_7'=>'fixture-session'];

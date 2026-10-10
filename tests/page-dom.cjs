@@ -16,7 +16,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
   calls.push({url,options});const u=new URL(url,w.location.href);
   if(u.searchParams.get('view')==='history'){
    if(resolveHistory)return new Promise(resolve=>{resolveHistory.resolve=resolve;});
-   return {ok:!expired,status:expired?401:200,json:async()=>expired?{error:'Passkey session expired.'}:{name:'Outside',aggregation:'hourly',from:stamp-86400,to:stamp+1,truncated:false,points:empty?[]:[{time:stamp-7200,value:19,min:18.8,max:19.2,duration:3600},{time:stamp-3600,value:20,min:19.8,max:20.2,duration:3600},{time:stamp,value:21,min:20.8,max:21.2,duration:3600}]}};
+   return {ok:!expired,status:expired?401:200,json:async()=>expired?{error:'Passkey session expired.'}:{name:'Outside temperature · Outdoor sensor',range:u.searchParams.get('range'),aggregation:u.searchParams.get('resolution')==='auto'?(u.searchParams.get('range')==='1h'?'recorded':'hourly'):u.searchParams.get('resolution'),from:stamp-86400,to:stamp+1,truncated:false,points:empty?[]:[{time:stamp-7200,value:19,min:18.8,max:19.2,duration:3600},{time:stamp-3600,value:20,min:19.8,max:20.2,duration:3600},{time:stamp,value:21,min:20.8,max:21.2,duration:3600}]}};
   }
   return {ok:true,status:200,json:async()=>state};
  };
@@ -32,12 +32,23 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.equal(d.querySelectorAll('#rooms article')[1].querySelectorAll('.sensor-value').length,0,'Unrecorded room has plain temperature');
  d.querySelector('#environment [data-sensor-id="25911"]').click();await settle();
  assert.equal(d.querySelector('#sensor-chart').open,true);
+ assert.equal(d.querySelector('#chart-title').textContent,'Outside temperature · Outdoor sensor');
+ assert.ok(d.querySelector('.chart-sensor-name').textContent.includes('Outside temperature · Outdoor sensor'));
  assert.equal(d.querySelectorAll('#chart-plot circle').length,3);
  assert.equal(d.querySelectorAll('#chart-rows tr').length,3);
  assert.ok(calls.at(-1).url.includes('id=25911&range=24h'));
  assert.ok(d.querySelector('#chart-summary').textContent.includes('18.80'));
  d.querySelector('#chart-period').value='7d';d.querySelector('#chart-period').dispatchEvent(new w.Event('change'));await settle();
  assert.ok(calls.at(-1).url.includes('range=7d'));
+ d.querySelector('#chart-period').value='1h';d.querySelector('#chart-period').dispatchEvent(new w.Event('change'));await settle();
+ assert.ok(calls.at(-1).url.includes('range=1h&resolution=auto'));
+ assert.ok(d.querySelector('#chart-status').textContent.includes('Recorded readings'));
+ assert.equal(d.querySelector('#chart-details th:nth-child(2)').textContent,'Temperature °C');
+ for(const resolution of ['hourly','daily','recorded']){
+  d.querySelector('#chart-resolution').value=resolution;d.querySelector('#chart-resolution').dispatchEvent(new w.Event('change'));await settle();
+  assert.ok(calls.at(-1).url.includes('range=1h&resolution='+resolution));
+  assert.ok(d.querySelector('.chart-sensor-name').textContent.includes(resolution==='recorded'?'Recorded readings':resolution==='hourly'?'Hourly averages':'Daily averages'));
+ }
  empty=true;d.querySelector('#chart-period').value='6h';d.querySelector('#chart-period').dispatchEvent(new w.Event('change'));await settle();
  assert.ok(d.querySelector('#chart-plot').textContent.includes('No recorded values'));
  assert.equal(d.querySelectorAll('#chart-plot circle').length,0);
@@ -59,5 +70,5 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#message a').textContent.includes('Sign in again'));
  assert.equal(d.querySelectorAll('#rooms button:enabled:not(.sensor-value),#controls button:enabled').length,0);
  assert.deepEqual(errors,[]);
- dom.window.close();console.log('Page DOM: device groups, archived-only links, chart periods, empty results, multi-sensor values, escaping and expired sessions passed.');
+ dom.window.close();console.log('Page DOM: device groups, archived-only links, sensor names, chart periods and resolutions, empty results, multi-sensor values, escaping and expired sessions passed.');
 })().catch(e=>{console.error(e);process.exit(1);});

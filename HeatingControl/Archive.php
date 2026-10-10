@@ -5,6 +5,21 @@ declare(strict_types=1);
 trait HeatingControlArchive
 {
     private const ARCHIVE_MODULE = '{43192F0B-135B-4CE7-A0A7-1475603F3060}';
+    private const HISTORY_LIMIT = 800;
+
+    private function webSensorName(int $id): string
+    {
+        $name = IPS_GetName($id);
+        $labels = ['OutsideTempID'=>'Outside temperature', 'IncomingAirTempID'=>'Incoming air',
+            'OutgoingAirTempID'=>'Outgoing air', 'HeatExchangerTempID'=>'Heat exchanger', 'HeatPumpTempID'=>'Heat pump temperature'];
+        foreach ($labels as $key=>$label) {
+            if ($this->id($key) === $id) return $label === $name ? $name : $label . ' · ' . $name;
+        }
+        foreach ($this->rooms() as $room) {
+            if (in_array($id, $room['sensors'], true)) return $room['name'] === $name ? $name : $room['name'] . ' · ' . $name;
+        }
+        return $name;
+    }
 
     private function webArchiveForSensor(int $id): int
     {
@@ -36,23 +51,36 @@ trait HeatingControlArchive
         foreach ($this->rooms() as $room) $allowed = array_merge($allowed, $room['sensors']);
         if (!in_array($id, $allowed, true)) throw new InvalidArgumentException('This variable is not a configured heating sensor.');
         $range = $query['range'] ?? '24h';
-        if (!is_string($range) || !in_array($range, ['6h', '24h', '7d', '30d'], true)) {
-            throw new InvalidArgumentException('Select 6 hours, 24 hours, 7 days or 30 days.');
+        if (!is_string($range) || !in_array($range, ['1h', '6h', '24h', '7d', '30d'], true)) {
+            throw new InvalidArgumentException('Select 1 hour, 6 hours, 24 hours, 7 days or 30 days.');
         }
+        $resolution = $query['resolution'] ?? 'auto';
+        if (!is_string($resolution) || !in_array($resolution, ['auto', 'recorded', 'hourly', 'daily'], true)) {
+            throw new InvalidArgumentException('Select automatic, recorded, hourly or daily resolution.');
+        }
+        $aggregation = $resolution === 'auto' ? ($range === '1h' ? 'recorded' : ($range === '30d' ? 'daily' : 'hourly')) : $resolution;
         $archive = $this->webArchiveForSensor($id);
         if ($archive === 0) throw new InvalidArgumentException('This sensor is not recorded in an available standard Symcon archive.');
-        $hours = ['6h'=>6, '24h'=>24, '7d'=>168, '30d'=>720][$range];
+        $hours = ['1h'=>1, '6h'=>6, '24h'=>24, '7d'=>168, '30d'=>720][$range];
         $end = time();
-        $daily = $range === '30d';
-        $start = $daily ? strtotime('midnight', $end - $hours * 3600) : (int)(floor(($end - $hours * 3600) / 3600) * 3600);
-        // Hourly/daily pre-aggregation bounds the work; no unbounded raw-history scan.
-        $values = AC_GetAggregatedValues($archive, $id, $daily ? 1 : 0, $start, $end, 513);
+        $raw = $aggregation === 'recorded';
+        $daily = $aggregation === 'daily';
+        $start = $end - $hours * 3600;
+        $queryStart = $raw ? $start : ($daily ? strtotime('midnight', $start) : (int)(floor($start / 3600) * 3600));
+        // Every read has a fixed time window and record limit; hourly aggregation fits the full 30 days.
+        if ($raw && !function_exists('AC_GetLoggedValues')) throw new RuntimeException('Recorded readings are unavailable.');
+        $values = $raw ? AC_GetLoggedValues($archive, $id, $queryStart, $end, self::HISTORY_LIMIT + 1)
+            : AC_GetAggregatedValues($archive, $id, $daily ? 1 : 0, $queryStart, $end, self::HISTORY_LIMIT + 1);
         if (!is_array($values)) throw new RuntimeException('Archive returned an invalid history response.');
-        $truncated = count($values) > 512;
+        $truncated = count($values) > self::HISTORY_LIMIT;
         $points = [];
-        foreach (array_slice($values, 0, 512) as $row) {
+        foreach (array_slice($values, 0, self::HISTORY_LIMIT) as $row) {
+            if ($raw && is_array($row)) {
+                $row['Avg'] = $row['Value'] ?? null;
+                $row['Min'] = $row['Max'] = $row['Avg'];
+            }
             if (!is_array($row) || !is_int($row['TimeStamp'] ?? null)
-                || $row['TimeStamp'] < $start || $row['TimeStamp'] > $end
+                || $row['TimeStamp'] < $queryStart || $row['TimeStamp'] > $end
                 || (!is_float($row['Avg'] ?? null) && !is_int($row['Avg'] ?? null)) || !is_finite((float)$row['Avg'])) continue;
             $avg = (float)$row['Avg'];
             $min = $row['Min'] ?? $avg;
@@ -60,11 +88,11 @@ trait HeatingControlArchive
             if ((!is_float($min) && !is_int($min)) || !is_finite((float)$min)) $min = $avg;
             if ((!is_float($max) && !is_int($max)) || !is_finite((float)$max)) $max = $avg;
             $points[] = ['time'=>$row['TimeStamp'], 'value'=>$avg, 'min'=>(float)$min, 'max'=>(float)$max,
-                'duration'=>max(1, min(172800, (int)($row['Duration'] ?? ($daily ? 86400 : 3600))))];
+                'duration'=>max(1, min(172800, (int)($row['Duration'] ?? ($raw ? 1 : ($daily ? 86400 : 3600)))))];
         }
         usort($points, static fn($a, $b)=>$a['time'] <=> $b['time']);
-        return ['id'=>$id, 'name'=>IPS_GetName($id), 'unit'=>'°C', 'range'=>$range,
-            'from'=>$start, 'to'=>$end, 'aggregation'=>$daily ? 'daily' : 'hourly',
-            'points'=>$points, 'truncated'=>$truncated];
+        return ['id'=>$id, 'name'=>$this->webSensorName($id), 'unit'=>'°C', 'range'=>$range,
+            'from'=>$start, 'to'=>$end, 'aggregation'=>$aggregation, 'resolution'=>$resolution,
+            'points'=>$points, 'truncated'=>$truncated, 'limit'=>self::HISTORY_LIMIT];
     }
 }

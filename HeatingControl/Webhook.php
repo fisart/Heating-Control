@@ -177,7 +177,7 @@ trait HeatingControlWebhook
         if ($id <= 1 || !IPS_VariableExists($id)) return ['id'=>$id, 'name'=>'Unavailable', 'chart'=>false, 'value'=>null, 'updated'=>null, 'stale'=>false];
         $meta = IPS_GetVariable($id);
         $age = $this->ReadPropertyInteger('MaxSensorAgeSeconds');
-        return ['id'=>$id, 'name'=>IPS_GetName($id), 'chart'=>$sensor && $this->webArchiveForSensor($id) > 0,
+        return ['id'=>$id, 'name'=>$sensor ? $this->webSensorName($id) : IPS_GetName($id), 'chart'=>$sensor && $this->webArchiveForSensor($id) > 0,
             'value'=>GetValue($id), 'updated'=>$meta['VariableUpdated'] ?? null,
             'stale'=>$age > 0 && time() - ($meta['VariableUpdated'] ?? 0) > $age];
     }
