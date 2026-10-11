@@ -8,13 +8,23 @@ hysteresis 58771 (then 1 °C), residual delta 28538 (then 6 K), desired fan
 speed 48646 (then 90), desired heat pump power 59800 (then 83), and the four
 room target variables. Their current values are read during each evaluation.
 
+## LichtBlick prices and source recommendation
+
+Version **0.3.0** adds a separate **LichtBlickElectricityPrice** instance with
+postcode price retrieval, configurable threshold, editable safety margin
+(default 25%), hysteresis, source/status outputs, configuration import/export,
+a debug string and opt-in daily threshold learning from matched consumption.
+See [setup and calculation rules](docs/lichtblick-electricity-price.md).
+It publishes recommendations for air heating; it does not operate equipment.
+
 ## Proposed automatic source selection
 
 See the [heating source selection design](docs/heating-source-selection-design.md)
 for the proposed LichtBlick price importer, gas/heat-pump decision module,
 independent hot-water and radiator coordination, holiday protection,
 conservative switching criteria and January–February 2025 validation.
-This is a design proposal; automatic source selection has not been implemented.
+The full transfer/controller integration remains a proposal. The new price module
+implements a provisional economic recommendation and guarded holiday-day learner.
 
 ## Installation and safe handover
 

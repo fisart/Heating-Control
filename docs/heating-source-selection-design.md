@@ -1,6 +1,6 @@
 # Automatic selection of heat pump or gas — proposed design
 
-Prepared 11 October 2026. Revised to include domestic hot water, the separate radiator circuit, holiday protection and the supplemental January–February 2025 radiator/eBUS validation. Status: proposal for agreement; no control implementation or live heating changes have been made.
+Prepared 11 October 2026. Revised to include domestic hot water, the separate radiator circuit, holiday protection and the supplemental January–February 2025 radiator/eBUS validation. Status: controller/source-transfer proposal for agreement. Version 0.3.0 implements a separate price-based recommendation and initial holiday-day threshold learner; no live heating changes have been made.
 
 ## Recommendation
 
@@ -8,11 +8,25 @@ Use three principal IP-Symcon modules: a reusable electricity-price importer, an
 
 The selector requests a heat source and a heat-pump capacity command **for the air-heating circuit only**. HeatingControl evaluates the independent air, radiator and domestic-hot-water services, coordinates their shared boiler needs, and decides whether the air request can be applied. Selecting the heat pump for air heating never means disabling the gas boiler as a whole.
 
+## First implementation: price recommendation
+
+[LichtBlickElectricityPrice](lichtblick-electricity-price.md), added in library 0.3.0,
+combines the reusable price feed with a provisional threshold recommendation and
+an opt-in daily learner. Its **SafetyMarginPercent** is editable in the instance
+configuration form, defaults to 25%, and is included in configuration backups.
+Daily accepted updates change the original threshold, never the chosen margin.
+Learning uses matched historical consumption, stable holiday targets and fixed
+capacity; unsuitable days retain the threshold. Recommendations are not wired
+to HeatingControl. Actual source transfer, capacity selection, comfort/moisture
+protection and coordination of radiator/DHW loads remain to be implemented
+under this design. The price module's hysteresis is only an economic band;
+equipment minimum run/off times belong in the future controller.
+
 ## Existing implementation reviewed
 
 Repository: https://github.com/fisart/Heating-Control
 
-The default branch currently reports library version 0.2.4, build 9. The reviewed `HeatingControl/module.php` blob SHA is `0d990b2922f4edcb28bee34e6976f31c58b594a4`.
+The original controller review used library version 0.2.4, build 9; the price-module addition raises the library to 0.3.0, build 10 without changing that controller. The reviewed `HeatingControl/module.php` blob SHA is `0d990b2922f4edcb28bee34e6976f31c58b594a4`.
 
 - Existing source selection is `OperatingModeID` (Berlin object 41085): 0 cooling, 1 heat pump, 2 gas.
 - Existing manual desired capacity is `HeatPumpDesiredPowerID` (59800). The physical capacity command is `HeatPumpPowerID` (19207).

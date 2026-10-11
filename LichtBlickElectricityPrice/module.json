@@ -1,0 +1,13 @@
+{
+  "id": "{5C0EEDE9-5C09-4F18-BCD1-CE65CFA7B1B7}",
+  "name": "LichtBlickElectricityPrice",
+  "type": 3,
+  "vendor": "Artur Fischer",
+  "aliases": [
+    "LichtBlick Electricity Prices and Heating Recommendation"
+  ],
+  "parentRequirements": [],
+  "childRequirements": [],
+  "implemented": [],
+  "prefix": "LBEP"
+}

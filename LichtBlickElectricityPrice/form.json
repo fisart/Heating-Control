@@ -1,0 +1,346 @@
+{
+  "elements": [
+    {
+      "type": "Label",
+      "caption": "Price-only recommendation for air heating. This instance does not command equipment."
+    },
+    {
+      "type": "CheckBox",
+      "name": "Enabled",
+      "caption": "Enable prices and source recommendation"
+    },
+    {
+      "type": "ValidationTextBox",
+      "name": "PostalCode",
+      "caption": "Delivery postcode (5 digits)"
+    },
+    {
+      "type": "CheckBox",
+      "name": "TariffVerified",
+      "caption": "I have checked that these prices, including correction, match my variable gross tariff"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "ThresholdCt",
+      "caption": "Break-even electricity threshold (ct/kWh)",
+      "minimum": 0,
+      "maximum": 1000,
+      "digits": 3
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "SafetyMarginPercent",
+      "caption": "Safety margin (%) \u2014 default 25; editable",
+      "minimum": 0,
+      "maximum": 95,
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "HysteresisCt",
+      "caption": "Switching hysteresis below safe threshold (ct/kWh)",
+      "minimum": 0,
+      "maximum": 100,
+      "digits": 3
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Price retrieval",
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "FetchIntervalMinutes",
+          "caption": "Fetch interval (minutes)",
+          "minimum": 5,
+          "maximum": 1440
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "MaxCacheAgeHours",
+          "caption": "Maximum cache age (hours)",
+          "minimum": 1,
+          "maximum": 48
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "PriceCorrectionCt",
+          "caption": "Verified constant tariff correction (ct/kWh)",
+          "minimum": -100,
+          "maximum": 100,
+          "digits": 3
+        },
+        {
+          "type": "Label",
+          "caption": "Uses the public LichtBlick regional price display. Enter your postcode and compare against your contract/app. Percentage-based or time-varying corrections are not supported."
+        }
+      ]
+    },
+    {
+      "type": "CheckBox",
+      "name": "DebugEnabled",
+      "caption": "Write debug string below instance"
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Daily threshold learner",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "DailyLearningEnabled",
+          "caption": "Calculate threshold from previous day at/after 00:10 Berlin time"
+        },
+        {
+          "type": "Label",
+          "caption": "Opt-in initial learner: holiday heating only, no significant radiator/DHW load, stable room targets and temperatures, fixed reference capacity. Missing or unsuitable history retains the threshold."
+        },
+        {
+          "type": "SelectInstance",
+          "name": "ArchiveID",
+          "caption": "Archive Control",
+          "validModules": [
+            "{43192F0B-135B-4CE7-A0A7-1475603F3060}"
+          ]
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "GasPriceCt",
+          "caption": "Gas variable gross price (ct/kWh)",
+          "minimum": 0.001,
+          "maximum": 100,
+          "digits": 3
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "GasKWhPerM3",
+          "caption": "Gas conversion (kWh/m\u00b3)",
+          "minimum": 1,
+          "maximum": 20,
+          "digits": 6
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "ReferenceCapacityPercent",
+          "caption": "Heat-pump reference power command (%)",
+          "minimum": 1,
+          "maximum": 100,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "MinimumReferenceDays",
+          "caption": "Required suitable opposite-source days",
+          "minimum": 1,
+          "maximum": 14
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "ElectricalBackgroundKW",
+          "caption": "Shared electric background load (kW)",
+          "minimum": 0,
+          "maximum": 10,
+          "digits": 3
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasCounterID",
+          "caption": "Cumulative gas counter"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpCounterID",
+          "caption": "Cumulative heat-pump/shared circuit counter"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "AuxCounterID",
+          "caption": "Cumulative air/gas auxiliary circuit counter"
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "GasCounterScale",
+          "caption": "Gas counter multiplier to m\u00b3",
+          "minimum": 1e-06,
+          "maximum": 100,
+          "digits": 6
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpCounterScale",
+          "caption": "Heat-pump counter multiplier to kWh",
+          "minimum": 1e-06,
+          "maximum": 100,
+          "digits": 6
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "AuxCounterScale",
+          "caption": "Auxiliary counter multiplier to kWh",
+          "minimum": 1e-06,
+          "maximum": 100,
+          "digits": 6
+        },
+        {
+          "type": "SelectVariable",
+          "name": "SourceModeID",
+          "caption": "Source mode: 1 heat pump / 2 gas"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HolidayID",
+          "caption": "Holiday status: true = holiday"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "OutsideTemperatureID",
+          "caption": "Outside temperature"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpOnID",
+          "caption": "Heat pump on status"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpHeatModeID",
+          "caption": "Heat pump heating mode: true = heating"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpCapacityID",
+          "caption": "Actual heat-pump power command (%)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasAirPumpID",
+          "caption": "Gas air-exchanger pump status"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "RadiatorPumpID",
+          "caption": "Radiator circuit pump status"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HotWaterPumpID",
+          "caption": "DHW storage load pump (not circulation pump)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "StorageTemperatureID",
+          "caption": "DHW storage temperature"
+        },
+        {
+          "type": "List",
+          "name": "LearningRooms",
+          "caption": "Air-heated rooms (all relevant rooms)",
+          "rowCount": 4,
+          "add": true,
+          "delete": true,
+          "columns": [
+            {
+              "name": "name",
+              "caption": "Room",
+              "width": "auto",
+              "add": "",
+              "edit": {
+                "type": "ValidationTextBox"
+              }
+            },
+            {
+              "name": "temperatureID",
+              "caption": "Temperature",
+              "width": "200px",
+              "add": 0,
+              "edit": {
+                "type": "SelectVariable"
+              }
+            },
+            {
+              "name": "targetID",
+              "caption": "Target",
+              "width": "200px",
+              "add": 0,
+              "edit": {
+                "type": "SelectVariable"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "All selected inputs must be archived. Existing IDs are Berlin defaults; verify them. Counter scales default to gas m\u00b3 and electric pulses at 0.001 kWh/pulse. Shared humidifier load must be comparable between reference days."
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Button",
+      "caption": "Fetch prices now",
+      "onClick": "LBEP_RefreshPrices($id);"
+    },
+    {
+      "type": "Button",
+      "caption": "Recalculate yesterday (once per accepted day)",
+      "onClick": "LBEP_CalculateYesterday($id);"
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Add historical reference",
+      "items": [
+        {
+          "type": "ValidationTextBox",
+          "name": "ReferenceDate",
+          "caption": "Completed date (YYYY-MM-DD)",
+          "value": ""
+        },
+        {
+          "type": "Button",
+          "caption": "Check and add reference day (no threshold change)",
+          "onClick": "echo LBEP_AddReferenceDay($id, $ReferenceDate);"
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Configuration backup / restore",
+      "items": [
+        {
+          "type": "ScriptEditor",
+          "name": "BackupJson",
+          "caption": "Configuration JSON",
+          "value": "",
+          "rowCount": 15
+        },
+        {
+          "type": "Button",
+          "caption": "Export configuration",
+          "onClick": "LBEP_ExportConfig($id);"
+        },
+        {
+          "type": "Button",
+          "caption": "Import (disables recommendation and learning)",
+          "onClick": "echo LBEP_ImportConfig($id, $BackupJson);",
+          "confirm": "Replace configuration? Recommendation, learning and tariff confirmation will be disabled."
+        }
+      ]
+    },
+    {
+      "type": "Button",
+      "caption": "Clear debug log",
+      "onClick": "LBEP_ClearDebug($id);"
+    }
+  ],
+  "status": [
+    {
+      "code": 102,
+      "icon": "active",
+      "caption": "Ready"
+    },
+    {
+      "code": 201,
+      "icon": "error",
+      "caption": "Invalid configuration"
+    }
+  ]
+}

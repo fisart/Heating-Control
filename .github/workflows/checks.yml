@@ -10,8 +10,12 @@ jobs:
           php -l HeatingControl/module.php
           php -l HeatingControl/Webhook.php
           php -l HeatingControl/Archive.php
+          php -l LichtBlickElectricityPrice/module.php
+          php -l LichtBlickElectricityPrice/Economics.php
+          php -l LichtBlickElectricityPrice/History.php
       - name: Heating behavior and web security
         run: |
+          php tests/lichtblick.php
           php tests/room-editor.php
           php tests/recovery-hysteresis.php
           php tests/webhook.php
