@@ -1,4 +1,4 @@
-# LichtBlick electricity prices and air-heating recommendation
+# LichtBlick electricity prices and air-heating recommendation — reviewed 0.3.5
 
 Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. Library 0.3.2 adds an editable weather/power model and a protected dashboard alongside the optional, initially disabled HeatingControl integration; see [setup and exact source commands](automatic-source-selection.md).
 
@@ -81,7 +81,7 @@ HeatingControl still determines demand and permissions. Update the curve after s
 
 ## Protected HTML dashboard and portal link
 
-1. Update **Heating-Control** to **0.3.2, build 12** and **MyAlarmSystem** from `main`.
+1. Update **Heating-Control** to **0.3.5, build 15** and **MyAlarmSystem** from `main`.
 2. In the LichtBlick form, open **Protected LichtBlick web page**, enable **WebEnabled** and select **SecretsManager**. ID 0 selects the only eligible vault; multiple eligible vaults require an explicit choice. The vault must have its HTTPS portal enabled and expose `SEC_IsPortalAuthenticated`.
 3. Apply. Deferred registration adds `/hook/lichtblick_<instanceID>` to WebhookControl. The child **WebPath** shows the result. Open it on the configured SecretsManager HTTPS origin.
 4. Use **Refresh pages** on AlarmPortal. **Smart Home → LichtBlick prices & heating** appears automatically for each registered, web-enabled LichtBlick instance.
@@ -100,7 +100,7 @@ The initial learner deliberately accepts only **holiday** days with unchanged ai
 
 Configure Archive Control, all input IDs and counter multipliers in the form; Berlin IDs are prefilled. The electricity inputs are **cumulative counters**, not power readings or historic prices. Defaults use 0.001 kWh/pulse on 12254 and 10054, gas m³ on 25105. Verify those units for the actual variables. All inputs, including room targets, must have logging enabled and an archived start baseline. The module neither starts logging nor fills missing historical data. A temperature held for over two hours is conservatively rejected because this learner cannot distinguish an unchanged reading from a failed sensor. A valid quiet cumulative counter is held between its logged changes; resets, ambiguous timestamps and saturated archive requests reject the day. Logging interruptions with no recorded change cannot always be detected from historic counter records alone.
 
-With automatic selection, enable archive logging on HeatingControl **LearningSourceMode** and set **SourceModeID** to that child, because manual 41085 is preserved. Mixed or incorrectly mapped days with over two minutes of opposite air-source activity are rejected.
+With automatic selection, enable archive logging on HeatingControl **LearningSourceMode** and set **SourceModeID** to that child, because LearningSourceMode marks shutdown/bypass as unavailable. In 0.3.5, source selector 41085 mirrors the intended automatic source, including transfer/no-demand periods, and is retained when automatic selection is switched off. Mixed or incorrectly mapped days with over two minutes of opposite air-source activity are rejected.
 
 The defaults monitor radiator pump 44860, storage load pump 20574, storage temperature 15709, actual heat-pump capacity command 19207 and mode 41085. **These defaults must be checked against your installation.** Shared humidifier/auxiliary electricity must be comparable between periods; unequal unrelated circuit loads can bias the estimate.
 
