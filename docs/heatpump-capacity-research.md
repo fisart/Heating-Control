@@ -73,7 +73,7 @@ values as a physical capacity curve. No automatic correction factor is applied.
 Reproduce the state/power and consumption summaries with:
 
 ```
-python tools/analyse-heatpump-history.py /path/to/Heating_history_20250212_000000_fb8f31.txt
+python libs/tools/analyse-heatpump-history.py /path/to/Heating_history_20250212_000000_fb8f31.txt
 ```
 
 The script needs NumPy. It is deliberately specific to this exported period/IDs,

@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Symcon library structure
+        run: php tests/library-structure.php
       - name: PHP syntax
         run: |
           php -l HeatingControl/module.php
