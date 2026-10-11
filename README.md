@@ -8,6 +8,14 @@ hysteresis 58771 (then 1 °C), residual delta 28538 (then 6 K), desired fan
 speed 48646 (then 90), desired heat pump power 59800 (then 83), and the four
 room target variables. Their current values are read during each evaluation.
 
+## Proposed automatic source selection
+
+See the [heating source selection design](docs/heating-source-selection-design.md)
+for the proposed LichtBlick price importer, gas/heat-pump decision module,
+independent hot-water and radiator coordination, holiday protection,
+conservative switching criteria and January–February 2025 validation.
+This is a design proposal; automatic source selection has not been implemented.
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.
