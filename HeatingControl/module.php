@@ -84,6 +84,7 @@ class HeatingControl extends IPSModule
         $this->RegisterPropertyInteger('HeatPumpModeValue', 1);
         $this->RegisterPropertyInteger('GasModeValue', 2);
         $this->RegisterAttributeString('DemandLatch', '{}');
+        $this->RegisterAttributeString('RecoveryLatch', '{}');
         $this->RegisterAttributeString('LastDemandRoom', '');
         $this->RegisterAttributeString('WatchIDs', '[]');
         $this->RegisterVariableString('DecisionStatus', 'Heating decision', '~TextBox', 10);
@@ -117,6 +118,7 @@ class HeatingControl extends IPSModule
     public function ApplyChanges()
     {
         parent::ApplyChanges();
+        if (!$this->ReadPropertyBoolean('Enabled')) $this->WriteAttributeString('RecoveryLatch', '{}');
         $this->replaceWatchers();
         // Defer cross-instance changes until after the current ApplyChanges lifecycle.
         $this->SetTimerInterval('HookSetup', IPS_GetKernelRunlevel() === KR_READY ? 1000 : 0);
@@ -159,6 +161,7 @@ class HeatingControl extends IPSModule
         $disabled = $this->boolValue('MasterDisableID');
         $winter = $this->boolValue('WinterID');
         if ($disabled || !$winter) {
+            $this->WriteAttributeString('RecoveryLatch', '{}');
             $this->debug($disabled ? 'Master disabled; no commands' : 'Summer; no commands');
             $this->SetValue('DecisionStatus', ($this->ReadPropertyBoolean('DryRun') ? '[DRY RUN] ' : '') .
                 ($disabled ? 'Master disabled: no devices controlled' : 'Summer: no devices controlled'));
@@ -173,6 +176,7 @@ class HeatingControl extends IPSModule
         if (($night && !$holiday) || $mode === $this->ReadPropertyInteger('CoolingModeValue')) {
             $this->queueOff($queue);
             $this->dispatch($queue, $log);
+            $this->WriteAttributeString('RecoveryLatch', '{}');
             $this->SetValue('ResidualHeating', false);
             $decision = ($night && !$holiday) ? 'Night shutdown' : 'Cooling mode: heating shutdown';
             $this->publish($decision, $log);
@@ -215,6 +219,7 @@ class HeatingControl extends IPSModule
             $this->queueHeatSource($queue, $mode);
             $this->queueFanForSource($queue, $mode);
             $this->dispatch($queue, $log);
+            $this->WriteAttributeString('RecoveryLatch', '{}');
             $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
             $this->WriteAttributeString('LastDemandRoom', end($demandRooms));
             $this->SetValue('ResidualHeating', false);
@@ -225,21 +230,32 @@ class HeatingControl extends IPSModule
         }
 
         $recoveryEnabled = $this->recoveryEnabled();
+        $oldRecovery = json_decode($this->ReadAttributeString('RecoveryLatch'), true);
+        if (!is_array($oldRecovery)) $oldRecovery = [];
         $outgoing = $delta = 0.0;
         if ($recoveryEnabled) {
             $outgoing = $this->temperature($this->ReadPropertyInteger('OutgoingAirTempID'));
             $delta = $this->floatValue('ResidualDeltaID');
-            $this->debug(sprintf('RESIDUAL enabled=1 outgoing=%.2f minimum=%.2f delta=%.2f',
-                $outgoing, $this->ReadPropertyFloat('ResidualMinOutgoingTemp'), $delta));
+            $this->debug(sprintf('RESIDUAL enabled=1 outgoing=%.2f minimum=%.2f delta=%.2f hysteresis=%.2f',
+                $outgoing, $this->ReadPropertyFloat('ResidualMinOutgoingTemp'), $delta, $hysteresis));
         } else {
             $this->debug('RESIDUAL enabled=0: recovery disabled');
         }
         $candidates = $cutoffRooms ?: [$this->ReadAttributeString('LastDemandRoom')];
+        // Keep all recovering rooms eligible after the heating cutoff evaluation.
+        $candidates = array_merge($candidates, array_keys(array_filter($oldRecovery, static fn($active)=>$active === true)));
         $purge = [];
+        $nextRecovery = [];
         foreach ($rooms as $room) {
-            $useful = $recoveryEnabled && $outgoing >= $this->ReadPropertyFloat('ResidualMinOutgoingTemp')
-                && $outgoing > $this->temperature((int)$room['targetID'], false) + $delta
+            $previous = ($oldRecovery[$room['name']] ?? false) === true;
+            $margin = $previous ? -$hysteresis : $hysteresis;
+            $minimum = $this->ReadPropertyFloat('ResidualMinOutgoingTemp') + $margin;
+            $threshold = $this->temperature((int)$room['targetID'], false) + $delta + $margin;
+            $useful = $recoveryEnabled && $outgoing >= $minimum && $outgoing > $threshold
                 && in_array($room['name'], $candidates, true);
+            $nextRecovery[$room['name']] = $useful;
+            $this->debug(sprintf('RESIDUAL ROOM %s previous=%d active=%d minimum=%.2f target+delta=%.2f',
+                $room['name'], (int)$previous, (int)$useful, $minimum, $threshold));
             $this->queue($queue, (int)$room['flapID'], $useful ? $room['open'] : $room['closed']);
             if ($useful) $purge[] = $room['name'];
         }
@@ -247,6 +263,7 @@ class HeatingControl extends IPSModule
         if ($purge) $this->queueFanOn($queue);
         else $this->queueFanOff($queue);
         $this->dispatch($queue, $log);
+        $this->WriteAttributeString('RecoveryLatch', json_encode($nextRecovery, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         $this->SetValue('ResidualHeating', (bool)$purge);
         $decision = $purge ? 'Residual heat: ' . implode(', ', $purge) :

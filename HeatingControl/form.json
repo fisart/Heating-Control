@@ -113,7 +113,7 @@
     {
       "type": "SelectVariable",
       "name": "HysteresisID",
-      "caption": "Hysteresis setting"
+      "caption": "Heating and residual recovery hysteresis setting"
     },
     {
       "type": "SelectVariable",

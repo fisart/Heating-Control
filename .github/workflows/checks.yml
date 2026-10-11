@@ -13,6 +13,7 @@ jobs:
       - name: Heating behavior and web security
         run: |
           php tests/room-editor.php
+          php tests/recovery-hysteresis.php
           php tests/webhook.php
           php tests/webhook.php --no-auth-api
           php tests/archive.php

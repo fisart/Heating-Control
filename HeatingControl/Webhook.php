@@ -134,7 +134,7 @@ trait HeatingControlWebhook
             'HolidayID'=>['Holiday override', 'bool'],
             'RecoveryEnableID'=>['Allow residual heat recovery', 'bool'],
             'OperatingModeID'=>['Heat source', 'mode'],
-            'HysteresisID'=>['Room hysteresis', 'number', 0, 5, 0.05, '°C'],
+            'HysteresisID'=>['Heating & recovery hysteresis', 'number', 0, 5, 0.05, '°C'],
             'ResidualDeltaID'=>['Heat recovery / source fan difference', 'number', 0, 30, 0.1, '°C'],
             'FanDesiredSpeedID'=>['Requested fan speed', 'number', 0, 100, 1, '%'],
             'HeatPumpDesiredPowerID'=>['Requested heat pump power', 'number', 0, 100, 1, '%'],

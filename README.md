@@ -38,15 +38,27 @@ room target variables. Their current values are read during each evaluation.
   latch is held in an instance attribute. On the first run inside the band,
   demand is initialized from actual temperature below the target. This may
   differ from the old script's persisted `DemandActive` flags.
-- Residual heat uses outgoing air at least 22 °C and above the room target
-  by more than the configured delta. The mixer positions are explicitly
+- Residual heat reuses the **heating hysteresis variable** (`HysteresisID`,
+  default object 58771) from version 0.2.4. Each eligible room remembers its
+  recovery state. With hysteresis `h`, recovery starts when outgoing air is at
+  least `ResidualMinOutgoingTemp + h` and strictly above `target + delta + h`.
+  Once active, it stops when outgoing air falls below
+  `ResidualMinOutgoingTemp - h` or reaches/breaches `target + delta - h`.
+  Between the start/stop thresholds it retains its state, keeping the fan and
+  recovering room flaps stable. Example: target 23 °C, delta 2 °C, hysteresis
+  0.5 °C gives a start above 25.5 °C and a stop at/below 24.5 °C, provided the
+  minimum outgoing temperature also permits recovery. Hysteresis 0 preserves
+  the former threshold comparisons. No additional setting or ID is needed.
+  Recovery memory is cleared by manual recovery off, normal heating, night/cooling
+  shutdown, summer/master bypass, and disabling/restoring the instance. Bypass
+  still leaves external devices untouched. The mixer positions are explicitly
   configured as 0 open and 100 closed.
 - **Residual heat recovery enable** (German: **Freigabe Restwärmenutzung**,
   added in 0.1.3) selects an optional external Boolean variable. `true` permits
   residual heat recovery when its normal conditions are met; `false` stops it.
   When no room requests heating, switching it off closes purge flaps, stops
   the fan and clears internal/external residual status on the next evaluation.
-  Normal room heating and its fan-temperature condition are unaffected.
+  Normal room heating and its source fan-temperature condition keep their existing logic.
   Changes to the variable trigger evaluation immediately when the controller
   is enabled. DryRun still suppresses all external writes; summer and master
   disable retain their bypass behavior. No variable selected (ID 0 or 1)
