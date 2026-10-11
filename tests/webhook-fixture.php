@@ -5,6 +5,7 @@ require __DIR__ . '/../HeatingControl/module.php';
 function IPS_InstanceExists($id) { return isset($GLOBALS['instanceModules'][$id]); }
 function IPS_GetInstance($id) { return ['ModuleInfo'=>['ModuleID'=>$GLOBALS['instanceModules'][$id]]]; }
 function IPS_GetInstanceListByModuleID($module) { return array_keys(array_filter($GLOBALS['instanceModules'],fn($v)=>$v===$module)); }
+function IPS_GetObjectIDByIdent($ident,$instance) { return $GLOBALS['instanceIdents'][$instance][$ident] ?? 0; }
 function IPS_GetProperty($id,$name) { return $GLOBALS['instanceProperties'][$id][$name] ?? ''; }
 function IPS_SetProperty($id,$name,$value) { $GLOBALS['instanceProperties'][$id][$name]=$value; }
 function IPS_HasChanges($id) { return $GLOBALS['pendingChanges'] ?? false; }
@@ -19,8 +20,8 @@ function AC_GetAggregatedValues($archive,$id,$level,$from,$to,$limit) { $GLOBALS
 if (($argv[1] ?? '') !== '--no-auth-api') {
 function SEC_IsPortalAuthenticated($id) { if (!empty($GLOBALS['authThrows'])) throw new RuntimeException('Private vault details'); return $GLOBALS['authenticated'] ?? false; }
 }
-function heatingFixture(): HeatingControl {
-    $m=new HeatingControl();$m->Create();$GLOBALS['instance']=$m;
+function heatingFixture(string $class = HeatingControl::class): HeatingControl {
+    $m=new $class();$m->Create();$GLOBALS['instance']=$m;
     $GLOBALS['variables']=[];$GLOBALS['categories']=[];$GLOBALS['commands']=[];$GLOBALS['directWrites']=[];$GLOBALS['applies']=[];
     $GLOBALS['instanceModules']=[7=>'{7C5A3841-3F7B-4D2A-9E1C-5B6D8F9A0E12}',5=>'{015A6EB8-D6E5-4B93-B496-0D3F77AE9FE1}'];
     $GLOBALS['instanceProperties']=[7=>['PortalEnabled'=>true,'PortalOrigin'=>'https://heating.example:46900','PortalBackupOrigin'=>'https://backup.example'],5=>['Hooks'=>'[{"Hook":"/hook/other","TargetID":88}]']];

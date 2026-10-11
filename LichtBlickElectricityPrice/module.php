@@ -46,6 +46,8 @@ class LichtBlickElectricityPrice extends IPSModule
         $this->RegisterVariableFloat('EffectiveThresholdCt', 'Threshold after safety margin (ct/kWh)', 'LBEP.Price', 100);
         $this->RegisterVariableFloat('EntryThresholdCt', 'Heat-pump entry threshold (ct/kWh)', 'LBEP.Price', 110);
         $this->RegisterVariableInteger('RecommendedSource', 'Air-heating source recommendation', 'LBEP.Source', 120);
+        $this->RegisterVariableInteger('RecommendedHeatPumpPowerPercent', 'Recommended heat-pump power (%)', '', 125);
+        $this->RegisterVariableString('RecommendationJSON', 'Atomic source / power recommendation (JSON)', '~TextBox', 126);
         $this->RegisterVariableBoolean('RecommendationValid', 'Economic recommendation is valid', '', 130);
         $this->RegisterVariableBoolean('HeatPumpRecommended', 'Heat pump recommended for air heating', '', 140);
         $this->RegisterVariableBoolean('GasRecommended', 'Gas recommended for air heating', '', 150);
@@ -245,6 +247,12 @@ class LichtBlickElectricityPrice extends IPSModule
         $this->SetValue('RecommendedSource', $source); $this->SetValue('RecommendationValid', $valid);
         $this->SetValue('HeatPumpRecommended', $source === 1); $this->SetValue('GasRecommended', $source === 2);
         $this->SetValue('DecisionReason', $reason);
+        $power = $source === 1 && $valid ? (int)round($this->ReadPropertyFloat('ReferenceCapacityPercent')) : 0;
+        $this->SetValue('RecommendedHeatPumpPowerPercent', $power);
+        $this->SetValue('RecommendationJSON', json_encode(['schema'=>1, 'source'=>$source, 'valid'=>$valid,
+            'powerPercent'=>$power, 'updatedAt'=>time(), 'validUntil'=>$valid ? min((int)$this->GetValue('PriceEnd'),
+                (int)$this->GetValue('LastSuccessfulFetch') + $this->ReadPropertyInteger('MaxCacheAgeHours') * 3600) : 0,
+            'reason'=>$reason], JSON_THROW_ON_ERROR));
         if ($old !== $source) $this->debug($reason);
     }
 

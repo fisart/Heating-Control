@@ -7,11 +7,13 @@ declare(strict_types=1);
  */
 require_once __DIR__ . "/Webhook.php";
 require_once __DIR__ . "/Archive.php";
+require_once __DIR__ . "/SourceSelection.php";
 
 class HeatingControl extends IPSModule
 {
     use HeatingControlWebhook;
     use HeatingControlArchive;
+    use HeatingControlSourceSelection;
 
     private const DEFAULT_IDS = [
         'MasterDisableID' => 11098,
@@ -58,6 +60,7 @@ class HeatingControl extends IPSModule
     public function Create()
     {
         parent::Create();
+        $this->createSourceSelection();
         $this->RegisterPropertyBoolean('Enabled', false);
         $this->RegisterPropertyBoolean('DryRun', true);
         $this->RegisterPropertyBoolean('DebugEnabled', false);
@@ -118,7 +121,16 @@ class HeatingControl extends IPSModule
     public function ApplyChanges()
     {
         parent::ApplyChanges();
-        if (!$this->ReadPropertyBoolean('Enabled')) $this->WriteAttributeString('RecoveryLatch', '{}');
+        // An ApplyChanges/restart cannot establish how long external equipment stayed off.
+        $this->WriteAttributeString('HeatPumpStoppedAt', '0');
+        if ($this->GetValue('AutomaticSourceSelection') || $this->ReadAttributeString('AutomaticWasActive') === '1'
+            || $this->ReadAttributeString('SourceTransfer') !== '') {
+            $this->WriteAttributeString('SourceTransfer', '{"target":0,"since":0}');
+        }
+        if (!$this->ReadPropertyBoolean('Enabled')) {
+            $this->WriteAttributeString('RecoveryLatch', '{}');
+            $this->SetValue('LearningSourceMode', 0);
+        }
         $this->replaceWatchers();
         // Defer cross-instance changes until after the current ApplyChanges lifecycle.
         $this->SetTimerInterval('HookSetup', IPS_GetKernelRunlevel() === KR_READY ? 1000 : 0);
@@ -161,6 +173,12 @@ class HeatingControl extends IPSModule
         $disabled = $this->boolValue('MasterDisableID');
         $winter = $this->boolValue('WinterID');
         if ($disabled || !$winter) {
+            $this->SetValue('LearningSourceMode', 0);
+            $this->WriteAttributeString('HeatPumpStoppedAt', '0');
+            if ($this->GetValue('AutomaticSourceSelection') || $this->ReadAttributeString('AutomaticWasActive') === '1') {
+                $this->WriteAttributeString('SourceTransfer', '{"target":0,"since":0}');
+            }
+            $this->SetValue('SourceSelectionStatus', $disabled ? 'Master bypass: existing device states retained' : 'Summer bypass: existing device states retained');
             $this->WriteAttributeString('RecoveryLatch', '{}');
             $this->debug($disabled ? 'Master disabled; no commands' : 'Summer; no commands');
             $this->SetValue('DecisionStatus', ($this->ReadPropertyBoolean('DryRun') ? '[DRY RUN] ' : '') .
@@ -174,6 +192,8 @@ class HeatingControl extends IPSModule
         $this->debug(sprintf('INPUTS winter=%d nightDisabled=%d holiday=%d mode=%d hysteresis=%.2f',
             (int)$winter, (int)$night, (int)$holiday, $mode, $this->floatValue('HysteresisID')));
         if (($night && !$holiday) || $mode === $this->ReadPropertyInteger('CoolingModeValue')) {
+            $this->SetValue('LearningSourceMode', 0);
+            $this->sourceIdle(($night && !$holiday) ? 'Night shutdown' : 'Cooling shutdown');
             $this->queueOff($queue);
             $this->dispatch($queue, $log);
             $this->WriteAttributeString('RecoveryLatch', '{}');
@@ -187,6 +207,7 @@ class HeatingControl extends IPSModule
             throw new \RuntimeException('Unknown operating mode ' . $mode . '; no commands sent');
         }
 
+        [$mode, $selectedPower] = $this->sourceChoice($mode);
         $hysteresis = $this->floatValue('HysteresisID');
         if ($hysteresis < 0.0) throw new \RuntimeException('Hysteresis must not be negative');
         $oldLatch = json_decode($this->ReadAttributeString('DemandLatch'), true);
@@ -216,14 +237,19 @@ class HeatingControl extends IPSModule
             foreach ($rooms as $room) {
                 if (!$nextLatch[$room['name']]) $this->queue($queue, (int)$room['flapID'], $room['closed']);
             }
-            $this->queueHeatSource($queue, $mode);
-            $this->queueFanForSource($queue, $mode);
+            $ready = $this->sourceReady($queue, $mode);
+            if ($ready) {
+                $this->queueHeatSource($queue, $mode, $selectedPower);
+                $this->queueFanForSource($queue, $mode);
+            }
             $this->dispatch($queue, $log);
             $this->WriteAttributeString('RecoveryLatch', '{}');
             $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
             $this->WriteAttributeString('LastDemandRoom', end($demandRooms));
             $this->SetValue('ResidualHeating', false);
-            $decision = 'Heating demand: ' . implode(', ', $demandRooms);
+            $decision = ($ready ? 'Heating demand: ' : 'Source transfer; heating demand: ') . implode(', ', $demandRooms);
+            $log[] = $this->GetValue('SourceSelectionStatus');
+            $log[] = $this->GetValue('SourceTransferStatus');
             $this->publish($decision, $log);
             $this->mirrorLegacyStatus($rooms, $nextLatch, false, end($demandRooms), $decision, $log);
             return;
@@ -259,6 +285,7 @@ class HeatingControl extends IPSModule
             $this->queue($queue, (int)$room['flapID'], $useful ? $room['open'] : $room['closed']);
             if ($useful) $purge[] = $room['name'];
         }
+        $this->sourceIdle($purge ? 'Residual heat recovery: heat sources off' : 'No room demand: heat sources off');
         $this->queueHeatOff($queue, !$purge);
         if ($purge) $this->queueFanOn($queue);
         else $this->queueFanOff($queue);
@@ -272,14 +299,14 @@ class HeatingControl extends IPSModule
         $this->mirrorLegacyStatus($rooms, $nextLatch, (bool)$purge, null, $decision, $log);
     }
 
-    private function queueHeatSource(array &$q, int $mode): void
+    private function queueHeatSource(array &$q, int $mode, ?int $power = null): void
     {
         if ($mode === $this->ReadPropertyInteger('HeatPumpModeValue')) {
             $this->queue($q, $this->id('GasPumpID'), false);
             $this->queue($q, $this->id('GasMixerID'), $this->ReadPropertyInteger('MixerClosed'));
             $this->queue($q, $this->id('HeatPumpHeatModeID'), true);
+            $this->queue($q, $this->id('HeatPumpPowerID'), $power ?? $this->clamp($this->intValue('HeatPumpDesiredPowerID')));
             $this->queue($q, $this->id('HeatPumpOnID'), true);
-            $this->queue($q, $this->id('HeatPumpPowerID'), $this->clamp($this->intValue('HeatPumpDesiredPowerID')));
         } else {
             $this->queue($q, $this->id('HeatPumpOnID'), false);
             $this->queue($q, $this->id('HeatPumpPowerID'), 0);
@@ -459,6 +486,10 @@ class HeatingControl extends IPSModule
 
     private function validateConfiguration(array $rooms): void
     {
+        foreach (['SourceTransferDelaySeconds'=>[30, 3600], 'HeatPumpMinimumOffSeconds'=>[60, 3600]] as $name=>$range) {
+            $value = $this->ReadPropertyInteger($name);
+            if ($value < $range[0] || $value > $range[1]) throw new RuntimeException('Invalid transfer timing: ' . $name);
+        }
         $this->recoveryEnabled(); // Validate the optional switch before sending any commands.
         foreach (self::DEFAULT_IDS as $property => $_) {
             $id = $this->id($property);
@@ -492,6 +523,7 @@ class HeatingControl extends IPSModule
     private function validateLegacyOutputs(array $rooms): void
     {
         $protected = [];
+        $protected[$this->GetIDForIdent('AutomaticSourceSelection')] = true;
         $protected[$this->id('RecoveryEnableID')] = true;
         foreach (array_keys(self::DEFAULT_IDS) as $property) $protected[$this->id($property)] = true;
         foreach ($rooms as $room) {
@@ -623,6 +655,9 @@ class HeatingControl extends IPSModule
             $id = $this->id($property);
             if ($id > 0 && IPS_VariableExists($id)) $ids[$id] = true;
         }
+        $ids[$this->GetIDForIdent('AutomaticSourceSelection')] = true;
+        $providerID = $this->priceRecommendationID();
+        if ($providerID > 0) $ids[$providerID] = true;
         $recoveryID = $this->id('RecoveryEnableID');
         if ($recoveryID > 0 && IPS_VariableExists($recoveryID)) $ids[$recoveryID] = true;
         try {
@@ -665,7 +700,7 @@ class HeatingControl extends IPSModule
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
         $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS),
-            ['Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
+            ['Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
@@ -674,10 +709,10 @@ class HeatingControl extends IPSModule
                 throw new \InvalidArgumentException('Expected Boolean ' . $name);
             }
         }
-        foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS, ['RecoveryEnableID' => 0, 'VaultInstanceID' => 0]) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
+        foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS, ['RecoveryEnableID' => 0, 'VaultInstanceID' => 0, 'ElectricityPriceInstanceID' => 0]) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
             throw new \InvalidArgumentException('Expected integer ID: ' . $name);
         }
-        foreach (['IntervalSeconds', 'MaxSensorAgeSeconds', 'MixerOpen', 'MixerClosed',
+        foreach (['SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'MixerOpen', 'MixerClosed',
                   'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue'] as $name) {
             if (isset($incoming[$name]) && !is_int($incoming[$name])) throw new \InvalidArgumentException('Expected integer: ' . $name);
         }
@@ -696,6 +731,8 @@ class HeatingControl extends IPSModule
         $incoming['WebEnabled'] = false; // Restores require an explicit web-access review.
         $current = json_decode(IPS_GetConfiguration($this->InstanceID), true, 512, JSON_THROW_ON_ERROR);
         IPS_SetConfiguration($this->InstanceID, json_encode(array_replace($current, $incoming), JSON_THROW_ON_ERROR));
+        $this->SetValue('AutomaticSourceSelection', false);
+        $this->WriteAttributeString('SourceTransfer', '');
         IPS_ApplyChanges($this->InstanceID);
         return 'Configuration imported. Controller is disabled; verify IDs before enabling.';
     }

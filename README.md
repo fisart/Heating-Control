@@ -17,14 +17,25 @@ a debug string and opt-in daily threshold learning from matched consumption.
 See [setup and calculation rules](docs/lichtblick-electricity-price.md).
 It publishes recommendations for air heating; it does not operate equipment.
 
-## Proposed automatic source selection
+## Automatic air-heating source selection
 
 See the [heating source selection design](docs/heating-source-selection-design.md)
 for the proposed LichtBlick price importer, gas/heat-pump decision module,
 independent hot-water and radiator coordination, holiday protection,
 conservative switching criteria and January–February 2025 validation.
-The full transfer/controller integration remains a proposal. The new price module
-implements a provisional economic recommendation and guarded holiday-day learner.
+Version **0.3.1**, build 11 connects the price recommendation to HeatingControl.
+The **AutomaticSourceSelection** switch appears below the heating instance and
+on its protected web page; it defaults to off. Select the LichtBlick instance in
+the heating configuration. On uses its valid source and configured capacity;
+off restores the stored manual source and desired power. Gas is the fallback
+for missing, unverified or expired recommendations, subject to existing demand
+and heating permissions. Source changes stop both air sources before starting
+the other, with a configurable 120-second transfer pause and 300-second observed
+heat-pump off time. These are command-state checks, not physical stop feedback.
+
+See [exact commands and setup](docs/automatic-source-selection.md) and
+[heat-pump/fan research](docs/heatpump-capacity-research.md). Weather-based power
+optimisation and the wider radiator/DHW/moisture coordination remain design work.
 
 ## Installation and safe handover
 

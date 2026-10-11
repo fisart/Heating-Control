@@ -17,6 +17,42 @@
     },
     {
       "type": "ExpansionPanel",
+      "caption": "Automatic air-heating source selection",
+      "items": [
+        {
+          "type": "SelectInstance",
+          "name": "ElectricityPriceInstanceID",
+          "caption": "LichtBlick electricity-price instance",
+          "validModules": [
+            "{5C0EEDE9-5C09-4F18-BCD1-CE65CFA7B1B7}"
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "Use the Automatic heating source selection switch below this instance or on its web page. Default off. Missing/unconfirmed/expired prices use gas. Manual source and power values are retained."
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "SourceTransferDelaySeconds",
+          "caption": "Pause after stop/mixer command states are acknowledged (seconds)",
+          "minimum": 30,
+          "maximum": 3600
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpMinimumOffSeconds",
+          "caption": "Minimum observed heat-pump off time (seconds)",
+          "minimum": 60,
+          "maximum": 3600
+        },
+        {
+          "type": "Label",
+          "caption": "Defaults: transfer pause 120 s; heat-pump off time 300 s. Verify these against the equipment. Command state is not independent physical feedback."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
       "caption": "Heating web page",
       "items": [
         {
@@ -55,7 +91,7 @@
     {
       "type": "NumberSpinner",
       "name": "ResidualMinOutgoingTemp",
-      "caption": "Minimum outgoing air for residual heat (°C)",
+      "caption": "Minimum outgoing air for residual heat (\u00b0C)",
       "digits": 1,
       "minimum": 0,
       "maximum": 50
@@ -536,6 +572,21 @@
     }
   ],
   "actions": [
+    {
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Enable automatic source selection",
+          "onClick": "HC_SetAutomaticSourceSelection($id, true);"
+        },
+        {
+          "type": "Button",
+          "caption": "Return to manual source selection",
+          "onClick": "HC_SetAutomaticSourceSelection($id, false);"
+        }
+      ]
+    },
     {
       "type": "Button",
       "caption": "Register / repair heating webhook",

@@ -128,6 +128,7 @@ trait HeatingControlWebhook
     private function webControls(array $rooms): array
     {
         $definitions = [
+            'AutomaticSourceSelection'=>['Automatic heating source selection', 'bool'],
             'MasterDisableID'=>['Master disable', 'bool'],
             'WinterID'=>['Winter / heating season', 'bool'],
             'NightDisableID'=>['Night shutdown', 'bool'],
@@ -152,7 +153,7 @@ trait HeatingControlWebhook
         foreach ($rooms as $room) $blocked = array_merge($blocked, $room['sensors'], [$room['flapID'], $room['statusID']]);
         $controls = [];
         foreach ($definitions as $key=>$definition) {
-            $id = str_starts_with($key,'room:') ? $rooms[(int)substr($key,5)]['targetID'] : $this->id($key);
+            $id = str_starts_with($key,'room:') ? $rooms[(int)substr($key,5)]['targetID'] : ($key === 'AutomaticSourceSelection' ? $this->GetIDForIdent($key) : $this->id($key));
             $meta = $id > 1 && IPS_VariableExists($id) ? IPS_GetVariable($id) : null;
             $kind = $definition[1];
             $validType = $meta !== null && ($kind === 'bool' ? $meta['VariableType'] === 0 :
@@ -168,6 +169,10 @@ trait HeatingControlWebhook
                 ['value'=>$this->ReadPropertyInteger('HeatPumpModeValue'), 'label'=>'Heat pump'],
                 ['value'=>$this->ReadPropertyInteger('GasModeValue'), 'label'=>'Gas heating'],
             ];
+        }
+        if ($this->GetValue('AutomaticSourceSelection')) {
+            $controls['OperatingModeID']['available'] = false;
+            $controls['HeatPumpDesiredPowerID']['available'] = false;
         }
         return $controls;
     }
@@ -213,6 +218,9 @@ trait HeatingControlWebhook
             'residual'=>$this->GetValue('ResidualHeating'), 'lastRoom'=>$this->ReadAttributeString('LastDemandRoom'),
             'recoveryMinimum'=>$this->ReadPropertyFloat('ResidualMinOutgoingTemp'),
             'mixerOpen'=>$this->ReadPropertyInteger('MixerOpen'), 'mixerClosed'=>$this->ReadPropertyInteger('MixerClosed'),
+            'sourceSelection'=>['automatic'=>(bool)$this->GetValue('AutomaticSourceSelection'), 'effective'=>(int)$this->GetValue('EffectiveSource'),
+                'power'=>(int)$this->GetValue('SelectedHeatPumpPower'), 'status'=>(string)$this->GetValue('SourceSelectionStatus'),
+                'transfer'=>(string)$this->GetValue('SourceTransferStatus')],
             'rooms'=>$roomData, 'environment'=>$environment, 'equipment'=>$equipment, 'controls'=>$controls];
     }
 
@@ -256,7 +264,10 @@ trait HeatingControlWebhook
                     throw new InvalidArgumentException('Value outside the configured variable profile range.');
                 }
             }
-            if (GetValue($control['id']) !== $value) {
+            if ($payload['control'] === 'AutomaticSourceSelection') {
+                $this->SetValue('AutomaticSourceSelection', $value);
+                $this->debug('WEB automatic source selection = ' . json_encode($value));
+            } elseif (GetValue($control['id']) !== $value) {
                 if (($meta['VariableCustomAction'] ?? 0) || ($meta['VariableAction'] ?? 0)) RequestAction($control['id'],$value);
                 elseif ($meta['VariableType'] === 0) SetValueBoolean($control['id'],$value);
                 elseif ($meta['VariableType'] === 1) SetValueInteger($control['id'],$value);

@@ -18,6 +18,15 @@ class IPSModule
     public function RegisterPropertyString($n, $v) { $this->properties[$n] = $v; }
     public function RegisterPropertyFloat($n, $v) { $this->properties[$n] = $v; }
     public function RegisterAttributeString($n, $v) { $this->attributes[$n] = $v; }
+    public function RegisterVariableInteger($n, ...$args) { $this->values[$n] = 0; }
+    public function EnableAction($n) {}
+    public function GetIDForIdent($n) {
+        $id = 81000 + array_search($n, array_keys($this->values), true);
+        $value = $this->values[$n];
+        $GLOBALS['variables'][$id] = ['VariableType'=>is_bool($value)?0:(is_int($value)?1:(is_float($value)?2:3)),
+            'value'=>$value, 'OwnerIdent'=>$n, 'VariableUpdated'=>time(), 'VariableAction'=>1];
+        return $id;
+    }
     public function RegisterVariableString($n, ...$args) { $this->values[$n] = ''; }
     public function RegisterVariableBoolean($n, ...$args) { $this->values[$n] = false; }
     public function RegisterTimer(...$args) {}
@@ -47,7 +56,7 @@ function IPS_ApplyChanges($id) { if ($id === $GLOBALS['instance']->InstanceID) $
 function IPS_SemaphoreEnter(...$args) { return true; }
 function IPS_SemaphoreLeave(...$args) {}
 function IPS_GetName($id) { return 'Variable ' . $id; }
-function GetValue($id) { return $GLOBALS['variables'][$id]['value']; }
+function GetValue($id) { $v=$GLOBALS['variables'][$id]; return isset($v['OwnerIdent']) ? $GLOBALS['instance']->values[$v['OwnerIdent']] : $v['value']; }
 function GetValueFloat($id) { return (float)GetValue($id); }
 function GetValueInteger($id) { return (int)GetValue($id); }
 function GetValueBoolean($id) { return (bool)GetValue($id); }

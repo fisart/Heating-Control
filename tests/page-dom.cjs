@@ -28,6 +28,17 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#airflow-devices').textContent.includes('Current fan speed'));
  assert.ok(d.querySelector('#heat-pump-devices').textContent.includes('Heating / cooling'));
  assert.ok(d.querySelector('#gas-devices').textContent.includes('Gas mixerClosed (100)'));
+ assert.ok(d.querySelector('#controls').textContent.includes('Automatic heating source selection'));
+ const automaticRow=[...d.querySelectorAll('#controls > div')].find(r=>r.textContent.includes('Automatic heating source selection'));
+ assert.ok(automaticRow,'Automatic switch visible');
+ automaticRow.querySelector('button').click();await settle();
+ assert.deepEqual(JSON.parse(calls.findLast(c=>c.options.method==='POST').options.body),{control:'AutomaticSourceSelection',value:true});
+ state=structuredClone(state);state.sourceSelection={automatic:true,effective:1,power:35,status:'Heat pump at 35%',transfer:'Ready'};
+ state.controls.AutomaticSourceSelection.value=true;state.controls.OperatingModeID.available=false;state.controls.HeatPumpDesiredPowerID.available=false;
+ d.querySelector('#refresh').click();await settle();
+ assert.ok(d.querySelector('#source-selection').textContent.includes('Automatic selection'));
+ assert.ok(d.querySelector('#heat-pump-devices').textContent.includes('35 %'));
+ assert.equal(d.querySelector('#controls select').disabled,true,'Manual source locked in automatic selection');
  assert.equal(d.querySelectorAll('[data-sensor-id]').length,2);
  assert.equal(d.querySelectorAll('#rooms article')[1].querySelectorAll('.sensor-value').length,0,'Unrecorded room has plain temperature');
  d.querySelector('#environment [data-sensor-id="25911"]').click();await settle();

@@ -37,6 +37,18 @@
     },
     {
       "type": "NumberSpinner",
+      "name": "ReferenceCapacityPercent",
+      "caption": "Automatic heat-pump power / learning reference (%)",
+      "minimum": 1,
+      "maximum": 100,
+      "digits": 1
+    },
+    {
+      "type": "Label",
+      "caption": "Chosen operating capacity, not an optimized calculation. Published as RecommendedHeatPumpPowerPercent when the heat pump is recommended. Daily learning uses this same capacity."
+    },
+    {
+      "type": "NumberSpinner",
       "name": "HysteresisCt",
       "caption": "Switching hysteresis below safe threshold (ct/kWh)",
       "minimum": 0,
@@ -116,14 +128,6 @@
           "minimum": 1,
           "maximum": 20,
           "digits": 6
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "ReferenceCapacityPercent",
-          "caption": "Heat-pump reference power command (%)",
-          "minimum": 1,
-          "maximum": 100,
-          "digits": 1
         },
         {
           "type": "NumberSpinner",

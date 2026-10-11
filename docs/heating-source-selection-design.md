@@ -1,6 +1,6 @@
 # Automatic selection of heat pump or gas — proposed design
 
-Prepared 11 October 2026. Revised to include domestic hot water, the separate radiator circuit, holiday protection and the supplemental January–February 2025 radiator/eBUS validation. Status: controller/source-transfer proposal for agreement. Version 0.3.0 implements a separate price-based recommendation and initial holiday-day threshold learner; no live heating changes have been made.
+Prepared 11 October 2026. Revised to include domestic hot water, the separate radiator circuit, holiday protection and the supplemental January–February 2025 radiator/eBUS validation. Status: wider building strategy remains a design proposal. Version 0.3.1 implements an opt-in air-source switch with controlled transfer and fixed configured heat-pump capacity, alongside the 0.3.0 price feed and holiday-day learner. No live heating changes have been made.
 
 ## Recommendation
 
@@ -16,11 +16,14 @@ an opt-in daily learner. Its **SafetyMarginPercent** is editable in the instance
 configuration form, defaults to 25%, and is included in configuration backups.
 Daily accepted updates change the original threshold, never the chosen margin.
 Learning uses matched historical consumption, stable holiday targets and fixed
-capacity; unsuitable days retain the threshold. Recommendations are not wired
-to HeatingControl. Actual source transfer, capacity selection, comfort/moisture
-protection and coordination of radiator/DHW loads remain to be implemented
-under this design. The price module's hysteresis is only an economic band;
-equipment minimum run/off times belong in the future controller.
+capacity; unsuitable days retain the threshold. Version 0.3.1 wires the provider's
+single RecommendationJSON snapshot into HeatingControl behind an off-by-default
+switch, implements command-acknowledged transfer delays and observed heat-pump
+off time, and publishes configured capacity. The 50% default is not an optimum.
+See [implemented integration](automatic-source-selection.md) and
+[capacity research](heatpump-capacity-research.md). Adaptive capacity, minimum run
+policy, physical feedback, comfort/moisture protection and radiator/DHW coordination
+remain proposed. The price module's hysteresis is an economic band.
 
 ## Existing implementation reviewed
 
@@ -32,7 +35,7 @@ The original controller review used library version 0.2.4, build 9; the price-mo
 - Existing manual desired capacity is `HeatPumpDesiredPowerID` (59800). The physical capacity command is `HeatPumpPowerID` (19207).
 - HeatingControl already evaluates room demand and heating hysteresis, drives heat-source and airflow outputs, and performs residual heat recovery.
 - In the current code, winter=true permits heating. Master-disable=true or winter=false bypasses without changing external actuators. Cooling and applicable night-disable shut heating down. Automatic selection must respect these existing behaviors.
-- Current source changes are sequential output commands in one evaluation. They do not wait for confirmed equipment stop or mixer travel. A controlled transfer state machine is part of the proposed enhancement.
+- The original manual path changes sources through sequential commands. Version 0.3.1 adds stop-command acknowledgment and configurable transfer/off delays for automatic selection and handback to manual. It does not establish physical stop or valve-position feedback.
 
 ## Building services and operating profiles
 
@@ -232,7 +235,7 @@ Publish one coherent plan:
 - Issued timestamp, expiry, sequence and model revision.
 - Decision reason, price inputs, estimated crossover, conservative ceiling, confidence/eligibility, and any fallback reason.
 
-Suggested integration method: `SetAutomaticPlan(source, capacity, validUntil, sequence, reason)` on HeatingControl. This is a **proposed new method**, not an existing API. Validate and store the whole plan before triggering evaluation. Avoid writing source and power independently to two watched variables.
+Implemented integration in 0.3.1 reads one provider child `RecommendationJSON` with schema, source, powerPercent, valid, updatedAt, validUntil and reason. HeatingControl checks module identity, freshness (180 seconds), interval/cache deadline and capacity validity before evaluating transfer. `HC_SetAutomaticSourceSelection(instanceID, bool)` controls the switch. A richer plan API with sequence/model revisions remains proposed.
 
 Re-evaluate locally every minute and at price/sensor/status changes. Renew a five-minute plan lease even when its source stays unchanged. Network retrieval is separate and should not run on every local evaluation.
 

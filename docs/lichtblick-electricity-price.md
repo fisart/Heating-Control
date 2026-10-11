@@ -1,6 +1,6 @@
 # LichtBlick electricity prices and air-heating recommendation
 
-Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. HeatingControl source-transfer integration remains a separate task.
+Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. Library 0.3.1 adds an optional, initially disabled HeatingControl integration; see [setup and exact source commands](automatic-source-selection.md).
 
 ## Setup
 
@@ -30,6 +30,8 @@ For threshold **30**, margin **25%**, hysteresis **2**, the safe ceiling is **22
 |---|---|
 | `RecommendedSource` | 0 unavailable/disabled, 1 heat pump, 2 gas; air heating only |
 | `HeatPumpRecommended`, `GasRecommended` | Mutually exclusive convenience flags; reflect the source, including gas fallback |
+| `RecommendedHeatPumpPowerPercent` | Configured ReferenceCapacityPercent rounded to an integer for a valid heat-pump recommendation; zero otherwise; not a learned optimum |
+| `RecommendationJSON` | Final coherent source/power publication: schema 1, source, valid, powerPercent, updatedAt, validUntil, reason |
 | `RecommendationValid` | True for an economic comparison using valid settings/current price; false for fallback or unavailable |
 | `CurrentPriceCt`, `PriceValid` | Effective interval price and tariff-confirmed validity; a zero price with false validity must not be treated as free electricity |
 | `ThresholdCt` | Current original break-even threshold, before margin |
@@ -40,7 +42,7 @@ For threshold **30**, margin **25%**, hysteresis **2**, the safe ceiling is **22
 | `DailyCandidateCt`, `ThresholdCalculatedAt`, `DailyStatus` | Raw latest candidate, last accepted update time and calculation outcome |
 | `DebugLog` | Debug string directly below the instance; enabled in the form, bounded to 32,000 bytes |
 
-This is an economic preference whenever air heating is needed. It does not decide whether heating is needed, enforce equipment run times, set capacity, handle defrost or guarantee temperature/moisture protection. The later selector/controller must combine it with those requirements and independent radiator/DHW service demands. Do not directly connect it to `OperatingModeID` until the controlled-transfer design is implemented.
+This is an economic preference whenever air heating is needed. It does not decide whether heating is needed or optimise capacity. In 0.3.1 it publishes the configured **ReferenceCapacityPercent** as an operating command when recommending the heat pump. HeatingControl enforces its transfer/off delays and existing demand/shutdown rules; defrost remains equipment-controlled. Connect the provider instance through HeatingControl configuration, rather than wiring independent source/power variables into the manual inputs. Wider moisture and radiator/DHW coordination remain design work.
 
 ## Daily threshold calculation
 
@@ -49,6 +51,8 @@ Learning is **off by default**. It runs once at/after **00:10 Europe/Berlin**, u
 The initial learner deliberately accepts only **holiday** days with unchanged air-heating targets between 5 and 15°C. It requires a single selected heat source, at least one hour of heating, room start/end drift no greater than 0.3°C, valid room/outside temperatures, and no significant radiator/storage charging: pump activity is limited to two minutes for exercise, with storage temperature at most 20°C. Heat-pump days must be in heating mode and use the configured reference capacity within 3 percentage points while on. Default reference capacity is **50%**; change it to the intended operating command. Cooling, mixed-source days, warm-up days, invalid sensors and changed targets are rejected.
 
 Configure Archive Control, all input IDs and counter multipliers in the form; Berlin IDs are prefilled. The electricity inputs are **cumulative counters**, not power readings or historic prices. Defaults use 0.001 kWh/pulse on 12254 and 10054, gas m³ on 25105. Verify those units for the actual variables. All inputs, including room targets, must have logging enabled and an archived start baseline. The module neither starts logging nor fills missing historical data. A temperature held for over two hours is conservatively rejected because this learner cannot distinguish an unchanged reading from a failed sensor. A valid quiet cumulative counter is held between its logged changes; resets, ambiguous timestamps and saturated archive requests reject the day. Logging interruptions with no recorded change cannot always be detected from historic counter records alone.
+
+With automatic selection, enable archive logging on HeatingControl **LearningSourceMode** and set **SourceModeID** to that child, because manual 41085 is preserved. Mixed or incorrectly mapped days with over two minutes of opposite air-source activity are rejected.
 
 The defaults monitor radiator pump 44860, storage load pump 20574, storage temperature 15709, actual heat-pump capacity command 19207 and mode 41085. **These defaults must be checked against your installation.** Shared humidifier/auxiliary electricity must be comparable between periods; unequal unrelated circuit loads can bias the estimate.
 

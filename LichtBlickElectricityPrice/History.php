@@ -97,6 +97,10 @@ final class LichtBlickHistory
             throw new RuntimeException('Radiator or hot-water load makes this day unsuitable');
         }
         $source = (int)$mode['min'];
+        // A preserved manual mode must not label an automatic mixed-source day as pure gas/HP.
+        if ($this->stats($source === 1 ? $c['GasAirPumpID'] : $c['HeatPumpOnID'])['active'] > 120) {
+            throw new RuntimeException('Opposite air source active: source-mode history is mixed or incorrectly mapped');
+        }
         $active = $this->stats($source === 1 ? $c['HeatPumpOnID'] : $c['GasAirPumpID'])['active'];
         if ($active < 3600) throw new RuntimeException('Less than one hour of heating');
         if ($source === 1) {
