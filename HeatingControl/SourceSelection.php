@@ -33,7 +33,7 @@ trait HeatingControlSourceSelection
     public function SetAutomaticSourceSelection(bool $enabled): void
     {
         $this->SetValue('AutomaticSourceSelection', $enabled);
-        $this->debug('Automatic source selection ' . ($enabled ? 'enabled' : 'disabled: manual source/power restored'));
+        $this->debug('Automatic source selection ' . ($enabled ? 'enabled' : 'disabled: current source and manual desired power used'));
         $this->ProcessHeating();
     }
 
@@ -72,7 +72,7 @@ trait HeatingControlSourceSelection
     }
 
     /** One final JSON publication avoids reading half-updated provider variables. */
-    private function sourceChoice(int $manualMode): array
+    private function sourceChoice(int $manualMode, array &$queue): array
     {
         $automatic = (bool)$this->GetValue('AutomaticSourceSelection');
         $power = $this->clamp($this->intValue('HeatPumpDesiredPowerID'));
@@ -89,6 +89,9 @@ trait HeatingControlSourceSelection
                 $reason = 'Automatic: ' . ($r['source'] === 1 ? 'heat pump at ' . $power . '%' : 'gas')
                     . '; ' . substr((string)($r['reason'] ?? ''), 0, 500);
             } catch (Throwable $e) { $reason = 'Automatic gas fallback: ' . $e->getMessage(); }
+            // Mirror the selected mode, including fallback and transfer/no-demand periods.
+            // Dispatch respects DryRun and does not invoke a legacy mode action script.
+            $this->queue($queue, $this->id('OperatingModeID'), $mode);
         }
         $source = $mode === $this->ReadPropertyInteger('HeatPumpModeValue') ? 1 : 2;
         $this->SetValue('EffectiveSource', $source);

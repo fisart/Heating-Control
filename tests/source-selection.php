@@ -46,7 +46,7 @@ $m->clock+=299;plan($m,1);run($m);check(!value($m,'HeatPumpOnID'),'Heat-pump off
 $m->clock++;plan($m,1);run($m);check(value($m,'HeatPumpOnID')&&value($m,'HeatPumpPowerID')===35,'Heat pump starts at provider power after delays');
 check(value($m,'HeatPumpHeatModeID')===true,'Heat mode commanded');
 $commands=$GLOBALS['commands'];check(array_search([$m->properties['HeatPumpPowerID'],35],$commands,true)<array_search([$m->properties['HeatPumpOnID'],true],$commands,true),'Power set before enabling compressor');
-check(value($m,'OperatingModeID')===2&&value($m,'HeatPumpDesiredPowerID')===50,'Manual source and desired power preserved');
+check(value($m,'OperatingModeID')===1&&value($m,'HeatPumpDesiredPowerID')===50,'Automatic heat pump mirrored to manual source, desired power preserved');
 check($m->values['EffectiveSource']===1&&$m->values['SelectedHeatPumpPower']===35&&$m->values['LearningSourceMode']===1,'Selection and learning outputs');
 // A weather-driven power change updates the running HP without a source handover.
 plan($m,1,65);run($m);
@@ -54,6 +54,7 @@ check(value($m,'HeatPumpOnID')&&value($m,'HeatPumpPowerID')===65&&$m->values['Se
 check(!commanded($m,'HeatPumpOnID',false)&&!value($m,'GasPumpID'),'Power update does not stop the heat pump or activate gas');
 check(value($m,'HeatPumpDesiredPowerID')===50,'Automatic power change does not overwrite manual desired power');
 plan($m,2,0);run($m);check(!value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Heat pump stops before gas');
+check(value($m,'OperatingModeID')===2,'Gas source mirrored during protected transfer');
 $m->clock+=119;plan($m,2,0);run($m);check(!value($m,'GasPumpID'),'Transfer clock starts at acknowledged stop, not request');
 $m->clock++;plan($m,2,0);run($m);check(value($m,'GasPumpID')&&value($m,'GasMixerID')===$m->properties['MixerOpen'],'Gas starts after acknowledged delay');
 // Failed stop command cannot be bypassed by passage of time.
@@ -65,12 +66,38 @@ $m->clock+=119;plan($m,1);run($m);check(!value($m,'HeatPumpOnID'),'Full transfer
 $m->clock++;plan($m,1);run($m);check(value($m,'HeatPumpOnID'),'Start after late command acknowledgment plus delay');
 // Snapshot failures always select gas, never malformed capacity or stale heat-pump commands.
 foreach([['valid'=>false],['validUntil'=>2000000000],['updatedAt'=>1999999819],['updatedAt'=>2000000031],['powerPercent'=>0],['powerPercent'=>101],['powerPercent'=>35.5],['source'=>'1'],['schema'=>2]] as $bad) {
- $m=fixture();$m->values['AutomaticSourceSelection']=true;plan($m,1,35,$bad);run($m);
+ $m=fixture();$m->values['AutomaticSourceSelection']=true;$GLOBALS['variables'][$m->properties['OperatingModeID']]['value']=1;plan($m,1,35,$bad);run($m);
+ check(value($m,'OperatingModeID')===2,'Fallback gas mirrored '.json_encode($bad));
  check($m->values['EffectiveSource']===2 && value($m,'GasPumpID')&&!value($m,'HeatPumpOnID'),'Invalid plan gas fallback '.json_encode($bad));
 }
 $m=fixture();$m->values['AutomaticSourceSelection']=true;$GLOBALS['variables'][82000]['value']='{bad';run($m);check(value($m,'GasPumpID'),'Malformed JSON gas fallback');
 $m=fixture();$m->values['AutomaticSourceSelection']=true;$m->properties['ElectricityPriceInstanceID']=0;run($m);check(value($m,'GasPumpID'),'Missing provider gas fallback');
 $m=fixture();$m->values['AutomaticSourceSelection']=true;$m->attributes['SourceTransfer']='{bad';run($m);check(!value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Corrupt transfer state waits with both sources off');
+// Mirroring bypasses legacy action scripts, writes only changes and respects permission gates.
+$m=fixture();$m->values['AutomaticSourceSelection']=true;
+$GLOBALS['variables'][$m->properties['OperatingModeID']]['VariableCustomAction']=123;
+run($m);
+check(value($m,'OperatingModeID')===1&&!commanded($m,'OperatingModeID',1),'Mode mirror uses direct state write, never legacy source action');
+$count=count(array_filter($GLOBALS['directWrites'],fn($write)=>$write[0]===$m->properties['OperatingModeID']));run($m);
+check(count(array_filter($GLOBALS['directWrites'],fn($write)=>$write[0]===$m->properties['OperatingModeID']))===$count,'Unchanged source is not rewritten on reevaluation');
+$m->SetAutomaticSourceSelection(false);run($m);$m->clock+=300;run($m);
+check(value($m,'OperatingModeID')===1&&value($m,'HeatPumpOnID')&&value($m,'HeatPumpPowerID')===50,'Automatic off retains last mirrored source with manual power');
+$m=fixture();$m->values['AutomaticSourceSelection']=true;$m->properties['HeatPumpModeValue']=7;$m->properties['GasModeValue']=8;
+$GLOBALS['variables'][$m->properties['OperatingModeID']]['value']=8;run($m);
+check(value($m,'OperatingModeID')===7,'Configured heat-pump mode value mirrored');
+plan($m,2,0);run($m);check(value($m,'OperatingModeID')===8,'Configured gas mode value mirrored');
+foreach(['DryRun','Disabled','Summer','Master','Night','Cooling'] as $gate) {
+ $m=fixture();$m->values['AutomaticSourceSelection']=true;
+ if($gate==='DryRun')$m->properties['DryRun']=true;
+ elseif($gate==='Disabled')$m->properties['Enabled']=false;
+ else {$key=['Summer'=>'WinterID','Master'=>'MasterDisableID','Night'=>'NightDisableID','Cooling'=>'OperatingModeID'][$gate];$GLOBALS['variables'][$m->properties[$key]]['value']=$gate==='Cooling'?0:($gate!=='Summer');}
+ $before=value($m,'OperatingModeID');run($m);
+ check(value($m,'OperatingModeID')===$before,'Mode mirror respects '.$gate);
+}
+$m=fixture();$m->values['AutomaticSourceSelection']=true;
+$GLOBALS['variables'][$m->properties['OperatingModeID']]['VariableType']=2;
+$m->ProcessHeating();
+check(str_starts_with($m->values['DecisionStatus'],'ERROR')&&!$GLOBALS['commands']&&!$GLOBALS['directWrites'],'Wrong mode type fails before sending any commands');
 // Returning to manual obeys the same handover, then uses unchanged desired capacity.
 $m=fixture();$m->values['AutomaticSourceSelection']=true;plan($m,2,0);run($m);
 $GLOBALS['variables'][$m->properties['OperatingModeID']]['value']=1;
@@ -83,6 +110,7 @@ foreach(['NightDisableID','OperatingModeID'] as $key) {
 }
 $m=fixture();$m->values['AutomaticSourceSelection']=true;foreach(json_decode($m->properties['Rooms'],true) as $room)foreach($room['sensors'] as $id)$GLOBALS['variables'][$id]['value']=24.0;run($m);
 check(!value($m,'HeatPumpOnID')&&!value($m,'GasPumpID')&&$m->values['SelectedHeatPumpPower']===0,'No demand no source');
+check(value($m,'OperatingModeID')===1,'No demand retains selected heat-pump mode without enabling equipment');
 $m=fixture();$m->values['AutomaticSourceSelection']=true;$GLOBALS['variables'][$m->properties['MasterDisableID']]['value']=true;run($m);check(!$GLOBALS['commands'],'Master bypass retains existing behavior');
 $m=fixture();$m->values['AutomaticSourceSelection']=true;$m->attributes['HeatPumpStoppedAt']=(string)($m->clock-1000);$m->ApplyChanges();run($m);check(!value($m,'HeatPumpOnID'),'Restart reobserves full off period');
 // A short demand interruption cannot bypass an HP-to-gas stop delay.

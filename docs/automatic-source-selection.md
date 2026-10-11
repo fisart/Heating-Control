@@ -1,4 +1,4 @@
-# Automatic air-heating source selection — 0.3.4
+# Automatic air-heating source selection — 0.3.5
 
 The child **AutomaticSourceSelection** Boolean (with action) is an external switch
 below HeatingControl and appears on its protected HTML page. It defaults to off.
@@ -31,15 +31,26 @@ when existing heating permissions and room demand allow heating. Cooling and
 applicable night shutdown remain authoritative; master/summer retain existing
 bypass semantics. No room demand stops the sources, with existing residual recovery.
 
-The manual source **41085** and desired power **59800** remain stored separately.
-Turning automatic off returns to those values through the protected handover.
+Automatic selection updates **OperatingModeID** (default **41085**) to the
+configured heat-pump/gas mode values (defaults **1 / 2**), including gas fallback.
+This selector represents the intended source during transfer and no-demand
+periods; it is not physical running feedback. **HeatPumpDesiredPowerID** (default
+**59800**) retains the manual desired percentage. Turning automatic off keeps the
+last source selector value and uses that manual percentage through the protected
+handover. The previous manual source is not restored.
+
+The mode is written only when changed, after equipment-command dispatch, as a
+direct integer state update. Its custom/action script is not invoked, so legacy
+source actions cannot bypass the module's transfer logic. Disabled, DryRun,
+master/summer bypass, night shutdown and cooling do not write the selector.
+Cooling retains its existing veto, including when automatic selection is on.
 The page makes manual source/power read-only while automatic selection is on.
 Cooling can still veto heating through the external manual mode; to select it on
 the page, turn automatic selection off first.
 
-## Heating dashboard and setup — 0.3.4
+## Heating dashboard and setup — 0.3.5
 
-1. Update **Heating-Control** to **0.3.4, build 14**. Open the HeatingControl instance form and select the actual **LichtBlick electricity-price instance** under **Automatic air-heating source selection**, then apply. A missing provider remains a gas fallback, not a valid economic comparison.
+1. Update **Heating-Control** to **0.3.5, build 15**. Open the HeatingControl instance form and select the actual **LichtBlick electricity-price instance** under **Automatic air-heating source selection**, then apply. A missing provider remains a gas fallback, not a valid economic comparison.
 2. Check the provider tariff confirmation and current RecommendationJSON. Configure its weather curve or fixed power, threshold and margin in the LichtBlick form.
 3. Use the actionable **Automatic heating source selection (LichtBlick)** / **AutomaticSourceSelection** Boolean directly below HeatingControl, or the dedicated **Turn automatic on / off** button near the top of the protected heating dashboard. It defaults to off; changing it does not bypass Enabled/DryRun.
 
@@ -49,7 +60,7 @@ The display and controller share the same validation of the provider’s **Recom
 
 A new valid percentage while the selected heat pump is running updates its power command without initiating a gas/heat-pump transfer or restarting the heat pump. A source change follows the existing stop, mixer and off-time checks. Gas recommendations carry zero heat-pump power. Expired, missing or malformed snapshots cause automatic gas fallback, still subject to heating demand/permissions and transfer delays. The safety margin is already applied in LichtBlick; HeatingControl does not apply it again.
 
-Automatic off uses the stored manual source and desired percentage, through the same protected handover when changing source. Manual source and desired-power fields are read-only on the page while automatic is on. No demand or shutdown can leave a valid provider HP recommendation alongside a controller selection of Off; this is intentional. Reading the dashboard never switches equipment or changes provider data.
+Automatic off uses the current source selector and retained manual desired percentage, through the same protected handover when changing source. Manual source and desired-power fields are read-only on the page while automatic is on. No demand or shutdown can leave a valid provider HP recommendation alongside a controller selection of Off; this is intentional. Reading the dashboard never switches equipment or changes provider data.
 
 ## Exact Berlin command mapping
 
@@ -91,7 +102,7 @@ HeatingControl publishes **EffectiveSource** (0 off, 1 heat pump, 2 gas),
 no-demand periods and is zero for cooling/shutdown/bypass/disabled control. If
 using the daily learner with automatic selection, enable Archive logging on this
 child and set LichtBlick **SourceModeID** to its ID. Do not leave it pointing at
-manual **41085**, which is deliberately preserved. The learner also rejects more
+**41085**: it now mirrors the intended source, but lacks the learner's shutdown/bypass state. The learner also rejects more
 than two minutes of opposite air-source activity, guarding incorrectly mapped or
 mixed-source histories. Initial daily learning remains disabled until configured.
 
@@ -100,6 +111,7 @@ physically running; inspect device command variables and measured response too.
 
 Fixture tests check default manual control, snapshot validation/fallback, stop
 acknowledgment, delayed starts, command order, restarts, demand interruption,
-shutdown priority, handback, configuration restore and authenticated web controls.
+shutdown priority, source-selector mirroring (including configurable mode values),
+DryRun, legacy-action bypass, unchanged-value suppression, handback, configuration restore and authenticated web controls.
 Existing heating/recovery, archive/security and DOM checks also run. No live
 heating equipment was operated during implementation.

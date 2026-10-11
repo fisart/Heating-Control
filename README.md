@@ -27,7 +27,7 @@ Version **0.3.1**, build 11 connects the price recommendation to HeatingControl.
 The **AutomaticSourceSelection** switch appears below the heating instance and
 on its protected web page; it defaults to off. Select the LichtBlick instance in
 the heating configuration. On uses its valid source and published power;
-off restores the stored manual source and desired power. Gas is the fallback
+off uses the current source selector and retained manual desired power. Gas is the fallback
 for missing, unverified or expired recommendations, subject to existing demand
 and heating permissions. Source changes stop both air sources before starting
 the other, with a configurable 120-second transfer pause and 300-second observed
@@ -47,8 +47,10 @@ recommendation and power alongside the controller selection, device command
 values and transfer status, with a link to the protected price page. Select the
 LichtBlick instance in the HeatingControl form and use **AutomaticSourceSelection**
 below the instance or **Turn automatic on / off** on the page. Running heat-pump
-power follows valid provider changes; automatic off restores stored manual
-settings. See [setup and behavior](docs/automatic-source-selection.md).
+power follows valid provider changes. Version **0.3.5**, build 15 also updates
+the existing source selector **OperatingModeID** (default **41085**) to the
+automatic selection: **1 = heat pump**, **2 = gas** by default. Automatic off
+keeps the last selected source and uses the retained manual desired percentage. See [setup and behavior](docs/automatic-source-selection.md).
 
 ## Installation and safe handover
 

@@ -207,7 +207,7 @@ class HeatingControl extends IPSModule
             throw new \RuntimeException('Unknown operating mode ' . $mode . '; no commands sent');
         }
 
-        [$mode, $selectedPower] = $this->sourceChoice($mode);
+        [$mode, $selectedPower] = $this->sourceChoice($mode, $queue);
         $hysteresis = $this->floatValue('HysteresisID');
         if ($hysteresis < 0.0) throw new \RuntimeException('Hysteresis must not be negative');
         $oldLatch = json_decode($this->ReadAttributeString('DemandLatch'), true);
@@ -361,6 +361,15 @@ class HeatingControl extends IPSModule
 
     private function dispatch(array $q, array &$log): void
     {
+        // Publish the mode after equipment commands, without running its legacy action.
+        // The source controller owns the protected handover; this is a state mirror.
+        $modeID = $this->id('OperatingModeID');
+        if (array_key_exists($modeID, $q)) {
+            $mode = $q[$modeID]; unset($q[$modeID]); $q[$modeID] = $mode;
+            if (!IPS_VariableExists($modeID) || IPS_GetVariable($modeID)['VariableType'] !== 1) {
+                throw new \RuntimeException('Operating mode must be an integer variable: ' . $modeID);
+            }
+        }
         // Validate every destination before sending the first command.
         foreach ($q as $id => $_) {
             if (!IPS_VariableExists($id) || !in_array(IPS_GetVariable($id)['VariableType'], [0, 1, 2], true)) {
@@ -387,7 +396,9 @@ class HeatingControl extends IPSModule
                 $this->debug($line);
                 continue;
             }
-            if (($v['VariableCustomAction'] ?? 0) || ($v['VariableAction'] ?? 0)) {
+            if ($id === $modeID) {
+                SetValueInteger($id, $value);
+            } elseif (($v['VariableCustomAction'] ?? 0) || ($v['VariableAction'] ?? 0)) {
                 RequestAction($id, $value);
             } elseif ($type === 0) SetValueBoolean($id, $value);
             elseif ($type === 1) SetValueInteger($id, $value);

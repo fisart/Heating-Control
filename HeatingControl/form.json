@@ -29,7 +29,7 @@
         },
         {
           "type": "Label",
-          "caption": "AutomaticSourceSelection below this instance or on the heating page switches automatic selection on/off. Select the LichtBlick instance above: RecommendationJSON supplies its RecommendedSource and RecommendedHeatPumpPowerPercent together. Missing/unconfirmed/expired recommendations use gas. Manual source and power are retained."
+          "caption": "AutomaticSourceSelection below this instance or on the heating page switches automatic selection on/off. Select the LichtBlick instance above: RecommendationJSON supplies its RecommendedSource and RecommendedHeatPumpPowerPercent together. Missing/unconfirmed/expired recommendations use gas. Automatic selection updates OperatingModeID to the configured heat-pump/gas value. Automatic off keeps that source and uses the retained manual desired power."
         },
         {
           "type": "NumberSpinner",
