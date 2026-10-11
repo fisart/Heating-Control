@@ -26,7 +26,7 @@ const {chromium}=require('playwright');
  await page.goto('https://heating.example:46900/hook/heating_1');
  await page.locator('#rooms article').nth(3).waitFor();
  assert.equal(await page.locator('#rooms article').count(),4);
- assert.equal(await page.locator('#portal').getAttribute('href'),'/hook/secrets_7?portal=1');
+ assert.equal(await page.locator('#portal').getAttribute('href'),'/hook/alarm_portal_10');
  assert.equal(await page.locator('#environment .reading').count(),6);
  assert.equal(await page.locator('#heat-pump-devices .device-row').count(),4);
  assert.equal(await page.locator('#gas-devices .device-row').count(),5);

@@ -24,7 +24,11 @@ trait HeatingControlWebhook
 
     private function webVault(): int
     {
-        $selected = $this->ReadPropertyInteger('VaultInstanceID');
+        return $this->webVaultForSelection($this->ReadPropertyInteger('VaultInstanceID'));
+    }
+
+    private function webVaultForSelection(int $selected): int
+    {
         if ($selected < 0) return 0;
         $candidates = $selected > 1 ? [$selected] : IPS_GetInstanceListByModuleID(self::PORTAL_VAULT);
         $eligible = [];
@@ -39,6 +43,29 @@ trait HeatingControlWebhook
             } catch (Throwable $e) { continue; }
         }
         return count($eligible) === 1 ? $eligible[0] : 0;
+    }
+
+    /** Link only to one registered, enabled AlarmPortal using this page's vault. */
+    private function webPortalPath(int $vault): string
+    {
+        try {
+            $controls = IPS_GetInstanceListByModuleID(self::WEBHOOK_CONTROL);
+            if (count($controls) !== 1) return '';
+            $hooks = json_decode((string)IPS_GetProperty((int)$controls[0], 'Hooks'), true, 32, JSON_THROW_ON_ERROR);
+            if (!is_array($hooks) || !array_is_list($hooks)) return '';
+            $eligible = [];
+            foreach (IPS_GetInstanceListByModuleID('{922E5A10-A048-463D-A973-97B4BBD9096B}') as $id) {
+                $id = (int)$id;
+                try {
+                    if ($id <= 1 || !IPS_InstanceExists($id) || IPS_GetProperty($id, 'Enabled') !== true
+                        || $this->webVaultForSelection((int)IPS_GetProperty($id, 'VaultInstanceID')) !== $vault) continue;
+                    $path = '/hook/alarm_portal_' . $id;
+                    $matches = array_values(array_filter($hooks, static fn($hook) => is_array($hook) && ($hook['Hook'] ?? '') === $path));
+                    if (count($matches) === 1 && (int)($matches[0]['TargetID'] ?? 0) === $id) $eligible[$id] = $path;
+                } catch (Throwable $e) { continue; }
+            }
+            return count($eligible) === 1 ? array_values($eligible)[0] : '';
+        } catch (Throwable $e) { return ''; }
     }
 
     public function SetupHook(): void
@@ -374,7 +401,7 @@ trait HeatingControlWebhook
             $template = file_get_contents(__DIR__.'/page.html');
             if ($template === false) throw new RuntimeException('Page template missing.');
             return $reply(200,strtr($template,['{{NONCE}}'=>$escape($nonce),'{{PATH}}'=>$escape($this->webPath()),
-                '{{CSRF}}'=>$escape($this->webCSRF($vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape('/hook/secrets_'.$vault.'?portal=1')]),[
+                '{{CSRF}}'=>$escape($this->webCSRF($vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape($this->webPortalPath($vault))]),[
                 'Content-Type'=>'text/html; charset=utf-8',
                 'Content-Security-Policy'=>"default-src 'none'; script-src 'nonce-$nonce'; style-src 'nonce-$nonce'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"]);
         } catch (JsonException|InvalidArgumentException $e) { return $reply(422,['error'=>$e->getMessage()]); }

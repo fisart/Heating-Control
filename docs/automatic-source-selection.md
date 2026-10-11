@@ -1,4 +1,4 @@
-# Automatic air-heating source selection — 0.3.5
+# Automatic air-heating source selection — 0.3.6
 
 The child **AutomaticSourceSelection** Boolean (with action) is an external switch
 below HeatingControl and appears on its protected HTML page. It defaults to off.
@@ -48,11 +48,17 @@ The page makes manual source/power read-only while automatic selection is on.
 Cooling can still veto heating through the external manual mode; to select it on
 the page, turn automatic selection off first.
 
-## Heating dashboard and setup — 0.3.5
+## Heating dashboard and setup — 0.3.6
 
-1. Update **Heating-Control** to **0.3.5, build 15**. Open the HeatingControl instance form and select the actual **LichtBlick electricity-price instance** under **Automatic air-heating source selection**, then apply. A missing provider remains a gas fallback, not a valid economic comparison.
+1. Update **Heating-Control** to **0.3.6, build 16**. Open the HeatingControl instance form and select the actual **LichtBlick electricity-price instance** under **Automatic air-heating source selection**, then apply. A missing provider remains a gas fallback, not a valid economic comparison.
 2. Check the provider tariff confirmation and current RecommendationJSON. Configure its weather curve or fixed power, threshold and margin in the LichtBlick form.
 3. Use the actionable **Automatic heating source selection (LichtBlick)** / **AutomaticSourceSelection** Boolean directly below HeatingControl, or the dedicated **Turn automatic on / off** button near the top of the protected heating dashboard. It defaults to off; changing it does not bypass Enabled/DryRun.
+
+The heating page's **Back to portal** link selects the single enabled, correctly
+registered AlarmPortal using the same SecretsManager vault. It opens
+`/hook/alarm_portal_<instanceID>`, not the SecretsManager login page. Missing,
+conflicting or ambiguous portal configuration shows a browser **Back** button.
+Login/expired-session redirects still use the SecretsManager authentication gate.
 
 The dedicated HTML section displays automatic/manual state, the configured price instance, the provider’s valid recommended source/power, current price and tariff availability, safe/entry thresholds, expiry and reason. It also shows the controller’s last selected source/power, current heat-pump enable/power and gas-air-pump command values, and source-transfer status. These are command variables, not independent physical feedback. If the provider web page is enabled, a local link opens its protected price/model dashboard.
 

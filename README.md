@@ -52,6 +52,12 @@ the existing source selector **OperatingModeID** (default **41085**) to the
 automatic selection: **1 = heat pump**, **2 = gas** by default. Automatic off
 keeps the last selected source and uses the retained manual desired percentage. See [setup and behavior](docs/automatic-source-selection.md).
 
+Version **0.3.6**, build 16 corrects **Back to portal** on the heating page.
+It links to the single registered, enabled AlarmPortal using the heating page's
+SecretsManager vault, at `/hook/alarm_portal_<instanceID>`. If no unambiguous
+matching portal is available, a browser **Back** button is shown. The
+SecretsManager login redirect remains separate from this navigation link.
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.

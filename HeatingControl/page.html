@@ -12,7 +12,7 @@
 </style>
 </head>
 <body><main data-path="{{PATH}}" data-csrf="{{CSRF}}">
-<header><div><div class="eyebrow">Home climate · Heating Control</div><h1>Warmth, under control.</h1><p class="subtitle">Rooms, heat sources and recovered warmth in one view.</p></div><div class="tools"><a href="{{PORTAL}}" id="portal">Portal</a><button class="secondary" id="refresh">Refresh</button><span id="status" aria-live="polite">Connecting…</span></div></header>
+<header><div><div class="eyebrow">Home climate · Heating Control</div><h1>Warmth, under control.</h1><p class="subtitle">Rooms, heat sources and recovered warmth in one view.</p></div><div class="tools"><a href="{{PORTAL}}" id="portal" hidden>Back to portal</a><button class="secondary" id="portal-back" hidden>Back</button><button class="secondary" id="refresh">Refresh</button><span id="status" aria-live="polite">Connecting…</span></div></header>
 <div id="message" role="status" aria-live="polite"></div>
 <section id="decision" class="banner"><strong>Reading heating status…</strong><p>Controls become available after authentication and a successful status refresh.</p></section>
 <section id="automatic-source" class="card" aria-label="Automatic heat source selection">
@@ -121,6 +121,8 @@ document.querySelector('#chart-close').addEventListener('click',()=>chartDialog.
 
 document.querySelector('#refresh').addEventListener('click',()=>{document.activeElement?.blur();refresh();});
 // Return to the actual portal path supplied by the module; never accept a query redirect.
-document.querySelector('#portal').href='{{PORTAL}}';
+const portal=document.querySelector('#portal'),portalBack=document.querySelector('#portal-back');
+if(/^\/hook\/alarm_portal_\d+$/.test(portal.getAttribute('href')||'')){portal.hidden=false;}else{portal.removeAttribute('href');portalBack.hidden=false;}
+portalBack.addEventListener('click',()=>history.back());
 refresh();setInterval(()=>{if(!document.hidden)refresh();if(lastFetch&&Date.now()-lastFetch>30000){disableControls();document.querySelector('#status').textContent='Status stale — refresh';}},10000);
 </script></body></html>

@@ -22,6 +22,19 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  };
  w.eval(d.querySelector('script').textContent);
  const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
+ assert.equal(d.querySelector('#portal').getAttribute('href'),'/hook/alarm_portal_10');
+ assert.equal(d.querySelector('#portal').hidden,false,'Actual portal backlink visible');
+ assert.equal(d.querySelector('#portal-back').hidden,true,'Browser fallback hidden when portal is available');
+ for(const href of ['', 'javascript:alert(1)','https://evil.example/hook/alarm_portal_10']){
+  const html=fixture.page.body.replace('href="/hook/alarm_portal_10" id="portal"','href="'+href+'" id="portal"');
+  const fallback=new JSDOM(html,{url:w.location.href+'?return=https://evil.example',runScripts:'outside-only',virtualConsole:vc});
+  let backs=0;fallback.window.history.back=()=>{backs++;};fallback.window.setInterval=()=>0;fallback.window.fetch=w.fetch;
+  fallback.window.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+  fallback.window.HTMLDialogElement.prototype.close=function(){this.open=false;};
+  fallback.window.eval(fallback.window.document.querySelector('script').textContent);await settle();
+  const fd=fallback.window.document;assert.equal(fd.querySelector('#portal').hidden,true);assert.equal(fd.querySelector('#portal').hasAttribute('href'),false);
+  assert.equal(fd.querySelector('#portal-back').hidden,false);fd.querySelector('#portal-back').click();assert.equal(backs,1,'Fallback uses browser history');fallback.window.close();
+ }
  assert.equal(d.querySelectorAll('#heat-pump-devices .device-row').length,4);
  assert.equal(d.querySelectorAll('#gas-devices .device-row').length,5);
  assert.equal(d.querySelectorAll('#airflow-devices .device-row').length,7);
