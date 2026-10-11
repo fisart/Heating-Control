@@ -29,7 +29,7 @@
         },
         {
           "type": "Label",
-          "caption": "Use the Automatic heating source selection switch below this instance or on its web page. Default off. Missing/unconfirmed/expired prices use gas. Manual source and power values are retained."
+          "caption": "AutomaticSourceSelection below this instance or on the heating page switches automatic selection on/off. Select the LichtBlick instance above: RecommendationJSON supplies its RecommendedSource and RecommendedHeatPumpPowerPercent together. Missing/unconfirmed/expired recommendations use gas. Manual source and power are retained."
         },
         {
           "type": "NumberSpinner",

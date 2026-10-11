@@ -13,7 +13,7 @@ trait HeatingControlSourceSelection
         $this->RegisterAttributeString('SourceTransfer', '');
         $this->RegisterAttributeString('AutomaticWasActive', '0');
         $this->RegisterAttributeString('HeatPumpStoppedAt', '0');
-        $this->RegisterVariableBoolean('AutomaticSourceSelection', 'Automatic heating source selection', '~Switch', 60);
+        $this->RegisterVariableBoolean('AutomaticSourceSelection', 'Automatic heating source selection (LichtBlick)', '~Switch', 60);
         $this->EnableAction('AutomaticSourceSelection');
         $this->RegisterVariableInteger('EffectiveSource', 'Selected air-heating source (0 off, 1 heat pump, 2 gas)', '', 70);
         $this->RegisterVariableInteger('LearningSourceMode', 'Air-source mode for archive learning (0 unavailable, 1 heat pump, 2 gas)', '', 75);
@@ -51,6 +51,26 @@ trait HeatingControlSourceSelection
         } catch (Throwable $e) { return 0; }
     }
 
+    /** The same strict snapshot validation is used by control and the read-only dashboard. */
+    private function readPriceRecommendation(): array
+    {
+        $id = $this->priceRecommendationID();
+        if (!$id) throw new RuntimeException('Select an updated LichtBlick price instance');
+        $json = GetValue($id);
+        if (!is_string($json) || strlen($json) > 8192) throw new RuntimeException('Invalid recommendation snapshot');
+        $r = json_decode($json, true, 16, JSON_THROW_ON_ERROR);
+        $now = $this->sourceClock();
+        if (!is_array($r) || ($r['schema'] ?? null) !== 1 || !is_int($r['updatedAt'] ?? null)
+            || $r['updatedAt'] > $now + 30 || $now - $r['updatedAt'] > 180
+            || ($r['valid'] ?? null) !== true || !is_int($r['validUntil'] ?? null) || $r['validUntil'] <= $now
+            || !in_array($r['source'] ?? null, [1, 2], true)) throw new RuntimeException('Recommendation unavailable, unconfirmed or expired');
+        if (!is_int($r['powerPercent'] ?? null) || ($r['source'] === 1
+            ? ($r['powerPercent'] < 1 || $r['powerPercent'] > 100) : $r['powerPercent'] !== 0)) {
+            throw new RuntimeException('Heat-pump power recommendation missing or invalid');
+        }
+        return $r;
+    }
+
     /** One final JSON publication avoids reading half-updated provider variables. */
     private function sourceChoice(int $manualMode): array
     {
@@ -62,20 +82,8 @@ trait HeatingControlSourceSelection
             $this->WriteAttributeString('AutomaticWasActive', '1');
             $mode = $this->ReadPropertyInteger('GasModeValue'); $power = 0;
             try {
-                $id = $this->priceRecommendationID();
-                if (!$id) throw new RuntimeException('Select an updated LichtBlick price instance');
-                $json = GetValue($id);
-                if (!is_string($json) || strlen($json) > 8192) throw new RuntimeException('Invalid recommendation snapshot');
-                $r = json_decode($json, true, 16, JSON_THROW_ON_ERROR);
-                $now = $this->sourceClock();
-                if (($r['schema'] ?? null) !== 1 || !is_int($r['updatedAt'] ?? null)
-                    || $r['updatedAt'] > $now + 30 || $now - $r['updatedAt'] > 180
-                    || ($r['valid'] ?? null) !== true || !is_int($r['validUntil'] ?? null) || $r['validUntil'] <= $now
-                    || !in_array($r['source'] ?? null, [1, 2], true)) throw new RuntimeException('Recommendation unavailable, unconfirmed or expired');
+                $r = $this->readPriceRecommendation();
                 if ($r['source'] === 1) {
-                    if (!is_int($r['powerPercent'] ?? null) || $r['powerPercent'] < 1 || $r['powerPercent'] > 100) {
-                        throw new RuntimeException('Heat-pump power recommendation missing or invalid');
-                    }
                     $power = $r['powerPercent']; $mode = $this->ReadPropertyInteger('HeatPumpModeValue');
                 }
                 $reason = 'Automatic: ' . ($r['source'] === 1 ? 'heat pump at ' . $power . '%' : 'gas')

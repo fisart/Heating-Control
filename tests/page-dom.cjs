@@ -28,8 +28,8 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#airflow-devices').textContent.includes('Current fan speed'));
  assert.ok(d.querySelector('#heat-pump-devices').textContent.includes('Heating / cooling'));
  assert.ok(d.querySelector('#gas-devices').textContent.includes('Gas mixerClosed (100)'));
- assert.ok(d.querySelector('#controls').textContent.includes('Automatic heating source selection'));
- const automaticRow=[...d.querySelectorAll('#controls > div')].find(r=>r.textContent.includes('Automatic heating source selection'));
+ assert.ok(d.querySelector('#automatic-control').textContent.includes('Automatic heating source selection'));
+ const automaticRow=[...d.querySelectorAll('#automatic-control > div')].find(r=>r.textContent.includes('Automatic heating source selection'));
  assert.ok(automaticRow,'Automatic switch visible');
  automaticRow.querySelector('button').click();await settle();
  assert.deepEqual(JSON.parse(calls.findLast(c=>c.options.method==='POST').options.body),{control:'AutomaticSourceSelection',value:true});
@@ -39,6 +39,27 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#source-selection').textContent.includes('Automatic selection'));
  assert.ok(d.querySelector('#heat-pump-devices').textContent.includes('35 %'));
  assert.equal(d.querySelector('#controls select').disabled,true,'Manual source locked in automatic selection');
+ assert.equal(d.querySelector('#automatic-control button').textContent,'Turn automatic off');
+ assert.equal(d.querySelector('#automatic-control button').getAttribute('aria-pressed'),'true');
+ const provider={instanceID:20,connected:true,name:'LichtBlick Berlin',path:'/hook/lichtblick_20',valid:true,source:1,powerPercent:65,validUntil:stamp+900,reason:'Weather-adjusted heat pump at 65%',readings:{PriceAvailable:true,PriceValid:true,CurrentPriceCt:19.25,EffectiveThresholdCt:22.5,EntryThresholdCt:20.5}};
+ state.sourceSelection.provider=provider;state.sourceSelection.power=65;
+ d.querySelector('#refresh').click();await settle();
+ assert.ok(d.querySelector('#price-provider').textContent.includes('LichtBlick Berlin'));
+ assert.ok(d.querySelector('#price-provider').textContent.includes('65 %'));
+ assert.ok(d.querySelector('#price-provider').textContent.includes('19.25 ct/kWh'));
+ assert.ok(d.querySelector('#automatic-selected').textContent.includes('65 %'));
+ assert.equal(d.querySelector('#price-provider-link').getAttribute('href'),'/hook/lichtblick_20');
+ state.sourceSelection.provider={...provider,valid:false,source:0,powerPercent:0,reason:'Expired <img src=x onerror=alert(1)>',path:'javascript:alert(1)'};
+ d.querySelector('#refresh').click();await settle();
+ assert.ok(d.querySelector('#price-provider').textContent.includes('Gas fallback'));
+ assert.equal(d.querySelector('#price-provider-link').hidden,true);
+ assert.equal(d.querySelectorAll('#automatic-source img').length,0);
+ // Both directions use the same protected action, and manual controls unlock when off.
+ state=structuredClone(state);state.sourceSelection.automatic=false;state.controls.AutomaticSourceSelection.value=false;state.controls.OperatingModeID.available=true;state.controls.HeatPumpDesiredPowerID.available=true;
+ d.querySelector('#automatic-control button').click();await settle();
+ assert.deepEqual(JSON.parse(calls.findLast(c=>c.options.method==='POST').options.body),{control:'AutomaticSourceSelection',value:false});
+ assert.equal(d.querySelector('#automatic-mode').textContent,'Manual');
+ assert.equal(d.querySelector('#controls select').disabled,false);
  assert.equal(d.querySelectorAll('[data-sensor-id]').length,2);
  assert.equal(d.querySelectorAll('#rooms article')[1].querySelectorAll('.sensor-value').length,0,'Unrecorded room has plain temperature');
  d.querySelector('#environment [data-sensor-id="25911"]').click();await settle();
@@ -79,7 +100,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  expired=true;d.querySelector('#environment .sensor-value').click();await settle();
  assert.ok(d.querySelector('#chart-status').textContent.includes('expired'));
  assert.ok(d.querySelector('#message a').textContent.includes('Sign in again'));
- assert.equal(d.querySelectorAll('#rooms button:enabled:not(.sensor-value),#controls button:enabled').length,0);
+ assert.equal(d.querySelectorAll('#rooms button:enabled:not(.sensor-value),#automatic-control button:enabled,#controls button:enabled').length,0);
  assert.deepEqual(errors,[]);
  dom.window.close();console.log('Page DOM: device groups, archived-only links, sensor names, chart periods and resolutions, empty results, multi-sensor values, escaping and expired sessions passed.');
 })().catch(e=>{console.error(e);process.exit(1);});

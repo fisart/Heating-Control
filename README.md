@@ -41,6 +41,15 @@ setting and update MyAlarmSystem for automatic **Smart Home** portal discovery.
 The curve is provisional; capacity optimisation from tests and wider
 radiator/DHW/moisture coordination remain design work.
 
+Version **0.3.4**, build 14 makes the heating dashboard's automatic/manual switch
+a dedicated section above room climate. It shows the connected LichtBlick
+recommendation and power alongside the controller selection, device command
+values and transfer status, with a link to the protected price page. Select the
+LichtBlick instance in the HeatingControl form and use **AutomaticSourceSelection**
+below the instance or **Turn automatic on / off** on the page. Running heat-pump
+power follows valid provider changes; automatic off restores stored manual
+settings. See [setup and behavior](docs/automatic-source-selection.md).
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.

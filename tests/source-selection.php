@@ -33,6 +33,10 @@ function run($m,$ack=true) {
 }
 function value($m,$key) {return GetValue($m->properties[$key]);}
 function commanded($m,$key,$v) {return in_array([$m->properties[$key],$v],$GLOBALS['commands'],true);}
+$m=fixture();$m->RequestAction('AutomaticSourceSelection',true);
+check($m->values['AutomaticSourceSelection']===true,'Instance switch action enables automatic selection');
+$m->RequestAction('AutomaticSourceSelection',false);
+check($m->values['AutomaticSourceSelection']===false,'Instance switch action disables automatic selection');
 $m=fixture();check($m->values['AutomaticSourceSelection']===false,'Default remains manual');run($m);
 check(value($m,'GasPumpID')===true && value($m,'HeatPumpOnID')===false,'Manual gas unchanged by cheap recommendation');
 $m->SetAutomaticSourceSelection(true);run($m);
@@ -44,6 +48,11 @@ check(value($m,'HeatPumpHeatModeID')===true,'Heat mode commanded');
 $commands=$GLOBALS['commands'];check(array_search([$m->properties['HeatPumpPowerID'],35],$commands,true)<array_search([$m->properties['HeatPumpOnID'],true],$commands,true),'Power set before enabling compressor');
 check(value($m,'OperatingModeID')===2&&value($m,'HeatPumpDesiredPowerID')===50,'Manual source and desired power preserved');
 check($m->values['EffectiveSource']===1&&$m->values['SelectedHeatPumpPower']===35&&$m->values['LearningSourceMode']===1,'Selection and learning outputs');
+// A weather-driven power change updates the running HP without a source handover.
+plan($m,1,65);run($m);
+check(value($m,'HeatPumpOnID')&&value($m,'HeatPumpPowerID')===65&&$m->values['SelectedHeatPumpPower']===65,'Running HP follows a new provider percentage');
+check(!commanded($m,'HeatPumpOnID',false)&&!value($m,'GasPumpID'),'Power update does not stop the heat pump or activate gas');
+check(value($m,'HeatPumpDesiredPowerID')===50,'Automatic power change does not overwrite manual desired power');
 plan($m,2,0);run($m);check(!value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Heat pump stops before gas');
 $m->clock+=119;plan($m,2,0);run($m);check(!value($m,'GasPumpID'),'Transfer clock starts at acknowledged stop, not request');
 $m->clock++;plan($m,2,0);run($m);check(value($m,'GasPumpID')&&value($m,'GasMixerID')===$m->properties['MixerOpen'],'Gas starts after acknowledged delay');
@@ -84,6 +93,31 @@ run($m);$m->clock++;plan($m,2,0);
 foreach(json_decode($m->properties['Rooms'],true) as $room)foreach($room['sensors'] as $id)$GLOBALS['variables'][$id]['value']=20.0;
 run($m);check(!value($m,'GasPumpID'),'Brief no-demand interval preserves stop delay');
 $m->clock+=119;plan($m,2,0);run($m);check(value($m,'GasPumpID'),'Observed idle stop counts toward delay');
+// Provider display uses the same atomic snapshot, with independent price context.
+$m=fixture();$GLOBALS['authenticated']=true;
+$GLOBALS['instanceProperties'][20]=['WebEnabled'=>true,'MaxCacheAgeHours'=>24];
+$display=['CurrentPriceCt'=>[2,25.84],'PriceValid'=>[0,true],'PriceStart'=>[1,$m->clock-60],
+ 'PriceEnd'=>[1,$m->clock+900],'LastSuccessfulFetch'=>[1,$m->clock],
+ 'EffectiveThresholdCt'=>[2,27.82],'EntryThresholdCt'=>[2,25.82]];
+$i=83000;foreach($display as $ident=>[$type,$v]){
+ $GLOBALS['instanceIdents'][20][$ident]=$i;$GLOBALS['variables'][$i]=['VariableType'=>$type,'value'=>$v];$i++;
+}
+$before=serialize([$m->values,$m->attributes,$GLOBALS['commands'],$GLOBALS['directWrites']]);
+$provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
+check($provider['connected']&&$provider['valid']&&$provider['source']===1&&$provider['powerPercent']===35,'Manual page still shows a valid atomic provider recommendation');
+check($provider['path']==='/hook/lichtblick_20'&&$provider['readings']['CurrentPriceCt']===25.84&&$provider['readings']['PriceValid'],'Provider dashboard link and tariff context');
+check(serialize([$m->values,$m->attributes,$GLOBALS['commands'],$GLOBALS['directWrites']])===$before,'Reading provider context never changes heating or settings');
+plan($m,1,35,['validUntil'=>$m->clock]);
+$provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
+check(!$provider['valid']&&$provider['source']===0&&$provider['powerPercent']===0,'Expired provider is not displayed as a valid power command');
+plan($m,2,0);$provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
+check($provider['valid']&&$provider['source']===2&&$provider['powerPercent']===0,'Gas recommendation displayed with zero heat-pump power');
+plan($m,2,65);$provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
+check(!$provider['valid'],'Gas snapshot with nonzero heat-pump power rejected');
+$m->ApplyChanges();check(($m->messages[82000]??0)===VM_UPDATE,'Provider final JSON changes trigger heating evaluation');
+$GLOBALS['instanceModules'][20]='{WRONG}';
+$provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
+check(!$provider['connected']&&!$provider['valid'],'Different module cannot supply heating commands');
 // Protected page toggles own Boolean; direct hardware writes remain unavailable.
 $m=fixture();$GLOBALS['authenticated']=true;
 check(response($m,'POST',[],['control'=>'AutomaticSourceSelection','value'=>1])['status']===422,'Web switch requires strict Boolean');
