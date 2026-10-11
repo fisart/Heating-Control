@@ -2,7 +2,7 @@
   "elements": [
     {
       "type": "Label",
-      "caption": "Price-only recommendation for air heating. This instance does not command equipment."
+      "caption": "Electricity-price and provisional air-source recommendation. This instance does not command equipment."
     },
     {
       "type": "CheckBox",
@@ -22,7 +22,7 @@
     {
       "type": "NumberSpinner",
       "name": "ThresholdCt",
-      "caption": "Break-even electricity threshold (ct/kWh)",
+      "caption": "Reference break-even threshold (ct/kWh); fixed when weather model is off",
       "minimum": 0,
       "maximum": 1000,
       "digits": 3
@@ -45,7 +45,7 @@
     },
     {
       "type": "Label",
-      "caption": "Chosen operating capacity, not an optimized calculation. Published as RecommendedHeatPumpPowerPercent when the heat pump is recommended. Daily learning uses this same capacity."
+      "caption": "Fixed power when weather model is off. With weather model on, the editable temperature curve supplies power and adjusts the reference threshold."
     },
     {
       "type": "NumberSpinner",
@@ -54,6 +54,144 @@
       "minimum": 0,
       "maximum": 100,
       "digits": 3
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Outside-temperature power and threshold model",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "WeatherModelEnabled",
+          "caption": "Use editable outside-temperature curve for power and threshold"
+        },
+        {
+          "type": "Label",
+          "caption": "Provisional starting points: manufacturer COP at different test loads; 35/50% input estimates from site consumption; 65% and 3.19 kW estimated. Not a verified optimum. Cold below first row uses gas; above last row holds its values."
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "GasPriceCt",
+          "caption": "Gas variable gross price (ct/kWh)",
+          "minimum": 0.001,
+          "maximum": 100,
+          "digits": 3
+        },
+        {
+          "type": "SelectVariable",
+          "name": "OutsideTemperatureID",
+          "caption": "Outside temperature"
+        },
+        {
+          "type": "List",
+          "name": "WeatherCurve",
+          "caption": "Editable weather / power / COP points",
+          "rowCount": 5,
+          "add": true,
+          "delete": true,
+          "columns": [
+            {
+              "name": "outsideC",
+              "caption": "Outside \u00b0C",
+              "width": "150px",
+              "add": 0,
+              "edit": {
+                "type": "NumberSpinner",
+                "minimum": -30,
+                "maximum": 30,
+                "digits": 1
+              }
+            },
+            {
+              "name": "powerPercent",
+              "caption": "HP command %",
+              "width": "150px",
+              "add": 50,
+              "edit": {
+                "type": "NumberSpinner",
+                "minimum": 1,
+                "maximum": 100,
+                "digits": 0
+              }
+            },
+            {
+              "name": "cop",
+              "caption": "Provisional COP",
+              "width": "150px",
+              "add": 3,
+              "edit": {
+                "type": "NumberSpinner",
+                "minimum": 0.5,
+                "maximum": 10,
+                "digits": 2
+              }
+            },
+            {
+              "name": "heatPumpKW",
+              "caption": "Estimated HP input kW",
+              "width": "150px",
+              "add": 2.12,
+              "edit": {
+                "type": "NumberSpinner",
+                "minimum": 0.05,
+                "maximum": 15,
+                "digits": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "WeatherReferenceTemperatureC",
+          "caption": "Temperature of reference threshold (\u00b0C)",
+          "minimum": -30,
+          "maximum": 30,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "WeatherReferenceGasPriceCt",
+          "caption": "Gas price underlying reference threshold (ct/kWh)",
+          "minimum": 0.001,
+          "maximum": 100,
+          "digits": 3
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "WeatherFanKW",
+          "caption": "HP fan allowance (kW); no gas fan credit",
+          "minimum": 0,
+          "maximum": 3,
+          "digits": 3
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "WeatherPowerStepPercent",
+          "caption": "Power command step (%)",
+          "minimum": 1,
+          "maximum": 10,
+          "digits": 0
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "WeatherTemperatureHysteresisC",
+          "caption": "Outside temperature deadband (\u00b0C)",
+          "minimum": 0,
+          "maximum": 2,
+          "digits": 2
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "OutsideTemperatureMaxAgeSeconds",
+          "caption": "Maximum outside sensor age (seconds)",
+          "minimum": 60,
+          "maximum": 7200,
+          "digits": 0
+        },
+        {
+          "type": "Label",
+          "caption": "Threshold(T) = reference threshold \u00d7 current/reference gas price \u00d7 fan-adjusted COP(T)/fan-adjusted COP(reference). The margin is applied once afterward. Fan-adjusted COP = COP \u00d7 HP kW/(HP kW + fan kW). This is an approximate empirical-reference model, not measured COP."
+        }
+      ]
     },
     {
       "type": "ExpansionPanel",
@@ -103,7 +241,7 @@
         },
         {
           "type": "Label",
-          "caption": "Opt-in initial learner: holiday heating only, no significant radiator/DHW load, stable room targets and temperatures, fixed reference capacity. Missing or unsuitable history retains the threshold."
+          "caption": "Opt-in learner: stable holiday rooms, no significant radiator/DHW load, pure source. Fixed mode requires reference capacity; weather mode checks the curve and normalizes accepted consumption to the reference temperature/gas price."
         },
         {
           "type": "SelectInstance",
@@ -112,14 +250,6 @@
           "validModules": [
             "{43192F0B-135B-4CE7-A0A7-1475603F3060}"
           ]
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "GasPriceCt",
-          "caption": "Gas variable gross price (ct/kWh)",
-          "minimum": 0.001,
-          "maximum": 100,
-          "digits": 3
         },
         {
           "type": "NumberSpinner",
@@ -192,11 +322,6 @@
           "type": "SelectVariable",
           "name": "HolidayID",
           "caption": "Holiday status: true = holiday"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "OutsideTemperatureID",
-          "caption": "Outside temperature"
         },
         {
           "type": "SelectVariable",
@@ -273,6 +398,27 @@
         {
           "type": "Label",
           "caption": "All selected inputs must be archived. Existing IDs are Berlin defaults; verify them. Counter scales default to gas m\u00b3 and electric pulses at 0.001 kWh/pulse. Shared humidifier load must be comparable between reference days."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Protected LichtBlick web page",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "WebEnabled",
+          "caption": "Enable read-only HTML page and portal link"
+        },
+        {
+          "type": "SelectInstance",
+          "name": "VaultInstanceID",
+          "caption": "SecretsManager (0 = only eligible instance)",
+          "moduleID": "{7C5A3841-3F7B-4D2A-9E1C-5B6D8F9A0E12}"
+        },
+        {
+          "type": "Label",
+          "caption": "Uses the existing SecretsManager HTTPS portal and passkey session. Page path: /hook/lichtblick_<instanceID>. Update MyAlarmSystem for automatic Smart Home discovery."
         }
       ]
     }

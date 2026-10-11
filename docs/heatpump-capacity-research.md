@@ -13,7 +13,11 @@ input is not a measured heat or electricity curve.
 Outside weather is relevant, but the best capacity also depends on room heat demand,
 setpoint, indoor heat-exchanger temperature, airflow, cycling and equipment limits.
 The current data do not establish a unique optimal percentage or a causal weather
-curve. Weather-based capacity control remains a proposal, not part of version 0.3.1.
+curve. Version 0.3.2 implements an opt-in editable starting curve using this evidence,
+not a learned optimum. Its power/threshold model and conservative fan allowance
+are described in [LichtBlick setup](lichtblick-electricity-price.md). The
+manufacturer COP values still apply to its tested indoor pairing and prescribed
+part loads; suitability for this installed system remains to be measured.
 
 ## Archive evidence
 

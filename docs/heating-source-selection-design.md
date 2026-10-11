@@ -1,6 +1,6 @@
 # Automatic selection of heat pump or gas — proposed design
 
-Prepared 11 October 2026. Revised to include domestic hot water, the separate radiator circuit, holiday protection and the supplemental January–February 2025 radiator/eBUS validation. Status: wider building strategy remains a design proposal. Version 0.3.1 implements an opt-in air-source switch with controlled transfer and fixed configured heat-pump capacity, alongside the 0.3.0 price feed and holiday-day learner. No live heating changes have been made.
+Prepared 11 October 2026. Revised to include domestic hot water, the separate radiator circuit, holiday protection and the supplemental January–February 2025 radiator/eBUS validation. Status: wider building strategy remains a design proposal. Version 0.3.2 includes the opt-in air-source switch with controlled transfer, an editable provisional outside-temperature power/COP model, normalized reference learning and a protected LichtBlick dashboard with portal discovery. No live heating changes have been made.
 
 ## Recommendation
 
@@ -21,8 +21,8 @@ single RecommendationJSON snapshot into HeatingControl behind an off-by-default
 switch, implements command-acknowledged transfer delays and observed heat-pump
 off time, and publishes configured capacity. The 50% default is not an optimum.
 See [implemented integration](automatic-source-selection.md) and
-[capacity research](heatpump-capacity-research.md). Adaptive capacity, minimum run
-policy, physical feedback, comfort/moisture protection and radiator/DHW coordination
+[capacity research](heatpump-capacity-research.md). The provisional weather curve is implemented in 0.3.2; automatically identified
+optimal capacity, minimum run policy, physical feedback, comfort/moisture protection and radiator/DHW coordination
 remain proposed. The price module's hysteresis is an economic band.
 
 ## Existing implementation reviewed

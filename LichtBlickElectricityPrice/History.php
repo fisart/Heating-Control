@@ -103,6 +103,7 @@ final class LichtBlickHistory
         }
         $active = $this->stats($source === 1 ? $c['HeatPumpOnID'] : $c['GasAirPumpID'])['active'];
         if ($active < 3600) throw new RuntimeException('Less than one hour of heating');
+        $weatherFactor = 1.0;
         if ($source === 1) {
             $heatMode = $this->stats($c['HeatPumpHeatModeID']);
             if ($heatMode['min'] != 1 || $heatMode['max'] != 1) throw new RuntimeException('Heat pump not exclusively in heating mode');
@@ -112,19 +113,35 @@ final class LichtBlickHistory
             $events = [];
             foreach ($on as $r) $events[] = ['t' => max($this->start, (int)$r['TimeStamp']), 'on' => $r['Value']];
             foreach ($powers as $r) $events[] = ['t' => max($this->start, (int)$r['TimeStamp']), 'power' => $r['Value']];
+            if ($c['WeatherModelEnabled']) foreach ($this->rows($c['OutsideTemperatureID']) as $r) {
+                $events[] = ['t'=>max($this->start,(int)$r['TimeStamp']), 'outside'=>$r['Value']];
+            }
             usort($events, fn($a, $b) => $a['t'] <=> $b['t']);
-            $state = 0; $power = 0; $i = 0;
+            $state = 0; $power = 0; $i = 0; $outsideNow = null; $weighted = 0.0; $weight = 0.0;
             while ($i < count($events)) {
                 $t = $events[$i]['t'];
                 while ($i < count($events) && $events[$i]['t'] === $t) {
                     if (isset($events[$i]['on'])) $state = (int)$events[$i]['on'];
                     if (isset($events[$i]['power'])) $power = (float)$events[$i]['power'];
+                    if (isset($events[$i]['outside'])) $outsideNow = (float)$events[$i]['outside'];
                     $i++;
                 }
                 $next = $i < count($events) ? $events[$i]['t'] : $this->end;
-                if ($state && $next > $t && abs($power - $c['ReferenceCapacityPercent']) > 3) {
-                    throw new RuntimeException('Heat-pump capacity differs from configured reference');
+                if ($state && $next > $t) {
+                    if ($c['WeatherModelEnabled']) {
+                        if ($outsideNow === null) throw new RuntimeException('Missing outside baseline for weather learning');
+                        $m=LichtBlickWeatherModel::estimate($c,$outsideNow);
+                        if (abs($power-$m['powerPercent']) > 5) throw new RuntimeException('Heat-pump capacity differs from configured weather curve');
+                        $w=($m['heatPumpKW']+$c['WeatherFanKW'])*($next-$t);
+                        $weighted += $m['factor']*$w; $weight += $w;
+                    } elseif (abs($power - $c['ReferenceCapacityPercent']) > 3) {
+                        throw new RuntimeException('Heat-pump capacity differs from configured reference');
+                    }
                 }
+            }
+            if ($c['WeatherModelEnabled']) {
+                if ($weight <= 0) throw new RuntimeException('No weather-model heating reference');
+                $weatherFactor=$weighted/$weight;
             }
         }
         $outside = $this->stats($c['OutsideTemperatureID'], true)['mean'];
@@ -142,7 +159,7 @@ final class LichtBlickHistory
         $degreeHours = (array_sum($inside) / count($inside) - $outside) * $hours;
         if ($degreeHours < 24) throw new RuntimeException('Too little weather-related heating demand');
         return ['source' => $source, 'hours' => $hours, 'outside' => $outside, 'inside' => $inside,
-            'profile' => json_encode($targets), 'degreeHours' => $degreeHours,
+            'profile' => json_encode($targets), 'degreeHours' => $degreeHours, 'weatherFactor'=>$weatherFactor,
             'gasM3' => $this->counter($c['GasCounterID'], $c['GasCounterScale']),
             'electricityKWh' => $this->counter($c['HeatPumpCounterID'], $c['HeatPumpCounterScale'])
                 + $this->counter($c['AuxCounterID'], $c['AuxCounterScale'])];

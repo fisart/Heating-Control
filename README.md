@@ -26,7 +26,7 @@ conservative switching criteria and January–February 2025 validation.
 Version **0.3.1**, build 11 connects the price recommendation to HeatingControl.
 The **AutomaticSourceSelection** switch appears below the heating instance and
 on its protected web page; it defaults to off. Select the LichtBlick instance in
-the heating configuration. On uses its valid source and configured capacity;
+the heating configuration. On uses its valid source and published power;
 off restores the stored manual source and desired power. Gas is the fallback
 for missing, unverified or expired recommendations, subject to existing demand
 and heating permissions. Source changes stop both air sources before starting
@@ -34,8 +34,12 @@ the other, with a configurable 120-second transfer pause and 300-second observed
 heat-pump off time. These are command-state checks, not physical stop feedback.
 
 See [exact commands and setup](docs/automatic-source-selection.md) and
-[heat-pump/fan research](docs/heatpump-capacity-research.md). Weather-based power
-optimisation and the wider radiator/DHW/moisture coordination remain design work.
+[heat-pump/fan research](docs/heatpump-capacity-research.md). Version **0.3.2**, build 12 adds an opt-in editable outside-temperature power/COP
+curve, a weather-adjusted threshold and a SecretsManager-protected read-only
+LichtBlick dashboard at `/hook/lichtblick_<instanceID>`. Enable its WebEnabled
+setting and update MyAlarmSystem for automatic **Smart Home** portal discovery.
+The curve is provisional; capacity optimisation from tests and wider
+radiator/DHW/moisture coordination remain design work.
 
 ## Installation and safe handover
 

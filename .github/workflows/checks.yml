@@ -14,9 +14,13 @@ jobs:
           php -l LichtBlickElectricityPrice/module.php
           php -l LichtBlickElectricityPrice/Economics.php
           php -l LichtBlickElectricityPrice/History.php
+          php -l LichtBlickElectricityPrice/WeatherModel.php
+          php -l LichtBlickElectricityPrice/Webhook.php
       - name: Heating behavior and web security
         run: |
           php tests/lichtblick.php
+          php tests/lichtblick-webhook.php
+          php tests/lichtblick-webhook.php --no-auth-api
           php tests/source-selection.php
           php tests/room-editor.php
           php tests/recovery-hysteresis.php
@@ -35,4 +39,6 @@ jobs:
       - name: Install DOM test dependency
         run: npm install --no-save --no-package-lock --no-audit --no-fund jsdom
       - name: Page interactions
-        run: node tests/page-dom.cjs
+        run: |
+          node tests/page-dom.cjs
+          node tests/lichtblick-page-dom.cjs

@@ -1,6 +1,6 @@
 # LichtBlick electricity prices and air-heating recommendation
 
-Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. Library 0.3.1 adds an optional, initially disabled HeatingControl integration; see [setup and exact source commands](automatic-source-selection.md).
+Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. Library 0.3.2 adds an editable weather/power model and a protected dashboard alongside the optional, initially disabled HeatingControl integration; see [setup and exact source commands](automatic-source-selection.md).
 
 ## Setup
 
@@ -16,7 +16,9 @@ Prices arrive in ct/kWh with absolute timestamps, normally in 15-minute interval
 
 ## Decision rule
 
-`safe ceiling = configured threshold × (1 − safety margin / 100)`
+`safe ceiling = current break-even threshold × (1 − safety margin / 100)`
+
+With the weather model off, the current threshold is the configured reference. With it on, the model below adjusts that reference before applying the margin.
 
 - Enter heat-pump recommendation when electricity is **strictly below safe ceiling minus hysteresis**.
 - Retain that recommendation within the band; return to gas at or above the safe ceiling.
@@ -30,25 +32,71 @@ For threshold **30**, margin **25%**, hysteresis **2**, the safe ceiling is **22
 |---|---|
 | `RecommendedSource` | 0 unavailable/disabled, 1 heat pump, 2 gas; air heating only |
 | `HeatPumpRecommended`, `GasRecommended` | Mutually exclusive convenience flags; reflect the source, including gas fallback |
-| `RecommendedHeatPumpPowerPercent` | Configured ReferenceCapacityPercent rounded to an integer for a valid heat-pump recommendation; zero otherwise; not a learned optimum |
+| `RecommendedHeatPumpPowerPercent` | Weather-curve command when enabled, otherwise configured ReferenceCapacityPercent rounded to an integer; valid heat-pump recommendation only, zero otherwise |
 | `RecommendationJSON` | Final coherent source/power publication: schema 1, source, valid, powerPercent, updatedAt, validUntil, reason |
 | `RecommendationValid` | True for an economic comparison using valid settings/current price; false for fallback or unavailable |
 | `CurrentPriceCt`, `PriceValid` | Effective interval price and tariff-confirmed validity; a zero price with false validity must not be treated as free electricity |
-| `ThresholdCt` | Current original break-even threshold, before margin |
+| `ThresholdCt` | Current break-even threshold after weather adjustment, before margin; configuration property remains the reference |
+| `ReferenceThresholdCt` | Configured / daily-learned reference threshold |
+| `WeatherHeatPumpPowerPercent` | Weather power candidate, also visible when gas is preferred; zero if model disabled/invalid |
+| `WeatherCOP`, `WeatherSystemCOP`, `WeatherHeatPumpKW` | Provisional COP, fan-adjusted COP and input estimate |
+| `WeatherOutsideTemperatureC`, `WeatherModelValid`, `WeatherModelStatus` | Held model temperature, validity and explanation |
+| `WebPath` | Registered protected dashboard path |
 | `EffectiveThresholdCt`, `EntryThresholdCt` | Margin ceiling and hysteresis entry boundary |
 | `PriceStart`, `PriceEnd`, `LastSuccessfulFetch` | Unix timestamps; end is exclusive |
 | `PriceSchedule` | JSON of the effective prices and actual coverage returned |
 | `PriceStatus`, `FetchStatus`, `DecisionReason` | Availability, latest request result and decision explanation |
-| `DailyCandidateCt`, `ThresholdCalculatedAt`, `DailyStatus` | Raw latest candidate, last accepted update time and calculation outcome |
+| `DailyCandidateCt`, `ThresholdCalculatedAt`, `DailyStatus` | Latest reference-normalized candidate (raw in fixed mode), last accepted update time and outcome |
 | `DebugLog` | Debug string directly below the instance; enabled in the form, bounded to 32,000 bytes |
 
-This is an economic preference whenever air heating is needed. It does not decide whether heating is needed or optimise capacity. In 0.3.1 it publishes the configured **ReferenceCapacityPercent** as an operating command when recommending the heat pump. HeatingControl enforces its transfer/off delays and existing demand/shutdown rules; defrost remains equipment-controlled. Connect the provider instance through HeatingControl configuration, rather than wiring independent source/power variables into the manual inputs. Wider moisture and radiator/DHW coordination remain design work.
+This is an economic preference whenever air heating is needed. It does not decide whether heating is needed or optimise capacity. With the weather model off it publishes **ReferenceCapacityPercent**. With it on it publishes the interpolated temperature-curve command. The atomic recommendation expires when either the price/cache or the outside-temperature reading expires. HeatingControl enforces its transfer/off delays and existing demand/shutdown rules; defrost remains equipment-controlled. Connect the provider instance through HeatingControl configuration, rather than wiring independent source/power variables into the manual inputs. Wider moisture and radiator/DHW coordination remain design work.
+
+## Editable weather and power model — 0.3.2
+
+Enable **Use editable outside-temperature curve for power and threshold** after checking the input ID and starting assumptions. It defaults to off for existing and new instances. The form exposes each curve row, reference temperature/gas price, fan allowance, power step, temperature deadband and sensor age. Export/import includes them. These are provisional starting values, not an identified optimum:
+
+| Outside temperature | Command | Provisional COP | Estimated heat-pump input |
+|---|---:|---:|---:|
+| −7°C | 65% | 2.70 | 3.19 kW |
+| +2°C | 50% | 3.75 | 2.12 kW |
+| +7°C | 35% | 5.78 | 1.00 kW |
+| +12°C | 35% | 7.26 | 1.00 kW |
+
+COP values come from the manufacturer's ASGE-48BI-3 + ASF-48BI sheet at different prescribed loads and 20°C indoor air. They are **not measured COPs of the installed SCHRAG system or holiday operation at 10°C**. The 35%/50% electricity estimates come from site counter data; 65%/3.19 kW is an interpolation between the observed 50% and 100% rates. Assigning these commands to temperatures is a starting policy for testing. See [source evidence and limitations](heatpump-capacity-research.md).
+
+The existing threshold is treated as a reference at **+2°C** and **10.48 ct/kWh gas**, both editable calibration assumptions. An existing 30 ct threshold remains exactly 30 at that reference. No gas-boiler efficiency is invented:
+
+```
+netCOP(T) = COP(T) × HPkW(T) / (HPkW(T) + fanAllowanceKW)
+factor(T) = gasPriceCt / referenceGasPriceCt × netCOP(T) / netCOP(referenceTemperature)
+current threshold = configured / learned reference threshold × factor(T)
+safe ceiling = current threshold × (1 − safetyMarginPercent / 100)
+```
+
+The default fan allowance is **0.60 kW**, conservative relative to the observed additional fan consumption. It is editable; the model gives no credit for fan electricity during gas operation. Fan costs remain included. The reference calibration contains unmeasured system/boiler effects; the manufacturer curve supplies relative weather adjustment. A 25% margin cannot guarantee compensation for a wrong curve or a different operating profile.
+
+Power, COP and estimated input interpolate linearly between rows; power is rounded to the editable step, initially **5%**, and the outside-temperature model point changes after **0.5°C** movement. The input estimate is interpolated before power rounding, so it is approximate. Below the coldest row the recommendation falls back to gas; above the warmest row the model holds its last values without further COP extrapolation. Invalid or stale outside readings (initially **900 seconds**) clear the weather candidate and publish invalid gas fallback while leaving independently valid tariff data visible.
+
+HeatingControl still determines demand and permissions. Update the curve after supervised tests; this version does not automatically identify optimal capacity or run experiments.
+
+## Protected HTML dashboard and portal link
+
+1. Update **Heating-Control** to **0.3.2, build 12** and **MyAlarmSystem** from `main`.
+2. In the LichtBlick form, open **Protected LichtBlick web page**, enable **WebEnabled** and select **SecretsManager**. ID 0 selects the only eligible vault; multiple eligible vaults require an explicit choice. The vault must have its HTTPS portal enabled and expose `SEC_IsPortalAuthenticated`.
+3. Apply. Deferred registration adds `/hook/lichtblick_<instanceID>` to WebhookControl. The child **WebPath** shows the result. Open it on the configured SecretsManager HTTPS origin.
+4. Use **Refresh pages** on AlarmPortal. **Smart Home → LichtBlick prices & heating** appears automatically for each registered, web-enabled LichtBlick instance.
+
+The dashboard shows interval price and tariff validity, coherent source/power recommendation, reference/raw/safe/entry thresholds, editable safety margin, outside temperature and model estimates, configured curve, learning/fetch status, actual upcoming intervals and the bounded debug log. It updates every 60 seconds and has a manual refresh. A single enabled AlarmPortal supplies a direct Back to portal link; otherwise browser Back is available.
+
+Each page and JSON request checks the existing SecretsManager portal session and configured origin. Anonymous page requests redirect to the existing passkey login with a fixed local return path; anonymous data requests return 401. Missing/disabled vaults or authentication APIs fail closed. There is no additional password, passkey store or public data endpoint. SecretsManager retains ownership of its supported login methods. Nonces, a restrictive CSP, no framing and private/no-store headers protect the page; displayed text uses safe DOM text insertion.
+
+The page is **read-only**: it cannot edit configuration, trigger fetches/learning or command heating. Opening it never mutates the instance. Expired recommendations show gas fallback and zero command; network/session failures hide previously displayed data. It is a recommendation view, not actuator feedback. The page can remain enabled when the price engine is disabled. Disabling WebEnabled blocks requests immediately and removes only its own hook.
 
 ## Daily threshold calculation
 
 Learning is **off by default**. It runs once at/after **00:10 Europe/Berlin**, using the previous complete calendar day (23/24/25 hours as appropriate). It needs suitable archived consumption and an earlier comparable period with the other heat source. Yesterday by itself cannot identify the heat-pump/gas consumption ratio.
 
-The initial learner deliberately accepts only **holiday** days with unchanged air-heating targets between 5 and 15°C. It requires a single selected heat source, at least one hour of heating, room start/end drift no greater than 0.3°C, valid room/outside temperatures, and no significant radiator/storage charging: pump activity is limited to two minutes for exercise, with storage temperature at most 20°C. Heat-pump days must be in heating mode and use the configured reference capacity within 3 percentage points while on. Default reference capacity is **50%**; change it to the intended operating command. Cooling, mixed-source days, warm-up days, invalid sensors and changed targets are rejected.
+The initial learner deliberately accepts only **holiday** days with unchanged air-heating targets between 5 and 15°C. It requires a single selected heat source, at least one hour of heating, room start/end drift no greater than 0.3°C, valid room/outside temperatures, and no significant radiator/storage charging: pump activity is limited to two minutes for exercise, with storage temperature at most 20°C. Heat-pump days must be in heating mode. In fixed mode they must use the configured reference capacity within 3 percentage points while on; in weather mode each active interval must match the curve command within 5 percentage points. Default reference capacity is **50%**; change it to the intended operating command. Cooling, mixed-source days, warm-up days, invalid sensors and changed targets are rejected.
 
 Configure Archive Control, all input IDs and counter multipliers in the form; Berlin IDs are prefilled. The electricity inputs are **cumulative counters**, not power readings or historic prices. Defaults use 0.001 kWh/pulse on 12254 and 10054, gas m³ on 25105. Verify those units for the actual variables. All inputs, including room targets, must have logging enabled and an archived start baseline. The module neither starts logging nor fills missing historical data. A temperature held for over two hours is conservatively rejected because this learner cannot distinguish an unchanged reading from a failed sensor. A valid quiet cumulative counter is held between its logged changes; resets, ambiguous timestamps and saturated archive requests reject the day. Logging interruptions with no recorded change cannot always be detected from historic counter records alone.
 
@@ -68,12 +116,12 @@ extra electricity (kWh) = H.electricity − expected gas electricity
 candidate (ct/kWh) = saved gas × gas kWh/m³ × gas price ct/kWh / extra electricity
 ```
 
-Only positive gas savings, at least 3 kWh extra electricity and candidate thresholds between 5 and 100 ct/kWh qualify. This is an approximate matched-consumption calculation; it does not measure delivered heat or COP. It assumes similar unmetered loads and weather response, and its result applies to the chosen capacity/holiday profile. It does not extrapolate performance to other capacities, comfort temperatures or substantially different weather.
+Only positive gas savings, at least 3 kWh extra electricity and candidate thresholds between 5 and 100 ct/kWh qualify. This is an approximate matched-consumption calculation; it does not measure delivered heat or COP. It assumes similar unmetered loads and weather response, and its result applies to the chosen capacity/holiday profile. Fixed-mode results apply to the configured capacity. Weather mode divides each accepted candidate by the heat-pump day’s estimated weather/gas factor, weighted by estimated total electricity over active intervals, before median/smoothing. This normalizes the learned reference; it does not measure COP, update curve rows, justify occupied-house extrapolation or remove the existing weather/profile matching restrictions.
 
-Take the median of the qualifying candidates. Move the original threshold 20% toward that median, capped at **10% change per day**. Save the result back to the **ThresholdCt configuration property**, the form and the child threshold variable. Apply the user-selected safety margin once, after this update. Insufficient matches or failed checks leave the threshold intact and explain the reason in `DailyStatus`. Repeated calculation of an already accepted day does not compound the update. Input/model changes clear the reference pool; price changes and margin edits do not.
+Take the median of the qualifying candidates. Move the original threshold 20% toward that median, capped at **10% change per day**. Save the result back to the **ThresholdCt configuration property**, the form and the child threshold variable. Apply the user-selected safety margin once, after this update. Insufficient matches or failed checks leave the threshold intact and explain the reason in `DailyStatus`. Repeated calculation of an already accepted day does not compound the update. Learning input/model changes clear the reference pool; electricity quote, margin and web-access edits do not. Gas-price/model changes clear it.
 
 ## Configuration backup and checks
 
-Export shows versioned JSON in the form. Import validates the complete backup before writing, includes the latest learned threshold and chosen safety margin, clears cached prices/history and leaves recommendation, daily learning and tariff confirmation **disabled**. Recheck IDs/tariff and reenable explicitly. Learned reference records/debug logs are not configuration and are not exported.
+Export shows versioned JSON in the form. Import validates the complete backup before writing, includes the latest learned threshold and chosen safety margin, clears cached prices/history and leaves web access, recommendation, daily learning and tariff confirmation **disabled**. Recheck IDs/tariff and reenable explicitly. Learned reference records/debug logs are not configuration and are not exported.
 
-`php tests/lichtblick.php` checks interval coverage, invalid responses, negative prices, margin/hysteresis, outage cache handling, configuration restore, DST day boundaries, accepted matched learning, repeat-update prevention and rejection of resets, sensor failures, radiator contamination and incomplete archive requests. It uses local fixtures, not live heating hardware. Existing HeatingControl behavior/security tests remain in the workflow. A live public response was also parsed successfully during development; deployment and testing against the user's IP-Symcon installation remain to be done.
+`php tests/lichtblick.php` checks interval coverage, invalid responses, negative prices, margin/hysteresis, outage cache handling, configuration restore, DST day boundaries, accepted matched learning, repeat-update prevention and rejection of resets, sensor failures, radiator contamination and incomplete archive requests. It uses local fixtures, not live heating hardware. `tests/lichtblick-webhook.php` checks session/origin enforcement, read-only behavior, stale decisions and deferred hook ownership. `tests/lichtblick-page-dom.cjs` verifies displayed values, text escaping, refresh and expired-session/outage handling. Weather interpolation, sensor expiry and end-to-end normalized learning are covered by the price tests. Existing HeatingControl behavior/security tests remain in the workflow. A live public response was also parsed successfully during development; deployment and testing against the user's IP-Symcon installation remain to be done.

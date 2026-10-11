@@ -1,76 +1,6 @@
 <?php
 declare(strict_types=1);
-
-class IPSModule
-{
-    public int $InstanceID = 1;
-    public array $properties = [], $attributes = [], $values = [], $buffers = [], $updates = [];
-    public function Create() {}
-    public function ApplyChanges() {}
-    public function RegisterPropertyBoolean($n,$v) {$this->properties[$n]=$v;}
-    public function RegisterPropertyFloat($n,$v) {$this->properties[$n]=$v;}
-    public function RegisterPropertyInteger($n,$v) {$this->properties[$n]=$v;}
-    public function RegisterPropertyString($n,$v) {$this->properties[$n]=$v;}
-    public function RegisterAttributeString($n,$v) {$this->attributes[$n]=$v;}
-    public function RegisterVariableBoolean($n,...$a) {$this->values[$n]=false;}
-    public function RegisterVariableFloat($n,...$a) {$this->values[$n]=0.0;}
-    public function RegisterVariableInteger($n,...$a) {$this->values[$n]=0;}
-    public function RegisterVariableString($n,...$a) {$this->values[$n]='';}
-    public function ReadPropertyBoolean($n) {return $this->properties[$n];}
-    public function ReadPropertyFloat($n) {return (float)$this->properties[$n];}
-    public function ReadPropertyInteger($n) {return $this->properties[$n];}
-    public function ReadPropertyString($n) {return $this->properties[$n];}
-    public function ReadAttributeString($n) {return $this->attributes[$n];}
-    public function WriteAttributeString($n,$v) {$this->attributes[$n]=$v;}
-    public function SetValue($n,$v) {$this->values[$n]=$v;}
-    public function GetValue($n) {return $this->values[$n];}
-    public function GetBuffer($n) {return $this->buffers[$n]??'';}
-    public function SetBuffer($n,$v) {$this->buffers[$n]=$v;}
-    public function RegisterTimer(...$a) {}
-    public function SetTimerInterval($n,$v) {$this->updates['timer']=$v;}
-    public function SetStatus($v) {$this->updates['status']=$v;}
-    public function UpdateFormField($n,$f,$v) {$this->updates[$n][$f]=$v;}
-    public function ReloadForm() {}
-}
-function IPS_VariableProfileExists($name) {return true;}
-function IPS_SemaphoreEnter(...$args) {return true;}
-function IPS_SemaphoreLeave(...$args) {}
-function IPS_SetProperty($id,$name,$value) {if ($GLOBALS['saveFailure']??false) return false; $GLOBALS['instance']->properties[$name]=$value;}
-function IPS_SetConfiguration($id,$json) {$GLOBALS['instance']->properties=json_decode($json,true,32,JSON_THROW_ON_ERROR);}
-function IPS_ApplyChanges($id) {$GLOBALS['instance']->ApplyChanges();}
-function IPS_VariableExists($id) {return isset($GLOBALS['history'][$id]);}
-function AC_GetLoggingStatus($archive,$id) {return !isset($GLOBALS['unlogged'][$id]);}
-function AC_GetLoggedValues($archive,$id,$a,$b,$limit) {
-    if (($GLOBALS['saturated']??false) && $limit===10000) return array_fill(0,10000,['TimeStamp'=>$a,'Value'=>0]);
-    $rows=array_filter($GLOBALS['history'][$id]??[],fn($r)=>$r['TimeStamp'] >= $a && $r['TimeStamp'] <= $b);
-    usort($rows,fn($x,$y)=>$y['TimeStamp'] <=> $x['TimeStamp']);
-    return array_slice($rows,0,$limit);
-}
-require __DIR__.'/../LichtBlickElectricityPrice/module.php';
-class FixturePrices extends LichtBlickElectricityPrice
-{
-    public string $response='';
-    public bool $fail=false;
-    protected function download(string $postcode): string {
-        if ($this->fail) throw new RuntimeException('Fixture network outage');
-        return $this->response;
-    }
-}
-function check($condition,string $message): void {
-    if (!$condition) throw new RuntimeException($message);
-}
-function throws(callable $fn,string $message): void {
-    try {$fn();} catch (Throwable $e) {return;}
-    throw new RuntimeException($message);
-}
-function quote(float $price,int $start): string {
-    return json_encode(['status'=>'ok','dataPoints'=>[['time'=>gmdate('Y-m-d\TH:i:s\Z',$start),'valueInCents'=>$price]]]);
-}
-function newModule(): FixturePrices {
-    $m=new FixturePrices();$m->Create();$GLOBALS['instance']=$m;
-    $m->properties['PostalCode']='10115';$m->properties['ThresholdCt']=30.0;
-    $m->ApplyChanges();return $m;
-}
+require __DIR__.'/lichtblick-fixture.php';
 $start=(int)(floor(time()/900)*900);
 $slots=LichtBlickEconomics::parsePrices(quote(-2.5,$start),1.5);
 check($slots[0]['price']===-1.0,'Negative price/correction preserved');
@@ -173,6 +103,76 @@ $hp=['source'=>1,'profile'=>'[10]','outside'=>5,'inside'=>[10],'hours'=>24,'degr
 $gas=$hp;$gas['source']=2;$gas['gasM3']=10;$gas['electricityKWh']=4.896;
 check(LichtBlickEconomics::candidate($hp,$gas,10.48,11.166973,0.204)!==null,'Plausible match');
 $gas['outside']=7;check(LichtBlickEconomics::candidate($hp,$gas,10.48,11.166973,0.204)===null,'Different weather excluded');
+// Weather curves combine an empirical reference with manufacturer/site priors.
+$w=newModule();$wc=$w->properties;
+$rows=LichtBlickWeatherModel::curve($wc['WeatherCurve']);
+$points=[-7=>65,2=>50,7=>35,12=>35];
+foreach ($points as $temperature=>$power) {
+    $p=LichtBlickWeatherModel::estimate($wc,$temperature);
+    check($p['powerPercent']===$power,'Weather knot power');
+    check($p['systemCOP']<$p['cop'],'Fan overhead reduces system COP');
+}
+check(abs(LichtBlickWeatherModel::estimate($wc,2)['thresholdCt']-30)<1e-9,'Reference threshold preserved exactly');
+$mid=LichtBlickWeatherModel::estimate($wc,4.5);
+check($mid['powerPercent']===45 && $mid['thresholdCt']>30,'Interpolation and five-percent command quantization');
+check(LichtBlickWeatherModel::estimate($wc,20)['cop']===7.26,'Warm end holds last COP, no extrapolation');
+throws(fn()=>LichtBlickWeatherModel::estimate($wc,-7.01),'Cold extrapolation accepted');
+$double=$wc;$double['GasPriceCt']*=2;
+check(abs(LichtBlickWeatherModel::estimate($double,7)['thresholdCt']/LichtBlickWeatherModel::estimate($wc,7)['thresholdCt']-2)<1e-9,'Gas tariff change scales threshold');
+foreach(['[]','[{"outsideC":2}]','[{"outsideC":2,"powerPercent":50,"cop":3,"heatPumpKW":2},{"outsideC":2,"powerPercent":35,"cop":4,"heatPumpKW":1}]'] as $bad) throws(fn()=>LichtBlickWeatherModel::curve($bad),'Bad curve accepted');
+$w->properties['Enabled']=true;$w->properties['TariffVerified']=true;$w->properties['WeatherModelEnabled']=true;
+$GLOBALS['liveVariables'][25911]=['VariableType'=>2,'VariableUpdated'=>time(),'value'=>7.0];
+$w->response=quote(19,$start);$w->RefreshPrices();
+check($w->values['RecommendedSource']===1 && $w->values['RecommendedHeatPumpPowerPercent']===35,'Live weather power in source recommendation');
+$weatherPlan=json_decode($w->values['RecommendationJSON'],true);
+check($weatherPlan['powerPercent']===35 && $weatherPlan['valid'] && $w->values['WeatherModelValid'],'Coherent weather source/power snapshot');
+check($w->values['ReferenceThresholdCt']===30.0 && $w->values['ThresholdCt']>30,'Reference distinct from current weather threshold');
+check(abs($w->values['EffectiveThresholdCt']/$w->values['ThresholdCt']-.75)<1e-9,'Margin applied once to weather threshold');
+$old=$w->values['WeatherOutsideTemperatureC'];$GLOBALS['liveVariables'][25911]['value']=7.2;$w->EvaluatePrices();
+check($w->values['WeatherOutsideTemperatureC']===$old,'Temperature deadband holds model point');
+$GLOBALS['liveVariables'][25911]['value']=2.0;$w->EvaluatePrices();
+check($w->values['RecommendedHeatPumpPowerPercent']===50 && abs($w->values['ThresholdCt']-30)<1e-9,'Temperature update changes power and crossover together');
+$GLOBALS['liveVariables'][25911]['VariableUpdated']=time()-850;$w->EvaluatePrices();
+check(json_decode($w->values['RecommendationJSON'],true)['validUntil']<=time()+50,'Snapshot expires with outside sensor');
+$GLOBALS['liveVariables'][25911]['VariableUpdated']=time()-900;$w->EvaluatePrices();
+check(!$w->values['RecommendationValid'] && $w->values['RecommendedSource']===2 && $w->values['PriceValid'],'Stale outside gas fallback distinct from valid tariff price');
+check(!$w->values['WeatherModelValid'] && $w->values['WeatherHeatPumpPowerPercent']===0 && $w->values['RecommendedHeatPumpPowerPercent']===0,'Invalid weather clears old candidate/power');
+$GLOBALS['liveVariables'][25911]=['VariableType'=>2,'VariableUpdated'=>time(),'value'=>-8.0];$w->EvaluatePrices();
+check($w->values['RecommendedSource']===2&&!$w->values['WeatherModelValid'],'Below cold endpoint gas fallback');
+$GLOBALS['liveVariables'][25911]['value']=7.0;$w->response=quote(100,$start);$w->RefreshPrices();
+check($w->values['WeatherHeatPumpPowerPercent']===35 && $w->values['RecommendedHeatPumpPowerPercent']===0 && $w->values['RecommendedSource']===2,'Weather candidate visible while gas preferred');
+$edited=json_decode($w->properties['WeatherCurve'],true);$edited[2]['powerPercent']=40;$w->properties['WeatherCurve']=json_encode($edited);$w->ApplyChanges();
+check($w->values['WeatherHeatPumpPowerPercent']===40,'Edited curve applied');
+$weatherBackup=$w->ExportConfig();$wb=json_decode($weatherBackup,true);
+check($wb['configuration']['WeatherCurve']===$w->properties['WeatherCurve'],'Curve exported');
+foreach(array_keys($wb['configuration']) as $key) if(str_starts_with($key,'Weather')||$key==='OutsideTemperatureMaxAgeSeconds')unset($wb['configuration'][$key]);
+check(str_starts_with($w->ImportConfig(json_encode($wb)),'Imported')&&!$w->properties['WeatherModelEnabled'],'Old schema-1 backup gets weather-off defaults');
+// Weather learner verifies varying command levels and normalizes a day's factor.
+$GLOBALS['history']=$history;$weatherConfig=$c;$weatherConfig['WeatherModelEnabled']=true;
+$expected=LichtBlickWeatherModel::estimate($weatherConfig,5.0);
+foreach($GLOBALS['history'][19207] as &$r)$r['Value']=$expected['powerPercent'];unset($r);
+$weatherDay=(new LichtBlickHistory(14817,$hpA,$hpB))->day($weatherConfig);
+check(abs($weatherDay['weatherFactor']-$expected['factor'])<1e-9,'Weather learning factor weighted from HP operating intervals');
+$GLOBALS['history'][19207][]=['TimeStamp'=>$hpA+3600,'Value'=>100];
+throws(fn()=>(new LichtBlickHistory(14817,$hpA,$hpB))->day($weatherConfig),'Weather learner accepts wrong capacity');
+$GLOBALS['history']=$history;
+// End-to-end daily update saves the normalized reference, then applies weather and margin once.
+$learn=newModule();$learn->properties['WeatherModelEnabled']=true;$learn->properties['DailyLearningEnabled']=true;
+$learn->ApplyChanges();$c=$learn->properties;$GLOBALS['history']=[];
+foreach(range(3,1) as $i){
+    $d=$dayStart->modify('-'.$i.' days')->format('Y-m-d');addDay($c,$d,1);
+}
+foreach($GLOBALS['history'][19207] as &$r)$r['Value']=LichtBlickWeatherModel::estimate($c,5.0)['powerPercent'];unset($r);
+foreach(range(3,1) as $i)check(str_starts_with($learn->AddReferenceDay($dayStart->modify('-'.$i.' days')->format('Y-m-d')),'Stored reference'),'Weather reference accepted');
+addDay($c,$date,2);$learn->CalculateYesterday();
+$learnedDays=json_decode($learn->attributes['ReferenceDays'],true);
+$hpRef=$learnedDays[$dayStart->modify('-1 day')->format('Y-m-d')];
+$raw=LichtBlickEconomics::candidate($hpRef,$learnedDays[$date],$c['GasPriceCt'],$c['GasKWhPerM3'],$c['ElectricalBackgroundKW']);
+check(abs($learn->values['DailyCandidateCt']-$raw/$hpRef['weatherFactor'])<1e-9,'Daily candidate normalized to reference weather');
+check(abs($learn->properties['ThresholdCt']-LichtBlickEconomics::smooth(30.0,$raw/$hpRef['weatherFactor']))<1e-9,'Normalized threshold saved to configuration');
+$GLOBALS['liveVariables'][25911]=['VariableType'=>2,'VariableUpdated'=>time(),'value'=>7.0];$learn->EvaluatePrices();
+check(abs($learn->values['ThresholdCt']-LichtBlickWeatherModel::estimate($learn->properties,7.0)['thresholdCt'])<1e-9,'Learned reference weather adjustment recomputed');
+check(abs($learn->values['EffectiveThresholdCt']-$learn->values['ThresholdCt']*.75)<1e-9,'Learned weather margin applied once');
 $form=json_decode(file_get_contents(__DIR__.'/../LichtBlickElectricityPrice/form.json'),true,32,JSON_THROW_ON_ERROR);
 $fields=array_column($form['elements'],'name');check(in_array('SafetyMarginPercent',$fields,true),'Margin exposed in form.json');
 echo "LichtBlick price, recommendation, restore, DST and guarded daily learning checks passed\n";

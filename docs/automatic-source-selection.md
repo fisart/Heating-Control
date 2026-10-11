@@ -1,4 +1,4 @@
-# Automatic air-heating source selection — 0.3.1
+# Automatic air-heating source selection — 0.3.2
 
 The child **AutomaticSourceSelection** Boolean (with action) is an external switch
 below HeatingControl and appears on its protected HTML page. It defaults to off.
@@ -15,10 +15,14 @@ Configuration restore disables the controller, web access and automatic switch.
 
 LichtBlick publishes **RecommendedHeatPumpPowerPercent** and a final coherent
 **RecommendationJSON** snapshot. The percentage comes from the editable
-**ReferenceCapacityPercent** property (form caption: Automatic heat-pump power /
-learning reference). It is currently a fixed configured percentage, default 50%,
-not a weather-dependent or learned optimum. Gas/unavailable recommendations carry
-zero power. The snapshot includes an issue timestamp and actual price/cache expiry.
+**ReferenceCapacityPercent** property when the weather model is off (default 50%).
+With **WeatherModelEnabled** on, it comes from the editable outside-temperature
+curve, initially 65% at −7°C, 50% at +2°C and 35% at +7°C/+12°C, with interpolation
+and a default 5% command step. These are provisional settings, not a measured
+optimum. Gas/unavailable recommendations carry zero power. The snapshot includes
+an issue timestamp and the earliest price/cache/outside-sensor expiry.
+**WeatherHeatPumpPowerPercent** retains the valid weather candidate while gas is
+preferred. See [model and protected price dashboard](lichtblick-electricity-price.md).
 
 HeatingControl validates provider identity, snapshot schema, strict validity,
 issue age no greater than 180 seconds, expiry and integer HP capacity 1–100.
