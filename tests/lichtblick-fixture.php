@@ -47,6 +47,7 @@ function IPS_GetVariable($id) {return $GLOBALS['liveVariables'][$id];}
 function GetValue($id) {return $GLOBALS['liveVariables'][$id]['value'];}
 function AC_GetLoggingStatus($archive,$id) {return !isset($GLOBALS['unlogged'][$id]);}
 function AC_GetLoggedValues($archive,$id,$a,$b,$limit) {
+    if(isset($GLOBALS['archiveReader']))return ($GLOBALS['archiveReader'])($archive,$id,$a,$b,$limit);
     if (($GLOBALS['saturated']??false) && $limit===10000) return array_fill(0,10000,['TimeStamp'=>$a,'Value'=>0]);
     $rows=array_filter($GLOBALS['history'][$id]??[],fn($r)=>$r['TimeStamp'] >= $a && $r['TimeStamp'] <= $b);
     usort($rows,fn($x,$y)=>$y['TimeStamp'] <=> $x['TimeStamp']);
@@ -86,3 +87,4 @@ register_shutdown_function(static function () {
     $files=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);
     foreach($files as $file){if($file->isDir())rmdir($file->getPathname());else unlink($file->getPathname());}rmdir($base);
 });
+

@@ -306,7 +306,7 @@ async function loadUtility(prefix){
  try{const reply=await fetch(path+'?'+new URLSearchParams({view:prefix==='total'?'total-consumption':'water-history',from:el(prefix+'-from').value,to:el(prefix+'-to').value,resolution:el(prefix+'-resolution').value}),{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
   if(ticket!==(prefix==='total'?totalRequest:waterRequest))return;
   if(reply.status===401||reply.status===403){el('dashboard').hidden=true;el('login').hidden=false;throw new Error('Portal session expired.');}
-  const h=await reply.json();if(!reply.ok)throw new Error(h.error||'Consumption data unavailable.');if(prefix==='total')drawTotal(h);else drawWater(h);
+  const body=await reply.text();let h;try{h=JSON.parse(body);}catch{throw new Error('The server returned an invalid consumption response (HTTP '+reply.status+'). Check Symcon messages for the PHP error.');}if(!reply.ok)throw new Error(h.error||'Consumption data unavailable.');if(prefix==='total')drawTotal(h);else drawWater(h);
  }catch(e){if(ticket===(prefix==='total'?totalRequest:waterRequest)){clearUtility(prefix);el(prefix+'-status').textContent=e.name==='AbortError'?'Request timed out.':e.message;}}
  finally{clearTimeout(timeout);if(prefix==='total')totalBusy=false;else waterBusy=false;el(prefix+'-show').disabled=false;}
 }

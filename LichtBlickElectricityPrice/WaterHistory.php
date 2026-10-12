@@ -62,19 +62,20 @@ final class LichtBlickWaterHistory
     }
     public static function meter(int $archive,array $source,int $from,int $to): array
     {
-        $adapter=new LichtBlickConsumptionHistory($archive,[]);$id=$source['counterID'];$events=$adapter->rows($id,$from,$to-1);
+        $adapter=new LichtBlickConsumptionHistory($archive,[]);$id=$source['counterID'];$events=$adapter->events($id,$from,$to-1);
         $seed=AC_GetLoggedValues($archive,$id,0,$from-1,1);
         $previous=is_array($seed) && isset($seed[0]['Value']) && is_numeric($seed[0]['Value'])?(float)$seed[0]['Value']:null;
         if($previous!==null && (!is_finite($previous) || $previous<0))throw new RuntimeException('Invalid water meter baseline');
-        $rows=[];$cursor=0;$stamps=array_keys($events);$count=count($stamps);
+        $rows=[];
         foreach(self::days($from,$to) as $day){
             $known=$previous!==null;$sum=0.;$flags=$known?0:8;$n=0;
-            while($cursor<$count && $stamps[$cursor]<$day['end']){
-                $value=$events[$stamps[$cursor++]];$n++;
+            while($events->valid() && $events->key()<$day['end']){
+                $value=$events->current();$n++;
                 if($value<0)throw new RuntimeException('Negative water counter');
                 if($previous!==null){$delta=$value-$previous;if($delta<0)$flags|=1;elseif(!($flags&1))$sum+=$delta*$source['scaleM3'];}
                 else $flags|=8;
                 $previous=$value;
+                $events->next();
             }
             $rows[]=$day+['observedM3'=>$known&&!($flags&1)?$sum:null,'knownObservedM3'=>($known||$n>1)?$sum:null,'qualityFlags'=>$flags,'recordedEvents'=>$n];
         }return $rows;

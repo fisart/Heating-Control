@@ -113,6 +113,9 @@ Berlin calendar day. A missing initial baseline or counter reset remains
 incomplete. Quiet held counters contribute zero. Original archives are never
 rewritten. This reader does not reproduce the old script's daily extrema/reset
 heuristics or sum daily counter averages.
+Dense raw water archives are processed as ascending events in bounded batches.
+Annual selections retain daily totals rather than the complete raw event list;
+unchanged readings, resets and ambiguous timestamps keep the same semantics.
 
 If `WaterHistoryHouseIncludesGarden` is enabled, the house volume is main meter
 minus garden submeter, once. If either volume is unavailable, or garden exceeds

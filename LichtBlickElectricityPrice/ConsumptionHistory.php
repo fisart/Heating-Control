@@ -48,6 +48,41 @@ final class LichtBlickConsumptionHistory
         return $result;
     }
 
+    /** Ascending raw events with bounded memory, including dense year selections. */
+    public function events(int $id, int $from, int $to): Generator
+    {
+        if ($id <= 0 || !IPS_VariableExists($id) || !AC_GetLoggingStatus($this->archive, $id)) throw new RuntimeException('Consumption archive variable is unavailable or unlogged: ' . $id);
+        $read = function (int $a, int $b) use (&$read, $id): Generator {
+            $part = AC_GetLoggedValues($this->archive, $id, $a, $b, 10000);
+            if (!is_array($part)) throw new RuntimeException('Consumption archive could not be read');
+            if (count($part) >= 10000) {
+                // Do not retain each saturated parent batch in the recursion stack.
+                unset($part);
+                if ($a === $b) throw new RuntimeException('Consumption archive has too many same-second records');
+                $middle = $a + intdiv($b - $a, 2);
+                yield from $read($a, $middle);
+                yield from $read($middle + 1, $b);
+                return;
+            }
+            foreach ($part as $r) {
+                if (!is_int($r['TimeStamp'] ?? null) || $r['TimeStamp'] < $a || $r['TimeStamp'] > $b
+                    || !is_numeric($r['Value'] ?? null) || !is_finite((float)$r['Value'])) throw new RuntimeException('Invalid consumption archive value');
+            }
+            usort($part, static fn($a,$b) => $a['TimeStamp'] <=> $b['TimeStamp']);
+            $lastTime = null; $lastValue = null;
+            foreach ($part as $r) {
+                $t = $r['TimeStamp']; $v = (float)$r['Value'];
+                if ($t === $lastTime) {
+                    if (abs($lastValue - $v) > 1e-9) throw new RuntimeException('Ambiguous consumption archive timestamp');
+                    continue;
+                }
+                $lastTime = $t; $lastValue = $v;
+                yield $t => $v;
+            }
+        };
+        if ($from <= $to) yield from $read($from, $to);
+    }
+
     public function prepared(array $data, int $from, int $to, array $quotes = []): array
     {
         if ($data['_archive_id'] !== $this->archive) throw new RuntimeException('Configured archive differs from the import');

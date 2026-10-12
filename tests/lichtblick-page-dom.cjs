@@ -15,11 +15,11 @@ const water={from:now-86400,to:now,resolution:'daily',houseIncludesGarden:true,t
 for(const key of ['house','garden','well']){const value=key==='house'?2:key==='garden'?1:3,cost=key==='well'?0:key==='house'?8:2;water.streams[key]={totals:{knownM3:value,knownCostEuro:cost,knownVariableCostEuro:cost,knownFixedCostEuro:0,missingVolumeDays:0,incompleteCostDays:0,completeVolume:true,completeCost:true},error:''};water.points[0].streams[key]={knownM3:value,knownCostEuro:cost,missingVolumeDays:0,incompleteCostDays:0,qualityFlags:0};}
 const total={from:now-86400,to:now,resolution:'daily',streams:{},points:[{start:now-86400,end:now,streams:{}}],totals:{knownCostEuro:12,knownEnergyKWh:20,knownWaterM3:6,completeCost:false}};
 for(const key of ['electricity','gas','house','garden','well']){const volume=key==='electricity'?10:key==='gas'?10:key==='house'?2:key==='garden'?1:3,cost=key==='electricity'?-2:key==='gas'?4:key==='house'?8:key==='garden'?2:0;total.streams[key]={knownVolume:volume,knownCostEuro:cost,unit:key==='electricity'||key==='gas'?'kWh':'m³',incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0,error:''};total.points[0].streams[key]={knownVolume:volume,knownCostEuro:cost,incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0};}
-let code=200,fail=false,payload=state,calls=[];
+let code=200,fail=false,invalidUtilityBody=false,payload=state,calls=[];
 let html=fs.readFileSync(__dirname+'/../LichtBlickElectricityPrice/page.html','utf8').replaceAll('{{NONCE}}','fixture').replaceAll('{{PATH}}','/hook/lichtblick_123').replaceAll('{{INSTANCE}}','123').replaceAll('{{PORTAL}}','/hook/alarm_portal_42').replaceAll('{{LOGIN}}','/hook/secrets_7?portal=1');
 const dom=new JSDOM(html,{url:'https://prices.example/hook/lichtblick_123',runScripts:'dangerously',beforeParse(w){
  w.AbortController=AbortController;
- w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:url.includes('view=gas-history')?gas:url.includes('view=water-history')?water:url.includes('view=total-consumption')?total:payload};};
+ w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');const data=url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:url.includes('view=gas-history')?gas:url.includes('view=water-history')?water:url.includes('view=total-consumption')?total:payload;return {status:code,ok:code===200,json:async()=>data,text:async()=>invalidUtilityBody?'Fatal error: fixture memory failure':JSON.stringify(data)};};
 }});
 const settle=()=>new Promise(r=>setImmediate(r));
 (async()=>{
@@ -147,6 +147,7 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.ok(calls.some(c=>c.url.includes('view=total-consumption&from=2026-01-01&to=2026-06-30')),'Combined date selection requests one common period');
  d.querySelector('#refresh').click();await settle();assert.equal(d.querySelector('#panel-total').hidden,false,'Refresh retains combined tab');assert.equal(d.querySelector('#total-to').value,'2026-06-30','Custom range survives refresh');
  total.streams.garden.error='<img src=x onerror=alert(1)>';d.querySelector('#total-show').click();await settle();assert.equal(d.querySelectorAll('#total-table img').length,0,'Combined coverage text stays text');
+ invalidUtilityBody=true;d.querySelector('#total-show').click();await settle();assert.ok(d.querySelector('#total-status').textContent.includes('Check Symcon messages for the PHP error'),'Non-JSON fatal response shows an actionable server error');assert.equal(d.querySelectorAll('#total-table tr').length,0,'Invalid response clears stale totals');invalidUtilityBody=false;
  code=401;d.querySelector('#total-show').click();await settle();assert.equal(d.querySelector('#dashboard').hidden,true);assert.equal(d.querySelectorAll('#total-table tr').length,0,'Expired total request clears private totals');code=200;d.querySelector('#refresh').click();await settle();
  d.querySelector('#tab-gas').click();await settle();d.querySelector('#refresh').click();await settle();
  assert.equal(d.querySelector('#panel-gas').hidden,false,'Refresh preserves tab selection');

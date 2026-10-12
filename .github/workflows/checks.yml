@@ -35,6 +35,7 @@ jobs:
           php tests/lichtblick-gas-history.php
           php tests/lichtblick-gas-costs.php
           php tests/lichtblick-water-total.php
+          php -d memory_limit=64M tests/lichtblick-water-dense.php
           php tests/lichtblick-webhook.php
           php tests/lichtblick-webhook.php --no-auth-api
           php tests/source-selection.php
