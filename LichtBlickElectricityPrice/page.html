@@ -5,7 +5,7 @@
 <title>LichtBlick · Heating decision</title>
 <style nonce="{{NONCE}}">
 :root{color-scheme:light;--ink:#183b38;--muted:#566f6b;--line:#dbe6df;--paper:#f3f6f1;--green:#216352}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,sans-serif}main{max-width:1140px;margin:auto;padding:30px 22px 60px}header{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.2;margin:5px 0}h2{font-size:1.15rem;margin:0 0 15px}.eyebrow{text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--muted)}p{margin:8px 0;color:var(--muted)}button,.button{display:inline-block;border:1px solid var(--line);border-radius:8px;background:white;padding:10px 15px;font:inherit;color:var(--ink);text-decoration:none;cursor:pointer}button:disabled{opacity:.5;cursor:wait}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #ce8f2f;outline-offset:3px}.toolbar{display:flex;gap:10px;flex-wrap:wrap}.status{padding:13px 16px;border-radius:10px;background:#e5eee6;margin:24px 0}.status.error{background:#ffe6d5;color:#743617}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card,section.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:22px}.card label{color:var(--muted);font-size:.88rem}.value{font-size:2.1rem;font-weight:650;letter-spacing:-.03em;margin:10px 0 2px}.unit{font-size:.85rem;color:var(--muted);font-weight:400;letter-spacing:0}.card small{display:block;color:var(--muted)}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}dt{color:var(--muted)}dd{margin:0;text-align:right;font-weight:550}.note{border-left:3px solid #c79335;padding-left:14px;font-size:.9rem}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}thead{color:var(--muted)}tr.current{background:#eaf2ea}section.panel{margin-top:16px}details{margin-top:16px}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto;font-size:.8rem}footer{margin-top:22px;color:var(--muted);font-size:.85rem}[hidden]{display:none!important}@media(max-width:750px){.grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}.value{font-size:1.9rem}main{padding:20px 14px}dl{gap:10px;font-size:.92rem}}
-</style>
+.history-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px}.history-controls label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted)}input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--ink)}#price-chart{display:block;width:100%;height:auto;min-height:220px}#history-data{max-height:320px;overflow:auto}.legend{font-size:.85rem}.legend span{display:inline-block;margin-right:16px}.quote-key{color:#216352}.reconstruction-key{color:#a96914}.market-key{color:#3b65b6}</style>
 </head>
 <body data-path="{{PATH}}">
 <main>
@@ -25,6 +25,11 @@
 <section class="panel"><h2>Editable model · current configuration</h2><p>Change these values in the IP-Symcon instance form after your measurements.</p><div class="table-wrap"><table><thead><tr><th>Outside °C</th><th>Power %</th><th>COP</th><th>Heat-pump kW</th></tr></thead><tbody id="curve"></tbody></table></div></section>
 <section class="panel"><h2>Learning & price retrieval</h2><dl id="learning"></dl><p id="daily-status"></p><p id="fetch-status"></p></section>
 <section class="panel"><h2>Published price intervals</h2><p id="coverage">Only actual intervals returned by LichtBlick are shown.</p><div class="table-wrap"><table><thead><tr><th>Berlin time · start</th><th>End</th><th>ct/kWh</th></tr></thead><tbody id="schedule"></tbody></table></div></section>
+<section class="panel"><h2>Price history</h2><p>Contract starts <span id="history-start">1 October 2026</span>. Stored quotes and reconstructed retail prices are shown separately. Missing prices are left blank.</p>
+<div class="history-controls"><label>Period<select id="history-range"><option value="7">Last 7 days</option><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="contract">Since contract start</option><option value="custom">Custom dates</option></select></label><label>From<input id="history-from" type="date"></label><label>Through<input id="history-to" type="date"></label><label>Price<select id="history-price"><option value="retail">Retail gross ct/kWh</option><option value="market">Wholesale net ct/kWh</option></select></label><button id="history-show">Show chart</button></div>
+<p id="history-summary" role="status">Loading stored history…</p><div class="legend"><span class="quote-key">● Stored LichtBlick quote</span><span class="reconstruction-key">● Reconstructed retail price</span><span class="market-key">● SMARD wholesale price</span></div>
+<svg id="price-chart" viewBox="0 0 1000 310" role="img" aria-label="Price history in cents per kilowatt-hour"></svg><p class="note">Daily means for longer periods are time averages of available prices, not consumption-weighted billing prices. Wholesale prices exclude your tariff additions and VAT. Basic charges are separate. Market data: Bundesnetzagentur | SMARD.de (CC BY 4.0).</p>
+<p id="history-status"></p><details><summary>Accessible price table</summary><div id="history-data" class="table-wrap"><table><thead><tr><th>Berlin time · start</th><th>Retail gross ct/kWh</th><th>Wholesale net ct/kWh</th><th>Source / verification</th></tr></thead><tbody id="history-table"></tbody></table></div></details></section>
 <details class="panel"><summary>Debug log</summary><pre id="debug"></pre></details>
 </div>
 <footer>Read-only. A source recommendation is not evidence that equipment is running. HeatingControl applies heating demand, permissions and transfer delays. Data refreshes every 60 seconds.</footer>
@@ -67,15 +72,49 @@ function render(s){
  table('schedule',s.slots.map(p=>[stamp(p.start),stamp(p.end),num(p.price,3)]),s.slots.findIndex(p=>p.start<=s.updatedAt&&s.updatedAt<p.end));
  el('coverage').textContent=s.slots.length?s.slots.length+' actual current/upcoming intervals. Gaps and missing future prices are not filled.':'No current or upcoming intervals available.';
  el('debug').textContent=s.debug||'No debug entries.';
+ historyStart=c.historyStartDate||'2026-10-01';el('history-start').textContent=historyStart;el('history-from').min=historyStart;el('history-to').min=historyStart;
+ el('history-status').textContent=[v.PriceHistoryStatus,v.HistoricalFetchStatus].filter(Boolean).join(' · ');
  el('status').textContent='Updated '+stamp(s.updatedAt)+' · Berlin · '+(s.enabled?'Recommendation enabled':'Recommendation disabled');
  el('status').classList.remove('error');el('dashboard').hidden=false;el('login').hidden=true;
 }
+let historyStart='2026-10-01',historyData=null,historyBusy=false,historyRequest=0;
+const berlinDay=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+function dayShift(day,n){const d=new Date(day+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function chooseHistoryDates(){const today=berlinDay(),range=el('history-range').value;if(range==='custom')return;
+ let from=range==='contract'?historyStart:range==='yesterday'?dayShift(today,-1):range==='today'?today:dayShift(today,-6);
+ el('history-from').value=from<historyStart?historyStart:from;el('history-to').value=range==='yesterday'?dayShift(today,-1):today;}
+function svgNode(name,attrs,text){const n=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;}
+function drawHistory(h){historyData=h;const root=el('price-chart');root.replaceChildren();const market=el('history-price').value==='market',key=market?'marketCt':'price';
+ const points=h.points.filter(p=>typeof p[key]==='number'&&Number.isFinite(p[key]));
+ el('history-summary').textContent=h.storedIntervals+' / '+h.expectedIntervals+' intervals stored · '+h.retailIntervals+' retail prices ('+h.confirmedIntervals+' tariff-confirmed) · '+h.missingIntervals+' missing · '+h.resolution+'.';
+ table('history-table',h.points.map(p=>[stamp(p.start),num(p.price,3),num(p.marketCt,3),p.source+(p.price===null?' · retail unavailable':p.verified?' · tariff confirmed':' · unconfirmed quote')+(p.retailIntervals!==undefined?' · '+p.retailIntervals+'/'+p.expectedIntervals+' retail intervals':'')]));
+ root.append(svgNode('title',{},market?'Historical wholesale prices, net ct/kWh':'Historical retail prices, gross ct/kWh'));
+ if(!points.length){root.append(svgNode('text',{x:70,y:150,fill:'#566f6b','font-size':18},market?'No wholesale history in the selected period.':'No retail history yet. Historical retail reconstruction needs verified tariff components.'));return;}
+ const lo=Math.min(0,...points.map(p=>p[key])),hi=Math.max(1,...points.map(p=>p[key])),pad=(hi-lo)*.08,min=lo-pad,max=hi+pad;
+ const x=t=>70+(t-h.from)/(h.to-h.from)*900,y=v=>270-(v-min)/(max-min)*235;
+ for(let i=0;i<=4;i++){const v=min+(max-min)*i/4;root.append(svgNode('line',{x1:70,x2:970,y1:y(v),y2:y(v),stroke:'#dbe6df'}),svgNode('text',{x:62,y:y(v)+4,'text-anchor':'end',fill:'#566f6b','font-size':12},num(v,1)));}
+ root.append(svgNode('line',{x1:70,x2:970,y1:y(0),y2:y(0),stroke:'#566f6b'}));
+ for(const p of points){const value=p[key],start=Math.max(h.from,p.start),end=Math.min(h.to,p.end),color=market?'#3b65b6':p.source==='lichtblick-quote'?'#216352':'#a96914';
+ const rect=svgNode('rect',{x:x(start),y:Math.min(y(value),y(0)),width:Math.max(.4,x(end)-x(start)-.4),height:Math.max(1,Math.abs(y(value)-y(0))),fill:color,opacity:p.verified||market?1:.55});
+ rect.append(svgNode('title',{},stamp(p.start)+' – '+stamp(p.end)+' · '+num(value,3)+' ct/kWh · '+p.source+(p.verified?' · confirmed':' · unconfirmed')));root.append(rect);}
+ for(let i=0;i<=3;i++){const t=h.from+(h.to-h.from)*i/3;root.append(svgNode('text',{x:x(t),y:295,'text-anchor':i===0?'start':i===3?'end':'middle',fill:'#566f6b','font-size':12},stamp(t)));}
+ root.append(svgNode('text',{x:70,y:18,fill:'#183b38','font-size':13},market?'Wholesale net · ct/kWh':'Retail gross · ct/kWh'));
+}
+async function loadHistory(){if(historyBusy)return;historyBusy=true;const ticket=++historyRequest;el('history-show').disabled=true;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+ try{const from=el('history-from').value,to=el('history-to').value;if(!from||!to||from<historyStart||from>to)throw new Error('Select valid dates on or after contract start.');
+ const reply=await fetch(path+'?view=price-history&from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to),{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
+ if(ticket!==historyRequest)return;if(reply.status===401||reply.status===403){el('dashboard').hidden=true;el('login').hidden=false;throw new Error('Portal session expired or origin rejected.');}
+ const data=await reply.json();if(!reply.ok)throw new Error(data.error||'History unavailable.');if(ticket===historyRequest)drawHistory(data);
+ }catch(error){if(ticket===historyRequest){historyData=null;el('price-chart').replaceChildren();el('history-table').replaceChildren();el('history-summary').textContent=error.name==='AbortError'?'History request timed out.':error.message;}}
+ finally{clearTimeout(timeout);historyBusy=false;el('history-show').disabled=false;}}
+el('history-range').addEventListener('change',()=>{chooseHistoryDates();loadHistory();});el('history-show').addEventListener('click',()=>{el('history-range').value='custom';loadHistory();});
+el('history-price').addEventListener('change',()=>{if(historyData)drawHistory(historyData);});
 let busy=false;
 async function load(){if(busy)return;busy=true;el('refresh').disabled=true;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);try{
  const reply=await fetch(path+'?view=state',{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
  if(reply.status===401||reply.status===403){el('login').hidden=false;throw new Error('Portal session expired or origin rejected. Sign in through the configured HTTPS portal.');}
- if(!reply.ok)throw new Error('Data unavailable. Check the module and SecretsManager configuration.');render(await reply.json());
- }catch(error){el('dashboard').hidden=true;el('status').classList.add('error');el('status').textContent=error.name==='AbortError'?'Request timed out; displayed data has been cleared.':error.message;}
+ if(!reply.ok)throw new Error('Data unavailable. Check the module and SecretsManager configuration.');render(await reply.json());if(el('history-range').value!=='custom')chooseHistoryDates();if(!el('history-from').value)chooseHistoryDates();loadHistory();
+ }catch(error){++historyRequest;historyData=null;el('price-chart').replaceChildren();el('history-table').replaceChildren();el('dashboard').hidden=true;el('status').classList.add('error');el('status').textContent=error.name==='AbortError'?'Request timed out; displayed data has been cleared.':error.message;}
  finally{clearTimeout(timeout);busy=false;el('refresh').disabled=false;}}
 if(el('portal').getAttribute('href')){el('portal').hidden=false;el('back').hidden=true;}
 el('refresh').addEventListener('click',load);el('back').addEventListener('click',()=>history.back());load();setInterval(load,60000);

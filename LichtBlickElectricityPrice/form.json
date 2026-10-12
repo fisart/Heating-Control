@@ -421,6 +421,92 @@
           "caption": "Uses the existing SecretsManager HTTPS portal and passkey session. Page path: /hook/lichtblick_<instanceID>. Update MyAlarmSystem for automatic Smart Home discovery."
         }
       ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Persistent prices and historical tariffs",
+      "items": [
+        {
+          "type": "ValidationTextBox",
+          "name": "PriceHistoryStartDate",
+          "caption": "Electricity contract / history start date (YYYY-MM-DD)"
+        },
+        {
+          "type": "CheckBox",
+          "name": "PriceHistoryEnabled",
+          "caption": "Collect and retain complete LichtBlick schedules (independent of recommendation enable)"
+        },
+        {
+          "type": "CheckBox",
+          "name": "HistoricalFetchEnabled",
+          "caption": "Retrieve SMARD historical day-ahead prices; automatically recover the last 7 completed days"
+        },
+        {
+          "type": "Label",
+          "caption": "Retrieve SMARD historical day-ahead prices from contract start; recover the last 7 completed days on later runs"
+        },
+        {
+          "type": "List",
+          "name": "HistoricalTariffs",
+          "caption": "Historical tariff periods (ascending dates; adder includes all net per-kWh components; no monthly basic charge)",
+          "rowCount": 5,
+          "add": true,
+          "delete": true,
+          "columns": [
+            {
+              "name": "from",
+              "caption": "Effective from (YYYY-MM-DD)",
+              "width": "auto",
+              "add": "",
+              "edit": {
+                "type": "ValidationTextBox"
+              }
+            },
+            {
+              "name": "postcode",
+              "caption": "Delivery postcode",
+              "width": "auto",
+              "add": "",
+              "edit": {
+                "type": "ValidationTextBox"
+              }
+            },
+            {
+              "name": "adderNetCt",
+              "caption": "Total fixed adder net ct/kWh",
+              "width": "auto",
+              "add": 0.0,
+              "edit": {
+                "type": "NumberSpinner",
+                "minimum": -100,
+                "maximum": 200,
+                "digits": 4
+              }
+            },
+            {
+              "name": "vatPercent",
+              "caption": "VAT %",
+              "width": "auto",
+              "add": 19.0,
+              "edit": {
+                "type": "NumberSpinner",
+                "minimum": 0,
+                "maximum": 100,
+                "digits": 4
+              }
+            },
+            {
+              "name": "verified",
+              "caption": "Contract formula verified",
+              "width": "auto",
+              "add": false,
+              "edit": {
+                "type": "CheckBox"
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "actions": [
@@ -428,6 +514,34 @@
       "type": "Button",
       "caption": "Fetch prices now",
       "onClick": "LBEP_RefreshPrices($id);"
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Retrieve historical prices",
+      "items": [
+        {
+          "type": "ValidationTextBox",
+          "name": "HistoryFrom",
+          "caption": "First completed day (YYYY-MM-DD)",
+          "value": ""
+        },
+        {
+          "type": "ValidationTextBox",
+          "name": "HistoryTo",
+          "caption": "Last completed day (YYYY-MM-DD, inclusive)",
+          "value": ""
+        },
+        {
+          "type": "Button",
+          "caption": "Queue historical retrieval (maximum 366 days)",
+          "onClick": "echo LBEP_RetrieveHistoricalPrices($id, $HistoryFrom, $HistoryTo);"
+        },
+        {
+          "type": "Button",
+          "caption": "Cancel pending historical retrieval (keep stored prices)",
+          "onClick": "LBEP_CancelHistoricalImport($id);"
+        }
+      ]
     },
     {
       "type": "Button",

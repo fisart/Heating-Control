@@ -57,6 +57,10 @@ class FixturePrices extends LichtBlickElectricityPrice
 {
     public string $response='';
     public bool $fail=false;
+    protected function priceHistoryDirectory(): string {
+        $base=$GLOBALS['priceFixtureDirectory']??=sys_get_temp_dir().'/lbep-fixture-'.bin2hex(random_bytes(6));
+        return $base.'/'.spl_object_id($this);
+    }
     protected function download(string $postcode): string {
         if ($this->fail) throw new RuntimeException('Fixture network outage');
         return $this->response;
@@ -77,3 +81,8 @@ function newModule(): FixturePrices {
     $m->properties['PostalCode']='10115';$m->properties['ThresholdCt']=30.0;
     $m->ApplyChanges();return $m;
 }
+register_shutdown_function(static function () {
+    $base=$GLOBALS['priceFixtureDirectory']??null;if(!$base||!is_dir($base))return;
+    $files=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);
+    foreach($files as $file){if($file->isDir())rmdir($file->getPathname());else unlink($file->getPathname());}rmdir($base);
+});

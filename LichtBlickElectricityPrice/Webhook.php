@@ -121,7 +121,7 @@ trait LichtBlickElectricityPriceWebhook
             'ThresholdCt','ReferenceThresholdCt','EffectiveThresholdCt','EntryThresholdCt','DecisionReason',
             'DailyCandidateCt','ThresholdCalculatedAt','DailyStatus','WeatherHeatPumpPowerPercent',
             'WeatherOutsideTemperatureC','WeatherCOP','WeatherSystemCOP','WeatherHeatPumpKW','WeatherModelValid',
-            'WeatherModelStatus'] as $key) $values[$key] = $this->GetValue($key);
+            'WeatherModelStatus','PriceHistoryStatus','HistoricalFetchStatus','LastHistoricalFetch'] as $key) $values[$key] = $this->GetValue($key);
         $values['PriceAvailable'] = $values['PriceStart'] > 0 && $values['PriceStart'] <= $now
             && $now < $values['PriceEnd'] && $values['LastSuccessfulFetch'] > 0
             && $now < $values['LastSuccessfulFetch'] + $this->ReadPropertyInteger('MaxCacheAgeHours') * 3600;
@@ -160,6 +160,7 @@ trait LichtBlickElectricityPriceWebhook
                 'reason'=>$fresh ? (string)($snapshot['reason'] ?? '') : ($enabled ? 'Recommendation unavailable or stale; gas fallback.' : 'Recommendation disabled.')],
             'values'=>$values, 'outside'=>['temperatureC'=>$outside,'updatedAt'=>$outsideUpdated],
             'settings'=>['postalCode'=>$this->ReadPropertyString('PostalCode'),'tariffVerified'=>$this->ReadPropertyBoolean('TariffVerified'),
+                'historyStartDate'=>$this->ReadPropertyString('PriceHistoryStartDate'),
                 'safetyMarginPercent'=>$this->ReadPropertyFloat('SafetyMarginPercent'),'hysteresisCt'=>$this->ReadPropertyFloat('HysteresisCt'),
                 'weatherEnabled'=>$this->ReadPropertyBoolean('WeatherModelEnabled'),'fanKW'=>$this->ReadPropertyFloat('WeatherFanKW'),
                 'gasPriceCt'=>$this->ReadPropertyFloat('GasPriceCt'),'referenceTemperatureC'=>$this->ReadPropertyFloat('WeatherReferenceTemperatureC'),
@@ -196,6 +197,12 @@ trait LichtBlickElectricityPriceWebhook
             $origin = $this->webOrigin('https://'.($server['HTTP_HOST'] ?? ''));
             if ($origin === '' || !in_array($origin,$this->webOrigins($vault),true)) return $reply(403,['error'=>'Use the configured SecretsManager HTTPS portal origin.']);
             if (($query['view'] ?? '') === 'state') return $reply(200,$this->webState());
+            if (($query['view'] ?? '') === 'price-history') {
+                try {
+                    if (!is_string($query['from'] ?? null) || !is_string($query['to'] ?? null)) throw new InvalidArgumentException('Select from/to dates');
+                    return $reply(200, $this->historyChart($query['from'], $query['to']));
+                } catch (InvalidArgumentException $e) { return $reply(400, ['error' => $e->getMessage()]); }
+            }
             if (isset($query['view'])) return $reply(404,['error'=>'Unknown view.']);
             $nonce = base64_encode(random_bytes(24));
             $escape = static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');

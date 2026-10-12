@@ -58,6 +58,13 @@ SecretsManager vault, at `/hook/alarm_portal_<instanceID>`. If no unambiguous
 matching portal is available, a browser **Back** button is shown. The
 SecretsManager login redirect remains separate from this navigation link.
 
+Version **0.3.7**, build 17 retains complete LichtBlick price schedules in persistent
+monthly files, retrieves historical SMARD day-ahead prices from the contract start
+(**1 October 2026**) and adds a passkey-protected price-history chart. Dated,
+verified tariff components can reconstruct historical retail prices; wholesale-only
+records and regional quotes are clearly distinguished. Collection is independent
+of the heating recommendation. See [history setup and provenance](docs/lichtblick-electricity-price.md#persistent-price-history-and-historical-retrieval--037).
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.

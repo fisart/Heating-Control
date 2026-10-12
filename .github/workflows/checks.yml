@@ -18,9 +18,12 @@ jobs:
           php -l LichtBlickElectricityPrice/History.php
           php -l LichtBlickElectricityPrice/WeatherModel.php
           php -l LichtBlickElectricityPrice/Webhook.php
+          php -l LichtBlickElectricityPrice/PriceStore.php
+          php -l LichtBlickElectricityPrice/PriceHistory.php
       - name: Heating behavior and web security
         run: |
           php tests/lichtblick.php
+          php tests/lichtblick-price-history.php
           php tests/lichtblick-webhook.php
           php tests/lichtblick-webhook.php --no-auth-api
           php tests/source-selection.php

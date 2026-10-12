@@ -8,11 +8,12 @@ const state={updatedAt:now,enabled:true,recommendation:{source:1,valid:true,powe
  settings:{weatherEnabled:true,safetyMarginPercent:25,hysteresisCt:2,referenceTemperatureC:2,gasPriceCt:10.48,referenceGasPriceCt:10.48,fanKW:0.6,postalCode:'14167'},
  outside:{temperatureC:7,updatedAt:now-60},curve:[{outsideC:7,powerPercent:35,cop:5.78,heatPumpKW:1}],
  slots:[{start:now-300,end:now+600,price:19.25},{start:now+600,end:now+1500,price:25.84}],debug:'No errors'};
+const chart={from:now-86400,to:now+86400,resolution:'15-minute intervals',storedIntervals:2,expectedIntervals:192,retailIntervals:2,confirmedIntervals:1,missingIntervals:190,points:[{start:now-900,end:now,price:-2.5,marketCt:-5,source:'lichtblick-quote',verified:true},{start:now+900,end:now+1800,price:29.75,marketCt:10,source:'smard-reconstructed',verified:false}]};
 let code=200,fail=false,payload=state,calls=[];
 let html=fs.readFileSync(__dirname+'/../LichtBlickElectricityPrice/page.html','utf8').replaceAll('{{NONCE}}','fixture').replaceAll('{{PATH}}','/hook/lichtblick_123').replaceAll('{{INSTANCE}}','123').replaceAll('{{PORTAL}}','/hook/alarm_portal_42').replaceAll('{{LOGIN}}','/hook/secrets_7?portal=1');
 const dom=new JSDOM(html,{url:'https://prices.example/hook/lichtblick_123',runScripts:'dangerously',beforeParse(w){
  w.AbortController=AbortController;
- w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>payload};};
+ w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:payload};};
 }});
 const settle=()=>new Promise(r=>setImmediate(r));
 (async()=>{
@@ -31,6 +32,16 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(calls[0].url,'/hook/lichtblick_123?view=state');
  assert.equal(calls[0].options.credentials,'same-origin');
  assert.equal(calls[0].options.cache,'no-store');
+ assert.equal(d.querySelectorAll('#price-chart rect').length,2,'Historical prices, including negatives, drawn');
+ assert.equal(d.querySelectorAll('#history-table tr').length,2,'Accessible provenance table');
+ assert.equal(d.querySelector('#history-from').min,'2026-10-01','Contract boundary in date input');
+ assert.ok(d.querySelector('#history-summary').textContent.includes('190 missing'));
+ assert.ok([...d.querySelectorAll('#price-chart title')].some(e=>e.textContent.includes('-2.500')),'Negative price tooltip');
+ d.querySelector('#history-price').value='market';d.querySelector('#history-price').dispatchEvent(new dom.window.Event('change'));
+ assert.ok(d.querySelector('#price-chart title').textContent.includes('wholesale'));
+ d.querySelector('#history-range').value='contract';d.querySelector('#history-range').dispatchEvent(new dom.window.Event('change'));await settle();
+ assert.equal(d.querySelector('#history-from').value,'2026-10-01','Since-contract preset');
+ assert.ok(calls.some(c=>c.url.includes('view=price-history&from=2026-10-01')));
  payload=structuredClone(state);payload.recommendation={source:2,valid:true,powerPercent:0,validUntil:now+600,reason:'Gas preferred'};
  payload.values.WeatherModelStatus='<img src=x onerror=alert(1)>';payload.debug='<script>alert(1)</script>';
  d.querySelector('#refresh').click();await settle();
@@ -41,7 +52,7 @@ const settle=()=>new Promise(r=>setImmediate(r));
  d.querySelector('#refresh').click();await settle();
  assert.equal(d.querySelector('#source').textContent,'Gas fallback');assert.equal(d.querySelector('#ceiling').textContent,'Unavailable');assert.equal(d.querySelector('#price').textContent,'Unavailable');
  code=401;d.querySelector('#refresh').click();await settle();
- assert.equal(d.querySelector('#dashboard').hidden,true,'Session expiry hides previous data');assert.equal(d.querySelector('#login').hidden,false);
+ assert.equal(d.querySelector('#dashboard').hidden,true,'Session expiry hides previous data');assert.equal(d.querySelectorAll('#price-chart rect').length,0,'Expired session clears old chart');assert.equal(d.querySelector('#login').hidden,false);
  assert.ok(d.querySelector('#status').textContent.includes('expired'));
  code=200;payload=state;d.querySelector('#refresh').click();await settle();assert.equal(d.querySelector('#login').hidden,true);
  fail=true;d.querySelector('#refresh').click();await settle();assert.equal(d.querySelector('#dashboard').hidden,true,'Outage hides previous data');
