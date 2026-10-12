@@ -24,74 +24,6 @@ final class LichtBlickPriceStore
         return [$a->getTimestamp(), $b->getTimestamp()];
     }
 
-    public static function tariffs(string $json): array
-    {
-        $rows = json_decode($json, true, 16, JSON_THROW_ON_ERROR);
-        if (!is_array($rows) || !array_is_list($rows) || count($rows) > 100) throw new InvalidArgumentException('Invalid historical tariff table');
-        $last = '';
-        foreach ($rows as $row) {
-            self::dates((string)($row['from'] ?? ''), (string)($row['from'] ?? ''));
-            if ($row['from'] <= $last || !preg_match('/^\d{5}$/D', (string)($row['postcode'] ?? ''))
-                || !is_bool($row['verified'] ?? null)) throw new InvalidArgumentException('Tariffs need ascending unique dates, postcode and a verified flag');
-            foreach (['adderNetCt' => [-100, 200], 'vatPercent' => [0, 100]] as $key => $bounds) {
-                $v = $row[$key] ?? null;
-                if ((!is_int($v) && !is_float($v)) || !is_finite((float)$v) || $v < $bounds[0] || $v > $bounds[1]) {
-                    throw new InvalidArgumentException('Invalid historical tariff ' . $key);
-                }
-            }
-            $last = $row['from'];
-        }
-        return $rows;
-    }
-
-    /** SMARD DE-LU day-ahead prices in EUR/MWh; no gap interpolation. */
-    public static function market(string $json, int $from, int $to): array
-    {
-        $body = json_decode($json, true, 32, JSON_THROW_ON_ERROR);
-        $series = $body['series'] ?? null;
-        if (!is_array($series) || !array_is_list($series) || count($series) < 2 || count($series) > 1000) throw new RuntimeException('Invalid SMARD series');
-        $points = [];
-        foreach ($series as $row) {
-            if (!is_array($row) || count($row) !== 2 || !is_int($row[0]) || $row[0] % 900000 !== 0
-                || ($row[1] !== null && ((!is_int($row[1]) && !is_float($row[1])) || !is_finite((float)$row[1]) || abs($row[1]) > 20000))) {
-                throw new RuntimeException('Invalid SMARD timestamp or price');
-            }
-            $time = intdiv($row[0], 1000);
-            if (isset($points[$time])) throw new RuntimeException('Duplicate SMARD timestamp');
-            $points[$time] = $row[1];
-        }
-        ksort($points, SORT_NUMERIC); $times = array_keys($points); $result = [];
-        $steps = [];
-        for ($i = 1; $i < count($times); $i++) $steps[] = $times[$i] - $times[$i - 1];
-        $native = in_array(900, $steps, true) ? 900 : (count(array_unique($steps)) === 1 && $steps[0] === 3600 ? 3600 : 0);
-        if (!$native) throw new RuntimeException('Unsupported SMARD interval resolution');
-        foreach ($times as $i => $start) {
-            $step = $native;
-            // A missing following sample is a gap, not evidence of an hourly price.
-            if ((isset($times[$i + 1]) && $times[$i + 1] - $start !== $native) || $points[$start] === null) continue;
-            for ($t = $start; $t < $start + $step; $t += 900) {
-                if ($t >= $from && $t + 900 <= $to) $result[] = ['start' => $t, 'end' => $t + 900,
-                    'marketCt' => (float)$points[$start] / 10, 'resolutionSeconds' => $step];
-            }
-        }
-        return $result;
-    }
-
-    public static function reconstruct(array $slots, array $tariffs, string $postcode, int $fetchedAt): array
-    {
-        $zone = new DateTimeZone('Europe/Berlin'); $result = [];
-        foreach ($slots as $slot) {
-            $day = (new DateTimeImmutable('@' . $slot['start']))->setTimezone($zone)->format('Y-m-d');
-            $tariff = null;
-            foreach ($tariffs as $row) if ($row['from'] <= $day) $tariff = $row;
-            $usable = $tariff !== null && $tariff['postcode'] === $postcode && $tariff['verified'];
-            $result[] = $slot + ['price' => $usable ? ($slot['marketCt'] + $tariff['adderNetCt']) * (1 + $tariff['vatPercent'] / 100) : null,
-                'source' => $usable ? 'smard-reconstructed' : 'smard-wholesale', 'verified' => $usable,
-                'postcode' => $postcode, 'fetchedAt' => $fetchedAt, 'tariff' => $tariff];
-        }
-        return $result;
-    }
-
     private function read(string $month): array
     {
         $path = $this->directory . '/' . $month . '.json';
@@ -157,12 +89,13 @@ final class LichtBlickPriceStore
 
     public static function chart(array $rows, int $from, int $to): array
     {
-        $covered = 0; $retail = 0; $confirmed = 0; $wholesaleOnly = 0;
+        $covered = 0; $retail = 0; $confirmed = 0; $wholesaleOnly = 0; $estimated = 0;
         foreach ($rows as $row) {
             $seconds = max(0, min($to, $row['end']) - max($from, $row['start']));
             $covered += $seconds;
             if ($row['price'] !== null) { $retail += $seconds; if ($row['verified']) $confirmed += $seconds; }
             elseif (isset($row['marketCt'])) $wholesaleOnly += $seconds;
+            if (($row['source'] ?? '') === 'app-normalized-estimate' && $row['price'] !== null) $estimated += $seconds;
         }
         $intervals = ($to - $from) / 900;
         $daily = $to - $from > 7 * 86400 + 3600;
@@ -186,7 +119,7 @@ final class LichtBlickPriceStore
         }
         return ['from' => $from, 'to' => $to, 'resolution' => $daily ? 'daily mean' : '15-minute intervals', 'expectedIntervals' => $intervals,
             'storedIntervals' => $covered / 900, 'retailIntervals' => $retail / 900, 'confirmedIntervals' => $confirmed / 900,
-            'wholesaleOnlyIntervals' => $wholesaleOnly / 900,
+            'wholesaleOnlyIntervals' => $wholesaleOnly / 900, 'estimatedIntervals' => $estimated / 900,
             'missingIntervals' => ($to - $from - $covered) / 900, 'points' => $points];
     }
 }

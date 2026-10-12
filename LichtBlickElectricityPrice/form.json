@@ -30,7 +30,7 @@
     {
       "type": "NumberSpinner",
       "name": "SafetyMarginPercent",
-      "caption": "Safety margin (%) \u2014 default 25; editable",
+      "caption": "Safety margin (%) — default 25; editable",
       "minimum": 0,
       "maximum": 95,
       "digits": 1
@@ -91,7 +91,7 @@
           "columns": [
             {
               "name": "outsideC",
-              "caption": "Outside \u00b0C",
+              "caption": "Outside °C",
               "width": "150px",
               "add": 0,
               "edit": {
@@ -142,7 +142,7 @@
         {
           "type": "NumberSpinner",
           "name": "WeatherReferenceTemperatureC",
-          "caption": "Temperature of reference threshold (\u00b0C)",
+          "caption": "Temperature of reference threshold (°C)",
           "minimum": -30,
           "maximum": 30,
           "digits": 1
@@ -174,7 +174,7 @@
         {
           "type": "NumberSpinner",
           "name": "WeatherTemperatureHysteresisC",
-          "caption": "Outside temperature deadband (\u00b0C)",
+          "caption": "Outside temperature deadband (°C)",
           "minimum": 0,
           "maximum": 2,
           "digits": 2
@@ -189,7 +189,7 @@
         },
         {
           "type": "Label",
-          "caption": "Threshold(T) = reference threshold \u00d7 current/reference gas price \u00d7 fan-adjusted COP(T)/fan-adjusted COP(reference). The margin is applied once afterward. Fan-adjusted COP = COP \u00d7 HP kW/(HP kW + fan kW). This is an approximate empirical-reference model, not measured COP."
+          "caption": "Threshold(T) = reference threshold × current/reference gas price × fan-adjusted COP(T)/fan-adjusted COP(reference). The margin is applied once afterward. Fan-adjusted COP = COP × HP kW/(HP kW + fan kW). This is an approximate empirical-reference model, not measured COP."
         }
       ]
     },
@@ -254,7 +254,7 @@
         {
           "type": "NumberSpinner",
           "name": "GasKWhPerM3",
-          "caption": "Gas conversion (kWh/m\u00b3)",
+          "caption": "Gas conversion (kWh/m³)",
           "minimum": 1,
           "maximum": 20,
           "digits": 6
@@ -292,7 +292,7 @@
         {
           "type": "NumberSpinner",
           "name": "GasCounterScale",
-          "caption": "Gas counter multiplier to m\u00b3",
+          "caption": "Gas counter multiplier to m³",
           "minimum": 1e-06,
           "maximum": 100,
           "digits": 6
@@ -397,7 +397,7 @@
         },
         {
           "type": "Label",
-          "caption": "All selected inputs must be archived. Existing IDs are Berlin defaults; verify them. Counter scales default to gas m\u00b3 and electric pulses at 0.001 kWh/pulse. Shared humidifier load must be comparable between reference days."
+          "caption": "All selected inputs must be archived. Existing IDs are Berlin defaults; verify them. Counter scales default to gas m³ and electric pulses at 0.001 kWh/pulse. Shared humidifier load must be comparable between reference days."
         }
       ]
     },
@@ -424,7 +424,7 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Persistent prices and historical tariffs",
+      "caption": "Persistent price history",
       "items": [
         {
           "type": "ValidationTextBox",
@@ -437,74 +437,8 @@
           "caption": "Collect and retain complete LichtBlick schedules (independent of recommendation enable)"
         },
         {
-          "type": "CheckBox",
-          "name": "HistoricalFetchEnabled",
-          "caption": "Retrieve SMARD historical day-ahead prices; automatically recover the last 7 completed days"
-        },
-        {
           "type": "Label",
-          "caption": "Retrieve SMARD historical day-ahead prices from contract start; recover the last 7 completed days on later runs"
-        },
-        {
-          "type": "List",
-          "name": "HistoricalTariffs",
-          "caption": "Historical tariff periods (ascending dates; adder includes all net per-kWh components; no monthly basic charge)",
-          "rowCount": 5,
-          "add": true,
-          "delete": true,
-          "columns": [
-            {
-              "name": "from",
-              "caption": "Effective from (YYYY-MM-DD)",
-              "width": "auto",
-              "add": "",
-              "edit": {
-                "type": "ValidationTextBox"
-              }
-            },
-            {
-              "name": "postcode",
-              "caption": "Delivery postcode",
-              "width": "auto",
-              "add": "",
-              "edit": {
-                "type": "ValidationTextBox"
-              }
-            },
-            {
-              "name": "adderNetCt",
-              "caption": "Total fixed adder net ct/kWh",
-              "width": "auto",
-              "add": 0.0,
-              "edit": {
-                "type": "NumberSpinner",
-                "minimum": -100,
-                "maximum": 200,
-                "digits": 4
-              }
-            },
-            {
-              "name": "vatPercent",
-              "caption": "VAT %",
-              "width": "auto",
-              "add": 19.0,
-              "edit": {
-                "type": "NumberSpinner",
-                "minimum": 0,
-                "maximum": 100,
-                "digits": 4
-              }
-            },
-            {
-              "name": "verified",
-              "caption": "Contract formula verified",
-              "width": "auto",
-              "add": false,
-              "edit": {
-                "type": "CheckBox"
-              }
-            }
-          ]
+          "caption": "Live LichtBlick schedules are collected automatically. Earlier estimates are imported once with a standalone script; the module does not download or reconstruct historical prices."
         }
       ]
     }
@@ -514,34 +448,6 @@
       "type": "Button",
       "caption": "Fetch prices now",
       "onClick": "LBEP_RefreshPrices($id);"
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Retrieve historical prices",
-      "items": [
-        {
-          "type": "ValidationTextBox",
-          "name": "HistoryFrom",
-          "caption": "First completed day (YYYY-MM-DD)",
-          "value": ""
-        },
-        {
-          "type": "ValidationTextBox",
-          "name": "HistoryTo",
-          "caption": "Last completed day (YYYY-MM-DD, inclusive)",
-          "value": ""
-        },
-        {
-          "type": "Button",
-          "caption": "Queue historical retrieval (maximum 366 days)",
-          "onClick": "echo LBEP_RetrieveHistoricalPrices($id, $HistoryFrom, $HistoryTo);"
-        },
-        {
-          "type": "Button",
-          "caption": "Cancel pending historical retrieval (keep stored prices)",
-          "onClick": "LBEP_CancelHistoricalImport($id);"
-        }
-      ]
     },
     {
       "type": "Button",

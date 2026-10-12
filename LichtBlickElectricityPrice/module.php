@@ -16,7 +16,8 @@ class LichtBlickElectricityPrice extends IPSModule
         'WebEnabled' => false, 'VaultInstanceID' => 0,
         'Enabled' => false, 'PostalCode' => '', 'TariffVerified' => false,
         'FetchIntervalMinutes' => 15, 'PriceCorrectionCt' => 0.0, 'MaxCacheAgeHours' => 24,
-        'PriceHistoryEnabled' => true, 'HistoricalFetchEnabled' => true, 'HistoricalTariffs' => '[]', 'PriceHistoryStartDate' => '2026-10-01',
+        // Retired HistoricalFetchEnabled/HistoricalTariffs keys are hidden and inert, retained for old configuration backups.
+        'PriceHistoryEnabled' => true, 'HistoricalFetchEnabled' => false, 'HistoricalTariffs' => '[]', 'PriceHistoryStartDate' => '2026-10-01',
         'ThresholdCt' => 0.0, 'SafetyMarginPercent' => 25.0, 'HysteresisCt' => 2.0, 'DebugEnabled' => false,
         'DailyLearningEnabled' => false, 'ArchiveID' => 14817, 'GasPriceCt' => 10.48,
         'GasKWhPerM3' => 11.166973, 'GasCounterID' => 25105, 'GasCounterScale' => 1.0,
@@ -82,8 +83,11 @@ class LichtBlickElectricityPrice extends IPSModule
         $this->RegisterVariableString('WeatherModelStatus', 'Weather model status', '~TextBox', 270);
         $this->RegisterVariableFloat('ReferenceThresholdCt', 'Configured / learned reference threshold (ct/kWh)', 'LBEP.Price', 280);
         $this->RegisterVariableString('PriceHistoryStatus', 'Price history storage status', '~TextBox', 300);
-        $this->RegisterVariableString('HistoricalFetchStatus', 'Historical price retrieval status', '~TextBox', 310);
-        $this->RegisterVariableInteger('LastHistoricalFetch', 'Last historical price retrieval', '~UnixTimestamp', 320);
+        // Old retrieval-status children are preserved but hidden on existing installations.
+        if (function_exists('IPS_SetHidden')) foreach (['HistoricalFetchStatus', 'LastHistoricalFetch'] as $ident) {
+            $id = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
+            if ($id) IPS_SetHidden($id, true);
+        }
     }
 
     private function profiles(): void
@@ -134,7 +138,6 @@ class LichtBlickElectricityPrice extends IPSModule
             if ($c[$key] < $bounds[0] || $c[$key] > $bounds[1]) throw new InvalidArgumentException('Out of range: ' . $key);
         }
         $curve=LichtBlickWeatherModel::curve($c['WeatherCurve']);
-        LichtBlickPriceStore::tariffs($c['HistoricalTariffs']);
         LichtBlickPriceStore::dates($c['PriceHistoryStartDate'], $c['PriceHistoryStartDate']);
         if ($c['WeatherReferenceTemperatureC'] < $curve[0]['outsideC']
             || $c['WeatherReferenceTemperatureC'] > $curve[count($curve)-1]['outsideC']) {
@@ -174,11 +177,6 @@ class LichtBlickElectricityPrice extends IPSModule
                     $this->UpdateFormField('TariffVerified', 'value', false);
                     return;
                 }
-            }
-            $historyIdentity = hash('sha256', $c['HistoricalTariffs'] . '|' . $c['PriceHistoryStartDate']);
-            if ($historyIdentity !== $this->ReadAttributeString('HistoricalTariffIdentity')) {
-                $this->WriteAttributeString('HistoricalTariffIdentity', $historyIdentity);
-                $this->WriteAttributeString('HistoricalImportQueue', ''); $this->WriteAttributeString('HistoryAutomaticDay', '');
             }
             $model = $c;
             foreach (['Enabled','PostalCode','TariffVerified','FetchIntervalMinutes','PriceCorrectionCt','MaxCacheAgeHours',
@@ -220,7 +218,6 @@ class LichtBlickElectricityPrice extends IPSModule
         [$date] = LichtBlickEconomics::previousDay(time());
         if ($local->format('H:i') >= '00:10' && $this->ReadPropertyBoolean('DailyLearningEnabled')
             && $this->ReadPropertyBoolean('Enabled') && $this->ReadAttributeString('LastAttemptDay') !== $date) $this->CalculateYesterday();
-        $this->historyTick();
     }
 
     /** Fixed public website endpoint; no account credentials or arbitrary URL. */
@@ -461,6 +458,7 @@ class LichtBlickElectricityPrice extends IPSModule
             foreach (self::DEFAULTS as $key=>$default) if ((str_starts_with($key,'Weather') || in_array($key,['OutsideTemperatureMaxAgeSeconds','WebEnabled','VaultInstanceID','PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'],true)) && !array_key_exists($key,$c)) $c[$key]=$default;
             if (array_diff(array_keys($c), array_keys(self::DEFAULTS))) throw new InvalidArgumentException('Unknown configuration keys');
             $this->validate($c); // Atomic validation before any writes.
+            $c['HistoricalFetchEnabled'] = false; $c['HistoricalTariffs'] = '[]'; // Retired keys accepted for schema-1 compatibility only.
             $c['WebEnabled'] = false; $c['Enabled'] = false; $c['DailyLearningEnabled'] = false; $c['TariffVerified'] = false;
             IPS_SetConfiguration($this->InstanceID, json_encode($c, JSON_THROW_ON_ERROR));
             $this->WriteAttributeString('PriceCache', ''); $this->WriteAttributeString('ReferenceDays', '');

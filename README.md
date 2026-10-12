@@ -58,12 +58,11 @@ SecretsManager vault, at `/hook/alarm_portal_<instanceID>`. If no unambiguous
 matching portal is available, a browser **Back** button is shown. The
 SecretsManager login redirect remains separate from this navigation link.
 
-Version **0.3.7**, build 17 retains complete LichtBlick price schedules in persistent
-monthly files, retrieves historical SMARD day-ahead prices from the contract start
-(**1 October 2026**) and adds a passkey-protected price-history chart. Dated,
-verified tariff components can reconstruct historical retail prices; wholesale-only
-records and regional quotes are clearly distinguished. Collection is independent
-of the heating recommendation. See [history setup and provenance](docs/lichtblick-electricity-price.md#persistent-price-history-and-historical-retrieval--037).
+Version **0.3.9**, build 19 retains live LichtBlick schedules and the protected
+history chart. Earlier prices are maintained by standalone imports; historical
+SMARD downloading and tariff reconstruction controls have been removed. Imported
+app-normalized estimates are labelled separately from captured LichtBlick quotes.
+Existing stored history remains intact. See [history and manual imports](docs/lichtblick-electricity-price.md#persistent-price-history-and-manual-import--039).
 
 ## Installation and safe handover
 
@@ -352,6 +351,3 @@ Symcon stub to check legacy conversion, multiple sensor subscriptions, typed
 flap commands, recovery switch transitions, normal fan control, unchanged dry-run decisions, backup/restore, external status
 publishing, shutdown/bypass behavior and invalid input.
 It does not replace a visual check of the native popup in the Symcon console.
-
-
-Version **0.3.8**, build 18 explains partial retail price history on the dashboard and adds **Show available wholesale history**. Historical market data may be present even when retail prices before today are unavailable; reconstructing those prices still requires dated verified tariff components.

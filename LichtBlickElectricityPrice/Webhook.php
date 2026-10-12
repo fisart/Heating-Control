@@ -121,7 +121,7 @@ trait LichtBlickElectricityPriceWebhook
             'ThresholdCt','ReferenceThresholdCt','EffectiveThresholdCt','EntryThresholdCt','DecisionReason',
             'DailyCandidateCt','ThresholdCalculatedAt','DailyStatus','WeatherHeatPumpPowerPercent',
             'WeatherOutsideTemperatureC','WeatherCOP','WeatherSystemCOP','WeatherHeatPumpKW','WeatherModelValid',
-            'WeatherModelStatus','PriceHistoryStatus','HistoricalFetchStatus','LastHistoricalFetch'] as $key) $values[$key] = $this->GetValue($key);
+            'WeatherModelStatus','PriceHistoryStatus'] as $key) $values[$key] = $this->GetValue($key);
         $values['PriceAvailable'] = $values['PriceStart'] > 0 && $values['PriceStart'] <= $now
             && $now < $values['PriceEnd'] && $values['LastSuccessfulFetch'] > 0
             && $now < $values['LastSuccessfulFetch'] + $this->ReadPropertyInteger('MaxCacheAgeHours') * 3600;

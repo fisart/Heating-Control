@@ -1,4 +1,4 @@
-# LichtBlick electricity prices and air-heating recommendation — reviewed 0.3.8
+# LichtBlick electricity prices and air-heating recommendation — reviewed 0.3.9
 
 Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. Library 0.3.2 adds an editable weather/power model and a protected dashboard alongside the optional, initially disabled HeatingControl integration; see [setup and exact source commands](automatic-source-selection.md).
 
@@ -92,130 +92,92 @@ Each page and JSON request checks the existing SecretsManager portal session and
 
 The page is **read-only**: it cannot edit configuration, trigger fetches/learning or command heating. Opening it never mutates the instance. Expired recommendations show gas fallback and zero command; network/session failures hide previously displayed data. It is a recommendation view, not actuator feedback. The page can remain enabled when the price engine is disabled. Disabling WebEnabled blocks requests immediately and removes only its own hook.
 
-## Persistent price history and historical retrieval — 0.3.7
+## Persistent price history and manual import — 0.3.9
 
-The owner's LichtBlick contract started on **1 October 2026**. `PriceHistoryStartDate`
-defaults to **2026-10-01**. Historical imports and chart requests before that date are
-rejected. No prices before the contract are imported. Changing this date is an
-explicit instance configuration change.
+The contract starts **1 October 2026**. `PriceHistoryStartDate` defaults to
+**2026-10-01**; chart and raw-history requests before that date are rejected.
+**PriceHistoryEnabled=true** retains every actual interval in the live public
+LichtBlick response, including elapsed/future slots on or after the contract start.
+Collection remains independent of the heating recommendation and runs at the
+normal **15-minute** fetch cadence. It never invents missing live intervals.
 
-**PriceHistoryEnabled=true** saves every interval in the entire returned LichtBlick
-schedule immediately, including already elapsed and future intervals on/after the
-contract start. It does not depend on `Enabled`, which controls the heating
-recommendation. The normal price-fetch cadence remains **15 minutes**. Historical
-collection never makes a heating recommendation valid or commands equipment.
+The module no longer downloads SMARD history or reconstructs retail tariffs.
+The historical retrieval/cancellation buttons and historical tariff table have
+been removed. `HistoricalFetchEnabled` and `HistoricalTariffs` are hidden, inert
+compatibility properties for old schema-1 backups; restore clears them. An old
+saved true value does not restart downloads. Old retrieval-status children are
+preserved but hidden; `PriceHistoryStatus` reports live schedule storage.
 
-The public LichtBlick postcode feed has **no verified historical date interface**.
-During development on 12 October 2026, requests using `date`, `start/end` and
-`startDate/endDate` for earlier days returned the same current-day schedule. This
-is not proof that customer-account exports cannot exist. The module does not
-pretend that the current price is an older price.
+### One-time import of app-normalized estimates
 
-With **HistoricalFetchEnabled=true**, the first background run retrieves **1 October
-2026 through yesterday**. Later runs revisit the last seven completed days to
-recover missing/revised market data; longer downtime is caught up in bounded
-periods. Import work runs in weekly batches on the 60-second timer, retains its
-queue across restarts, and retries failures after 15 minutes. Stored direct quotes
-are retained when a historical import overlaps them. The module uses:
+The owner imported **1,056 quarter-hour intervals for 1–11 October 2026** with a
+standalone script into **Archive Control 14817 / CurrentPriceCt 17542** and the
+chart's persistent monthly store under **instance 30424**. Imported historical
+`PriceValid` points are false; the live values remain managed by the price module.
+The script enables future price/validity logging, protects existing quotes and
+archive points, backs up touched files/settings and supports repeat runs.
 
-- `https://www.smard.de/app/chart_data/4169/DE/index_quarterhour.json`
-- `https://www.smard.de/app/chart_data/4169/DE/4169_DE_quarterhour_<weekTimestampMilliseconds>.json`
-
-These are fixed-host public website data endpoints for German/Luxembourg
-**day-ahead wholesale prices**, not a LichtBlick customer-account API. Source:
-**Bundesnetzagentur | SMARD.de**, https://www.smard.de/home/datennutzung (CC BY 4.0).
-Wholesale EUR/MWh is converted to net ct/kWh by dividing by ten. Negative prices
-are retained. Nulls and missing samples remain gaps. Native hourly data, if
-encountered, are explicitly labelled with `resolutionSeconds=3600`; splitting that
-hour for alignment does not claim quarter-hour price variation.
-
-### Historic retail tariff components
-
-The **HistoricalTariffs** list initially contains **no assumed tariff formula**.
-Each row has an effective date (`from`, YYYY-MM-DD), delivery `postcode`, total
-fixed **net** per-kWh additions (`adderNetCt`), VAT (`vatPercent`) and explicit
-contract-formula confirmation (`verified`). Rows must have unique ascending dates.
-The latest applicable row governs until the next row, even when unconfirmed; an
-older confirmed row cannot silently carry through a changed tariff.
-
-For a dated, verified matching-postcode row only:
+The estimated price model is:
 
 ```
-reconstructed gross ct/kWh = (SMARD market net ct/kWh + adderNetCt) × (1 + vatPercent / 100)
+estimated retail ct/kWh = market ct/kWh × 1.19 + 18.440804258195374
 ```
 
-The net adder must include all applicable net per-kWh tariff components exactly
-once. Do not include VAT again or include a monthly basic charge in the adder.
-This simple reconstruction requires the actual contract to use the same day-ahead
-index and additive formula. A different index/formula cannot be repaired by an
-invented constant. No current `PriceCorrectionCt` is applied to reconstructed
-historic prices; the dated tariff table provides its complete formula.
+This fits the owner's **466 kWh / EUR 173.26 for 1–10 October** with a relative
+meter normalization of **1.0041854709015685**, used only in the analysis. The
+normalization is not written to a consumption variable or hardware calibration.
+The 3 October interval allocation used hourly power scaled to the known daily
+counter increase. Both SMARD and Fraunhofer Energy-Charts provided matching
+wholesale samples. Matching the app total is by construction, not independent
+verification of a contract formula. Any fixed charges included in the app total
+are absorbed by this effective addition and must not be charged again.
 
-Without a verified applicable tariff, market data are stored as **smard-wholesale**
-with `price=null`; this means retail price unavailable, never zero/free electricity.
-Verified reconstructions use **smard-reconstructed**. Downloaded regional quotes
-use **lichtblick-quote**, with their original quote, correction, delivery postcode,
-tariff-confirmation flag and retrieval timestamp. They represent the public
-regional quote, not an independently obtained billed customer price. A direct
-quote wins over a reconstruction; an unconfirmed refresh cannot downgrade a
-previously confirmed quote. Editing tariff rows schedules backfill again and
-reconstructs SMARD-derived records, while preserving direct quote records.
+Imported estimates have **source=app-normalized-estimate, verified=false**.
+They are displayed separately from **lichtblick-quote** records, whose confirmation
+reflects `TariffVerified` when captured. Existing **smard-wholesale** and
+**smard-reconstructed** rows remain readable; no source or verification flag is
+silently upgraded. A direct quote takes precedence over a manual estimate.
+Consumers must check source, verification and coverage, not just a numeric price.
 
-### Storage, selected periods and chart
+### Storage, chart and missing intervals
 
-Persistent files are stored under:
+The chart reads `<kernel>/media/lichtblick-price-history/<instanceID>/YYYY-MM.json`,
+not the price variable's archive alone. Therefore an archive-only import does not
+populate it. Standalone imports update both stores. Files use UTC months and
+absolute timestamps, atomic replacement and the `LBEP.History.<instanceID>`
+semaphore. September's UTC file includes the first two local hours of 1 October.
+Other months and postcode/correction identities are retained. Include the entire
+price-history and import-backup media directories in backup/standby replication.
+Configuration restore preserves price files and leaves web access, recommendation,
+learning and tariff confirmation disabled. Live collection uses the restored
+`PriceHistoryEnabled` switch independently.
 
-`<Symcon kernel directory>/media/lichtblick-price-history/<instanceID>/YYYY-MM.json`
+The protected page offers Today, Yesterday, Last 7 days, Since contract start and
+custom dates. Retail gross and wholesale net remain separate selections. Up to
+seven days shows actual intervals; longer periods show daily arithmetic means,
+not consumption-weighted billing prices. The page reports imported-estimate,
+confirmed-retail and missing interval counts, with exact hover values and a table.
+Read-only chart requests require the existing SecretsManager session/origin gate.
+Network/session failures clear previous values. `Show available wholesale history`
+selects retained market prices explicitly without treating them as retail prices.
 
-Writes use temporary files and atomic replacement under an instance semaphore.
-Interval keys use absolute Unix timestamps; both repeated hours at the autumn DST
-change remain distinct. Months and previous postcode/correction identities are
-retained. Changing postcode/correction isolates the new identity without deleting
-older records. The page and API select the active postcode/correction identity.
-No automatic history deletion or retention limit is implemented. Include this
-media directory in production backup and standby replication. Removing an
-instance does not automatically purge the files.
+A complete **1–11 October** import does not fill a gap on **12 October**. The
+observed live 12 October response stored **88 of 96** local-day intervals; the
+missing **00:00–02:00** consists of **8** intervals. A separate targeted script
+can add those eight app-normalized estimates, preserving all actual quote slots.
+Subsequent live-feed gaps remain visible until supported by a separate import;
+the module does not fill them with the current price. A fetch count in the debug
+log cannot recover previous schedules.
 
-In the form, **Retrieve historical prices** queues a selected completed date range
-(up to 366 calendar days, inclusive end date). **Cancel pending historical
-retrieval** keeps all prices already saved. The default initial retrieval runs
-without manually filling dates. Disabling historical retrieval pauses the pending
-queue; disabling price history pauses collection. The existing records remain
-readable. Configuration export/import includes the new settings but excludes
-price files; restoring configuration preserves them and still disables the
-recommendation, daily learner, tariff confirmation and web page. Price collection
-uses the restored history switches independently; turn them off too if desired.
+`LBEP_GetPriceHistory(instanceID, fromUnixTimestamp, toUnixTimestamp)` still
+returns schema-1 JSON with the active identity, bounds and raw intervals. End is
+exclusive and each request is limited to approximately 31 calendar days. It reads
+local files only. Historic tariff reconstruction/download APIs are removed.
 
-The protected HTML **Price history** section offers Today, Yesterday, Last 7 days,
-Since contract start and custom dates. Retail gross and wholesale net are separate
-selections, with source colours, exact hover values and an accessible table.
-Periods up to seven calendar days show actual 15-minute slots; longer periods show
-daily arithmetic means of available prices. These are time averages, **not
-consumption-weighted billing prices**. Partial days, missing intervals and
-confirmed-versus-available retail coverage are reported. The chart does not fill
-gaps or substitute the current price. Requests remain read-only and use the
-existing SecretsManager session/origin gate; the chart uses local SVG, without
-external scripts/CDNs. Expired sessions/network errors clear old chart data.
-
-New child variables are **PriceHistoryStatus**, **HistoricalFetchStatus** and
-**LastHistoricalFetch**. The existing bounded **DebugLog** reports retrieval/storage
-failures. For later consumption calculations:
-
-`LBEP_GetPriceHistory(instanceID, fromUnixTimestamp, toUnixTimestamp)`
-
-returns schema-1 JSON with identity, from/to and raw `intervals`; the end is
-exclusive, intervals overlap the requested period, and raw requests are limited
-to approximately 31 calendar days. Consumers must check `price !== null`,
-`verified`, source, native resolution and coverage. This API reads only local
-files and never fetches, reconstructs or changes heating settings.
-
-Software checks: `php tests/lichtblick-price-history.php` covers durable storage,
-quote precedence, repeat imports, independent identities, contract bounds,
-negative/null prices, missing samples, DST, formula confirmation, bounded weekly
-retrieval, resumable failures and configuration restore. The webhook/DOM suites
-also verify history access gates, chart drawing, source labels and clearing on
-session expiry. Deployment on the owner's Symcon installations is separate from
-these local fixture checks.
+`php tests/lichtblick-price-history.php` covers manual estimates, quote precedence,
+repeat imports, identities, DST, legacy settings, retained files and absence of
+historical downloads. The DOM/webhook suites cover estimate labels, coverage,
+source distinctions, read-only access and session failure handling.
 
 ## Daily threshold calculation
 
@@ -250,7 +212,3 @@ Take the median of the qualifying candidates. Move the original threshold 20% to
 Export shows versioned JSON in the form. Import validates the complete backup before writing, includes the latest learned threshold and chosen safety margin, clears the live price cache and learning references, preserves persistent price files, and leaves web access, recommendation, daily learning and tariff confirmation **disabled**. Recheck IDs/tariff and reenable explicitly. Learned reference records/debug logs and persistent price files are not configuration and are not exported. Include the persistent price directory in the normal Symcon data backup.
 
 `php tests/lichtblick.php` checks interval coverage, invalid responses, negative prices, margin/hysteresis, outage cache handling, configuration restore, DST day boundaries, accepted matched learning, repeat-update prevention and rejection of resets, sensor failures, radiator contamination and incomplete archive requests. It uses local fixtures, not live heating hardware. `tests/lichtblick-webhook.php` checks session/origin enforcement, read-only behavior, stale decisions and deferred hook ownership. `tests/lichtblick-page-dom.cjs` verifies displayed values, text escaping, refresh and expired-session/outage handling. Weather interpolation, sensor expiry and end-to-end normalized learning are covered by the price tests. Existing HeatingControl behavior/security tests remain in the workflow. A live public response was also parsed successfully during development; deployment and testing against the user's IP-Symcon installation remain to be done.
-
-### Partial retail history notice — 0.3.8
-
-If historical imports contain wholesale-only records, the retail chart now displays a clear notice even when today has retail quotes. **Show available wholesale history** explicitly selects wholesale net prices and reveals older imported market data; it never changes the tariff or treats net prices as gross. Configure dated, verified HistoricalTariffs to reconstruct the missing retail prices. A completed import does not mean retail tariff components are available.
