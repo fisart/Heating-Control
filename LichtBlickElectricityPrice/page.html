@@ -9,27 +9,17 @@
 </head>
 <body data-path="{{PATH}}">
 <main>
-<header><div><div class="eyebrow">Hausverbrauch · Instanz {{INSTANCE}}</div><h1>Verbrauch &amp; Kosten</h1><p>Strom, Gas und Wasser im Überblick.</p></div><nav class="toolbar" aria-label="Page controls"><a id="portal" class="button" href="{{PORTAL}}" hidden>Zurück zum Portal</a><button id="back">Zurück</button><button id="refresh">Daten aktualisieren</button></nav></header>
+<header><div><div class="eyebrow">Hausverbrauch · Instanz {{INSTANCE}}</div><h1>Verbrauch &amp; Kosten</h1><p>Strom, Gas, Wasser und Heizvergleich im Überblick.</p></div><nav class="toolbar" aria-label="Page controls"><a id="portal" class="button" href="{{PORTAL}}" hidden>Zurück zum Portal</a><button id="back">Zurück</button><button id="refresh">Daten aktualisieren</button></nav></header>
 <div id="status" class="status" role="status">Geschützte Daten werden geladen…</div><a id="login" class="button" href="{{LOGIN}}" hidden>Mit Portal-Passkey anmelden</a>
 <div id="dashboard" hidden>
-<nav class="consumption-tabs" role="tablist" aria-label="Verbrauchsarten">
+<nav class="consumption-tabs" role="tablist" aria-label="Verbrauch und Heizung">
 <button id="tab-strom" type="button" role="tab" aria-selected="true" aria-controls="panel-strom" data-consumption-tab="strom">Strom</button>
 <button id="tab-gas" type="button" role="tab" aria-selected="false" aria-controls="panel-gas" data-consumption-tab="gas" tabindex="-1">Gas</button>
 <button id="tab-wasser" type="button" role="tab" aria-selected="false" aria-controls="panel-wasser" data-consumption-tab="wasser" tabindex="-1">Wasser</button>
+<button id="tab-heizung" type="button" role="tab" aria-selected="false" aria-controls="panel-heizung" data-consumption-tab="heizung" tabindex="-1">Heizung</button>
 </nav>
 <div id="panel-strom" role="tabpanel" aria-labelledby="tab-strom" lang="en">
-<div class="grid">
 <article class="card"><label>Current electricity price</label><div class="value" id="price">—</div><small id="price-period"></small><small id="price-valid"></small></article>
-<article class="card"><label>Air-heating recommendation</label><div class="value" id="source">—</div><small id="power"></small><small id="valid-until"></small></article>
-<article class="card"><label>Safe electricity ceiling</label><div class="value" id="ceiling">—</div><small id="entry"></small><small id="margin"></small></article>
-</div>
-<p id="reason" class="note"></p>
-<div class="two">
-<section class="panel"><h2>Threshold calculation</h2><dl id="calculation"></dl><p class="note">Enter heat pump below the entry boundary. Return to gas at the safe ceiling; keep the previous recommendation within the band.</p></section>
-<section class="panel"><h2>Outside temperature & power</h2><dl id="weather"></dl><p id="weather-status"></p><p class="note">The editable curve is provisional. Its COP and input estimates are starting assumptions, and its power setting is not a measured optimum.</p></section>
-</div>
-<section class="panel"><h2>Editable model · current configuration</h2><p>Change these values in the IP-Symcon instance form after your measurements.</p><div class="table-wrap"><table><thead><tr><th>Outside °C</th><th>Power %</th><th>COP</th><th>Heat-pump kW</th></tr></thead><tbody id="curve"></tbody></table></div></section>
-<section class="panel"><h2>Learning & price retrieval</h2><dl id="learning"></dl><p id="daily-status"></p><p id="fetch-status"></p></section>
 <details id="published-intervals" class="panel"><summary>Published price intervals</summary><p id="coverage">Only actual intervals returned by LichtBlick are shown.</p><div class="table-wrap"><table><thead><tr><th>Berlin time · start</th><th>End</th><th>ct/kWh</th></tr></thead><tbody id="schedule"></tbody></table></div></details>
 <section class="panel"><h2>Price history</h2><p>Contract starts <span id="history-start">1 October 2026</span>. Stored LichtBlick quotes and imported estimates are shown separately. Missing prices are left blank.</p>
 <div class="history-controls"><label>Period<select id="history-range"><option value="7">Last 7 days</option><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="contract">Since contract start</option><option value="custom">Custom dates</option></select></label><label>From<input id="history-from" type="date"></label><label>Through<input id="history-to" type="date"></label><button id="history-show">Show chart</button></div>
@@ -60,7 +50,22 @@
 <div class="table-wrap"><table><thead><tr><th>Rechnungszeitraum</th><th>Rechnung m³</th><th>Beobachtet m³</th><th>Rechnung − beobachtet m³</th><th>Rechnung kWh</th><th>Brutto EUR</th><th>Eigene bekannte Kosten EUR</th><th>Rechnung − Berechnung EUR</th><th>Entlastung EUR</th><th>Nach Entlastung EUR</th><th>Auswahl</th></tr></thead><tbody id="gas-invoices"></tbody></table></div>
 </section></div>
 <div id="panel-wasser" role="tabpanel" aria-labelledby="tab-wasser" hidden><section class="panel"><h2>Wasserverbrauch &amp; Kosten</h2><p>Wasserdaten sind noch nicht verbunden.</p><p>Für diesen Bereich müssen wir zuerst Wasserzähler, Archivaufzeichnung und Rechnungen prüfen.</p></section></div>
+<div id="panel-heizung" role="tabpanel" aria-labelledby="tab-heizung" lang="en" hidden>
+<h2>Gas / heat pump comparison</h2>
+<div class="grid">
+<article class="card"><label>Current electricity price</label><div class="value" id="heating-price">—</div><small id="heating-price-period"></small><small id="heating-price-valid"></small></article>
+<article class="card"><label>Air-heating recommendation</label><div class="value" id="source">—</div><small id="power"></small><small id="valid-until"></small></article>
+<article class="card"><label>Safe electricity ceiling</label><div class="value" id="ceiling">—</div><small id="entry"></small><small id="margin"></small></article>
+</div>
+<p id="reason" class="note"></p>
+<div class="two">
+<section class="panel"><h2>Threshold calculation</h2><dl id="calculation"></dl><p class="note">Enter heat pump below the entry boundary. Return to gas at the safe ceiling; keep the previous recommendation within the band.</p></section>
+<section class="panel"><h2>Outside temperature & power</h2><dl id="weather"></dl><p id="weather-status"></p><p class="note">The editable curve is provisional. Its COP and input estimates are starting assumptions, and its power setting is not a measured optimum.</p></section>
+</div>
+<section class="panel"><h2>Editable model · current configuration</h2><p>Change these values in the IP-Symcon instance form after your measurements.</p><div class="table-wrap"><table><thead><tr><th>Outside °C</th><th>Power %</th><th>COP</th><th>Heat-pump kW</th></tr></thead><tbody id="curve"></tbody></table></div></section>
+<section class="panel"><h2>Learning & price retrieval</h2><dl id="learning"></dl><p id="daily-status"></p><p id="fetch-status"></p></section>
 <details class="panel"><summary>Diagnoseprotokoll</summary><pre id="debug"></pre></details>
+</div>
 </div>
 <footer>Nur lesender Zugriff. Datenaktualisierung alle 60 Sekunden.</footer>
 </main>
@@ -80,6 +85,7 @@ function render(s){
  el('price').textContent=v.PriceAvailable?num(v.CurrentPriceCt)+' ct/kWh':'Unavailable';
  el('price-period').textContent=stamp(v.PriceStart)+' – '+stamp(v.PriceEnd)+' · Berlin';
  el('price-valid').textContent=v.PriceValid?'Tariff-confirmed interval':v.PriceAvailable?'Regional quote · confirm tariff in module form':v.PriceStatus||'Price not verified or expired';
+ for(const id of ['price','price-period','price-valid']) el('heating-'+id).textContent=el(id).textContent;
  el('source').textContent=r.source===1?'Heat pump':r.source===2?(r.valid?'Gas':'Gas fallback'):'Disabled';
  el('power').textContent=r.source===1&&r.valid?'Published power: '+num(r.powerPercent,0)+'%':'Published heat-pump power: 0%';
  el('valid-until').textContent=r.valid?'Recommendation valid until '+stamp(r.validUntil):'Economic recommendation unavailable';

@@ -1,8 +1,11 @@
-# Verbrauch & Kosten — 0.3.13, build 23
+# Verbrauch & Kosten — 0.3.14, build 24
 
-The protected page has three tabs: **Strom**, **Gas**, **Wasser**. Strom retains
-the electricity price, consumption, invoice reconciliation and heating-model
-functions. Gas adds reviewed observations and supplier invoices. Wasser states
+The protected page has four tabs: **Strom**, **Gas**, **Wasser**, **Heizung**.
+Strom shows electricity prices, consumption and invoice reconciliation. Heizung
+contains the gas/heat-pump threshold, live comparison price, recommendation,
+safety margin, hysteresis, outside-temperature/COP/power model, learning status
+and diagnostics. It updates with the state refresh every 60 seconds, retaining
+the selected tab. Gas shows reviewed observations and supplier invoices. Wasser states
 that its counter, archives and invoices still require review; it shows no sample
 consumption or costs.
 
@@ -13,7 +16,7 @@ external client requests, commands or heating-control parameters are introduced.
 
 ## Connect an existing reviewed gas import
 
-1. Update Heating-Control to **0.3.13, build 23**.
+1. Update Heating-Control to **0.3.14, build 24**.
 2. In **Reviewed gas consumption and invoice costs**, select the verified import
    metadata, cleaned cumulative m³, observed daily m³, sparse reference m³,
    sparse reference kWh and daily quality variables.

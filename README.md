@@ -74,6 +74,8 @@ Version **0.3.12**, build 22 names the protected page **Verbrauch & Kosten** and
 
 Version **0.3.13**, build 23 adds independently calculated gas costs from dated gross tariffs, basic charges and documented conversion factors. Current-year costs appear even when invoice periods cross the year boundary. Missing data and provisional later conversion factors remain marked. Confirmed outage periods show zero energy without rewriting archives; documented basic charges remain separate. See [gas cost calculation](docs/consumption-and-costs.md).
 
+Version **0.3.14**, build 24 moves the gas/heat-pump threshold and associated recommendation, weather/power model, learning status and diagnostics into a separate **Heizung** tab. Strom retains electricity prices, consumption and costs. State refresh continues every 60 seconds and preserves the selected tab.
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.
