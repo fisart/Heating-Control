@@ -57,6 +57,11 @@ check(response($m,'GET',['view'=>'consumption-history','from'=>['2024-10-01'],'t
 check(response($m,'GET',['view'=>'gas-history','from'=>'2024-10-26','to'=>'2024-10-28'],'evil.example')['status']===403,'Gas history origin enforced');
 check(response($m,'GET',['view'=>'gas-history','from'=>'2024-10-26','to'=>'2024-10-28'])['status']===503,'Disconnected gas history unavailable');
 check(response($m,'GET',['view'=>'gas-history','from'=>['2024-10-26'],'to'=>'2024-10-28'])['status']===400,'Gas dates reject array inputs');
+foreach(['water-history','total-consumption'] as $view){
+    check(response($m,'GET',['view'=>$view,'from'=>'2024-10-26','to'=>'2024-10-28'],'evil.example')['status']===403,'Water/total history enforces origin');
+    check(response($m,'GET',['view'=>$view,'from'=>['bad'],'to'=>'2024-10-28'])['status']===400,'Water/total reject array dates');
+    check(response($m,'GET',['view'=>$view,'from'=>'2024-10-26','to'=>'2024-10-28'])['status']===200,'Unavailable streams are explicitly reported without losing all totals');
+}
 check(serialize([$m->values,$m->attributes,$m->buffers,$m->properties])===$before,'History reads do not mutate stored state');
 $savedValidity=$m->values['PriceValid'];$m->values['PriceValid']=false;
 $data=json_decode(response($m,'GET',['view'=>'state'])['body'],true);

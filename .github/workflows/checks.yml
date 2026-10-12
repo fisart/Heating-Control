@@ -24,6 +24,9 @@ jobs:
           php -l LichtBlickElectricityPrice/GasHistory.php
           php -l LichtBlickElectricityPrice/GasCosts.php
           php -l LichtBlickElectricityPrice/NoConsumption.php
+          php -l LichtBlickElectricityPrice/WaterHistory.php
+          php -l LichtBlickElectricityPrice/ManualWater.php
+          php -l LichtBlickElectricityPrice/TotalHistory.php
       - name: Heating behavior and web security
         run: |
           php tests/lichtblick.php
@@ -31,6 +34,7 @@ jobs:
           php tests/lichtblick-consumption-history.php
           php tests/lichtblick-gas-history.php
           php tests/lichtblick-gas-costs.php
+          php tests/lichtblick-water-total.php
           php tests/lichtblick-webhook.php
           php tests/lichtblick-webhook.php --no-auth-api
           php tests/source-selection.php

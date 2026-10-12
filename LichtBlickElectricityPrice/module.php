@@ -10,6 +10,9 @@ require_once __DIR__ . '/ConsumptionHistory.php';
 require_once __DIR__ . '/GasHistory.php';
 require_once __DIR__ . '/GasCosts.php';
 require_once __DIR__ . '/NoConsumption.php';
+require_once __DIR__ . '/WaterHistory.php';
+require_once __DIR__ . '/ManualWater.php';
+require_once __DIR__ . '/TotalHistory.php';
 
 class LichtBlickElectricityPrice extends IPSModule
 {
@@ -17,8 +20,11 @@ class LichtBlickElectricityPrice extends IPSModule
     use LichtBlickPriceHistory;
     use LichtBlickConsumptionHistoryAccess;
     use LichtBlickGasHistoryAccess;
+    use LichtBlickWaterHistoryAccess;
+    use LichtBlickTotalHistoryAccess;
 
     private const DEFAULTS = [
+        'WaterHistoryInvoicePeriods'=>'[]','WaterHistoryGardenPeriods'=>'[]','WaterHistoryEnabled'=>false,'WaterHistorySources'=>'{}','WaterHistoryTariffs'=>'[]','WaterHistoryHouseIncludesGarden'=>false,
         'WebEnabled' => false, 'VaultInstanceID' => 0,
         'Enabled' => false, 'PostalCode' => '', 'TariffVerified' => false,
         'FetchIntervalMinutes' => 15, 'PriceCorrectionCt' => 0.0, 'MaxCacheAgeHours' => 24,
@@ -150,6 +156,12 @@ class LichtBlickElectricityPrice extends IPSModule
             if ($c[$key] < $bounds[0] || $c[$key] > $bounds[1]) throw new InvalidArgumentException('Out of range: ' . $key);
         }
         LichtBlickGasCosts::tariffs($c['GasHistoryTariffs']);
+        LichtBlickWaterHistory::sources($c['WaterHistorySources']);
+        LichtBlickWaterHistory::tariffs($c['WaterHistoryTariffs']);
+        LichtBlickWaterHistory::invoices($c['WaterHistoryInvoicePeriods']);
+        $manual=LichtBlickManualWater::periods($c['WaterHistoryGardenPeriods']);
+        $waterSources=LichtBlickWaterHistory::sources($c['WaterHistorySources']);
+        if($manual && ($waterSources['garden']['counterID']??0)>0)throw new InvalidArgumentException('Choose manual garden periods or an electronic garden meter, not both');
         LichtBlickNoConsumption::periods($c['ConsumptionZeroPeriods']);
         $curve=LichtBlickWeatherModel::curve($c['WeatherCurve']);
         LichtBlickPriceStore::dates($c['PriceHistoryStartDate'], $c['PriceHistoryStartDate']);
@@ -196,7 +208,7 @@ class LichtBlickElectricityPrice extends IPSModule
             foreach (['Enabled','PostalCode','TariffVerified','FetchIntervalMinutes','PriceCorrectionCt','MaxCacheAgeHours',
                 'ThresholdCt','SafetyMarginPercent','HysteresisCt','DebugEnabled','DailyLearningEnabled','WebEnabled','VaultInstanceID',
                 'PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'] as $key) unset($model[$key]);
-            foreach (array_keys($model) as $key) if (str_starts_with($key,'Prepared') || str_starts_with($key,'Consumption') || str_starts_with($key,'GasHistory')) unset($model[$key]);
+            foreach (array_keys($model) as $key) if (str_starts_with($key,'Prepared') || str_starts_with($key,'Consumption') || str_starts_with($key,'GasHistory') || str_starts_with($key,'WaterHistory')) unset($model[$key]);
             $identity = hash('sha256', json_encode($model));
             if ($identity !== $this->ReadAttributeString('LearningIdentity')) {
                 $this->WriteAttributeString('LearningIdentity', $identity);
@@ -470,7 +482,7 @@ class LichtBlickElectricityPrice extends IPSModule
                 || !is_array($backup['configuration'] ?? null)) throw new InvalidArgumentException('Unsupported backup');
             $c = $backup['configuration'];
             // Schema-1 backups predating weather compensation remain valid; no existing setting is filled silently.
-            foreach (self::DEFAULTS as $key=>$default) if ((str_starts_with($key,'Weather') || str_starts_with($key,'Prepared') || str_starts_with($key,'Consumption') || str_starts_with($key,'GasHistory') || in_array($key,['OutsideTemperatureMaxAgeSeconds','WebEnabled','VaultInstanceID','PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'],true)) && !array_key_exists($key,$c)) $c[$key]=$default;
+            foreach (self::DEFAULTS as $key=>$default) if ((str_starts_with($key,'Weather') || str_starts_with($key,'Prepared') || str_starts_with($key,'Consumption') || str_starts_with($key,'GasHistory') || str_starts_with($key,'WaterHistory') || in_array($key,['OutsideTemperatureMaxAgeSeconds','WebEnabled','VaultInstanceID','PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'],true)) && !array_key_exists($key,$c)) $c[$key]=$default;
             if (array_diff(array_keys($c), array_keys(self::DEFAULTS))) throw new InvalidArgumentException('Unknown configuration keys');
             $this->validate($c); // Atomic validation before any writes.
             $c['HistoricalFetchEnabled'] = false; $c['HistoricalTariffs'] = '[]'; // Retired keys accepted for schema-1 compatibility only.

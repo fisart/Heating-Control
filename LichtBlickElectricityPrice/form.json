@@ -557,6 +557,90 @@
           "caption": "Invoice references stay separate. Calculated costs use observed m3, dated gross unit rates, dated basic charges and the applicable billing conversion. Estimated future conversion and missing consumption remain marked. Aid and invoice residuals are not spread across days."
         }
       ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Water consumption and original-script charges",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "WaterHistoryEnabled",
+          "caption": "Read archived water counters"
+        },
+        {
+          "type": "CheckBox",
+          "name": "WaterHistoryHouseIncludesGarden",
+          "caption": "Main house meter includes garden meter; subtract garden for house-only volume"
+        },
+        {
+          "type": "List",
+          "name": "WaterHistoryGardenPeriods",
+          "caption": "Manual garden consumption periods (no daily interpolation)",
+          "rowCount": 5,
+          "add": true,
+          "delete": true,
+          "columns": [
+            {
+              "name": "from",
+              "caption": "From · YYYY-MM-DD",
+              "width": "auto",
+              "add": "",
+              "edit": {
+                "type": "ValidationTextBox"
+              }
+            },
+            {
+              "name": "through",
+              "caption": "Through · YYYY-MM-DD",
+              "width": "auto",
+              "add": "",
+              "edit": {
+                "type": "ValidationTextBox"
+              }
+            },
+            {
+              "name": "m3",
+              "caption": "Garden consumption m³",
+              "width": "auto",
+              "add": 0,
+              "edit": {
+                "type": "NumberSpinner",
+                "minimum": 0,
+                "maximum": 100000,
+                "digits": 3
+              }
+            },
+            {
+              "name": "source",
+              "caption": "Manual reading / invoice source",
+              "width": "auto",
+              "add": "",
+              "edit": {
+                "type": "ValidationTextBox"
+              }
+            }
+          ]
+        },
+        {
+          "type": "ValidationTextBox",
+          "name": "WaterHistorySources",
+          "caption": "House, garden and well counter IDs, m3 scales and sources (JSON)"
+        },
+        {
+          "type": "ValidationTextBox",
+          "name": "WaterHistoryTariffs",
+          "caption": "Dated house/garden water, sewage, basic and rainwater charges (JSON)"
+        },
+        {
+          "type": "Label",
+          "caption": "Use the original water-script components with documented dates. Allocate shared basic/rain fees once to house. Well water always has zero cost. Missing meters or tariffs remain incomplete."
+        },
+        {
+          "type": "ValidationTextBox",
+          "name": "WaterHistoryInvoicePeriods",
+          "caption": "Verified water invoice references: main/sewage/deducted garden m3, supply/billed costs and sources (JSON)"
+        }
+      ]
     }
   ],
   "actions": [

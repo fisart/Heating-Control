@@ -11,11 +11,15 @@ const state={updatedAt:now,enabled:true,recommendation:{source:1,valid:true,powe
 const chart={from:now-86400,to:now+86400,resolution:'15-minute intervals',storedIntervals:2,expectedIntervals:192,retailIntervals:2,confirmedIntervals:1,missingIntervals:190,points:[{start:now-900,end:now,price:-2.5,marketCt:-5,source:'lichtblick-quote',verified:true},{start:now+900,end:now+1800,price:29.75,marketCt:10,source:'smard-reconstructed',verified:false}]};
 const consumption={from:now-86400,to:now,resolution:'daily',preparedThrough:'2026-10-12T00:00:00+02:00',points:[{start:now-86400,end:now,cleanedKWh:10,referenceKWh:11,tariffCostEuro:3.3,qualityFlags:129}],references:[{invoice_number:'fixture',from:'2026-10-01',to_inclusive:'2026-10-10',billed_kwh:110,billed_gross_eur:40,dated_tariff_cost_on_reference_curve_eur:39,billing_reconciliation_eur:1,wholeReferenceSelected:false}],totals:{knownCleanedKWh:10,knownReferenceKWh:11,knownTariffCostEuro:3.3,fullPeriodReconciliationEuro:0,knownCostWithFullPeriodReconciliationEuro:3.3,missingEnergyIntervals:0,missingPriceIntervals:0,explicitResetEstimateKWh:.1,withoutConsumptionReferenceIntervals:0,unconfirmedPriceIntervals:0,coveredSeconds:86400,requestedSeconds:86400}};
 const gas={from:now-86400,to:now,resolution:'daily',preparedThrough:'2026-10-12T17:50:15+02:00',points:[{start:now-86400,end:now,observedM3:4,knownObservedM3:4,qualityFlags:32}],invoices:[{from:'2026-10-01',to:'2026-10-10',supplier_m3:12,cleaned_observed_m3:10,supplier_minus_cleaned_m3:2,supplier_kwh:133,supply_gross_eur:25,december_aid_gross_eur:0,price_brake_credit_eur:2,cost_after_aid_eur:23,wholeInvoiceSelected:false}],totals:{knownObservedM3:4,missingObservationDays:0,resetIntervalDays:0,laterUnreviewedDays:0,completeInvoices:0,invoicedM3:0,invoicedKWh:0,supplyGrossEuro:0,creditsEuro:0,costAfterAidEuro:0}};
+const water={from:now-86400,to:now,resolution:'daily',houseIncludesGarden:true,tariffs:[],streams:{},points:[{start:now-86400,end:now,streams:{}}]};
+for(const key of ['house','garden','well']){const value=key==='house'?2:key==='garden'?1:3,cost=key==='well'?0:key==='house'?8:2;water.streams[key]={totals:{knownM3:value,knownCostEuro:cost,knownVariableCostEuro:cost,knownFixedCostEuro:0,missingVolumeDays:0,incompleteCostDays:0,completeVolume:true,completeCost:true},error:''};water.points[0].streams[key]={knownM3:value,knownCostEuro:cost,missingVolumeDays:0,incompleteCostDays:0,qualityFlags:0};}
+const total={from:now-86400,to:now,resolution:'daily',streams:{},points:[{start:now-86400,end:now,streams:{}}],totals:{knownCostEuro:12,knownEnergyKWh:20,knownWaterM3:6,completeCost:false}};
+for(const key of ['electricity','gas','house','garden','well']){const volume=key==='electricity'?10:key==='gas'?10:key==='house'?2:key==='garden'?1:3,cost=key==='electricity'?-2:key==='gas'?4:key==='house'?8:key==='garden'?2:0;total.streams[key]={knownVolume:volume,knownCostEuro:cost,unit:key==='electricity'||key==='gas'?'kWh':'m³',incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0,error:''};total.points[0].streams[key]={knownVolume:volume,knownCostEuro:cost,incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0};}
 let code=200,fail=false,payload=state,calls=[];
 let html=fs.readFileSync(__dirname+'/../LichtBlickElectricityPrice/page.html','utf8').replaceAll('{{NONCE}}','fixture').replaceAll('{{PATH}}','/hook/lichtblick_123').replaceAll('{{INSTANCE}}','123').replaceAll('{{PORTAL}}','/hook/alarm_portal_42').replaceAll('{{LOGIN}}','/hook/secrets_7?portal=1');
 const dom=new JSDOM(html,{url:'https://prices.example/hook/lichtblick_123',runScripts:'dangerously',beforeParse(w){
  w.AbortController=AbortController;
- w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:url.includes('view=gas-history')?gas:payload};};
+ w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:url.includes('view=gas-history')?gas:url.includes('view=water-history')?water:url.includes('view=total-consumption')?total:payload};};
 }});
 const settle=()=>new Promise(r=>setImmediate(r));
 (async()=>{
@@ -89,7 +93,7 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.ok(d.querySelector('#history-summary').textContent.includes('1 imported estimates'));
  assert.ok(d.querySelector('#history-table').textContent.includes('Imported estimate, not tariff-confirmed'));
  assert.equal(d.title,'Verbrauch & Kosten','Provider-independent page name');
- assert.deepEqual([...d.querySelectorAll('[role=tab]')].map(e=>e.textContent),['Strom','Gas','Wasser','Heizung'],'Separate consumption and heating tabs');
+ assert.deepEqual([...d.querySelectorAll('[role=tab]')].map(e=>e.textContent),['Strom','Gas','Wasser','Total consumption','Heizung'],'Separate consumption and heating tabs');
  assert.equal(d.querySelector('#panel-strom').hidden,false);assert.equal(d.querySelector('#panel-gas').hidden,true);
  assert.equal(d.querySelector('#panel-heizung').hidden,true,'Heating comparison starts on a separate hidden panel');
  for(const id of ['source','power','ceiling','entry','margin','reason','calculation','weather','curve','learning','daily-status','fetch-status','debug']) assert.equal(d.querySelector('#'+id).closest('[role=tabpanel]').id,'panel-heizung','Threshold data belongs to heating tab: '+id);
@@ -128,7 +132,22 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(d.querySelectorAll('#gas-invoices img').length,0,'Gas invoice text never becomes HTML');
  d.querySelector('#tab-gas').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await settle();
  assert.equal(d.querySelector('#panel-wasser').hidden,false);assert.equal(d.querySelector('#panel-gas').hidden,true);assert.equal(d.activeElement.id,'tab-wasser','Keyboard focus follows selected tab');
- assert.ok(d.querySelector('#panel-wasser').textContent.includes('noch nicht verbunden'),'Water does not show invented readings');
+ assert.equal(d.querySelectorAll('#water-table tr').length,3,'House, garden and well remain separate');
+ assert.ok(d.querySelector('#water-status').textContent.includes('minus Gartenwasser'),'Nested garden is explicit');
+ assert.ok(d.querySelector('#water-table').textContent.includes('Brunnenwasser'));assert.equal(d.querySelectorAll('#water-chart rect').length,2,'Zero-cost well does not add a cost bar');
+ d.querySelector('#water-metric').value='water';d.querySelector('#water-metric').dispatchEvent(new dom.window.Event('change'));assert.equal(d.querySelectorAll('#water-chart rect').length,3,'All three water volumes are stacked');
+ d.querySelector('#tab-total').click();await settle();
+ assert.equal(d.querySelectorAll('#total-table tr').length,5,'All consumption streams listed for the same dates');
+ assert.equal(d.querySelectorAll('#total-chart rect').length,4,'Cost stack contains positive and negative values, well cost zero');
+ assert.ok(d.querySelector('#total-status').textContent.includes('Incomplete coverage'));assert.ok(d.querySelector('#total-summary').textContent.includes('12,00 EUR'));
+ assert.ok([...d.querySelectorAll('#total-chart title')].some(e=>e.textContent.includes('-2,000 EUR')),'Negative electricity costs retain signed stack');
+ d.querySelector('#total-metric').value='energy';d.querySelector('#total-metric').dispatchEvent(new dom.window.Event('change'));assert.equal(d.querySelectorAll('#total-chart rect').length,2,'Energy stacks only electricity and gas kWh');
+ d.querySelector('#total-metric').value='water';d.querySelector('#total-metric').dispatchEvent(new dom.window.Event('change'));assert.equal(d.querySelectorAll('#total-chart rect').length,3,'Water stacks only m3 streams');
+ d.querySelector('#total-from').value='2026-01-01';d.querySelector('#total-to').value='2026-06-30';d.querySelector('#total-show').click();await settle();
+ assert.ok(calls.some(c=>c.url.includes('view=total-consumption&from=2026-01-01&to=2026-06-30')),'Combined date selection requests one common period');
+ d.querySelector('#refresh').click();await settle();assert.equal(d.querySelector('#panel-total').hidden,false,'Refresh retains combined tab');assert.equal(d.querySelector('#total-to').value,'2026-06-30','Custom range survives refresh');
+ total.streams.garden.error='<img src=x onerror=alert(1)>';d.querySelector('#total-show').click();await settle();assert.equal(d.querySelectorAll('#total-table img').length,0,'Combined coverage text stays text');
+ code=401;d.querySelector('#total-show').click();await settle();assert.equal(d.querySelector('#dashboard').hidden,true);assert.equal(d.querySelectorAll('#total-table tr').length,0,'Expired total request clears private totals');code=200;d.querySelector('#refresh').click();await settle();
  d.querySelector('#tab-gas').click();await settle();d.querySelector('#refresh').click();await settle();
  assert.equal(d.querySelector('#panel-gas').hidden,false,'Refresh preserves tab selection');
  code=401;d.querySelector('#gas-show').click();await settle();

@@ -27,7 +27,7 @@ final class LichtBlickNoConsumption
             if (!in_array($utility,$period['utilities'],true) || $row['start']<$period['start'] || $row['end']>$period['end']) continue;
             $row['confirmedNoConsumption']=true; $row['noConsumptionSource']=$period['source'];
             $row['qualityFlags']|=8192;
-            if ($utility==='gas') {
+            if (in_array($utility,['gas','water'],true)) {
                 $row['originalObservedM3']=$row['observedM3'];
                 if (($row['observedM3']??0)>0) $row['qualityFlags']|=16384;
                 $row['observedM3']=0.0;

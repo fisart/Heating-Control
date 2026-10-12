@@ -1,13 +1,12 @@
-# Verbrauch & Kosten — 0.3.14, build 24
+# Verbrauch & Kosten — 0.3.15, build 25
 
-The protected page has four tabs: **Strom**, **Gas**, **Wasser**, **Heizung**.
+The protected page has five tabs: **Strom**, **Gas**, **Wasser**, **Total consumption**, **Heizung**.
 Strom shows electricity prices, consumption and invoice reconciliation. Heizung
 contains the gas/heat-pump threshold, live comparison price, recommendation,
 safety margin, hysteresis, outside-temperature/COP/power model, learning status
 and diagnostics. It updates with the state refresh every 60 seconds, retaining
-the selected tab. Gas shows reviewed observations and supplier invoices. Wasser states
-that its counter, archives and invoices still require review; it shows no sample
-consumption or costs.
+the selected tab. Gas shows reviewed observations and supplier invoices. Wasser reads separately configured house, garden and well water counters with
+dated charges. Unconnected sources remain unknown; no sample readings appear.
 
 The module class `LichtBlickElectricityPrice`, prefix `LBEP`, module ID and existing
 `/hook/lichtblick_<instanceID>` URL stay compatible. Every gas request uses the
@@ -16,7 +15,7 @@ external client requests, commands or heating-control parameters are introduced.
 
 ## Connect an existing reviewed gas import
 
-1. Update Heating-Control to **0.3.14, build 24**.
+1. Update Heating-Control to **0.3.15, build 25**.
 2. In **Reviewed gas consumption and invoice costs**, select the verified import
    metadata, cleaned cumulative m³, observed daily m³, sparse reference m³,
    sparse reference kWh and daily quality variables.
@@ -103,3 +102,114 @@ Ranges are limited to 2,192 days and cannot start before the reviewed import.
 Gas tab switching, keyboard navigation, refresh and session-expiry handling are
 covered by the DOM tests; snapshot markers, DST, missing days, aid, invoice
 selection, archive integrity and later counter resets are covered by PHP tests.
+
+## Water streams and original-script charges — 0.3.15
+
+`WaterHistoryEnabled` enables archive reads. `WaterHistorySources` is an object
+with `house`, `garden`, `well` entries: positive distinct `counterID`, positive
+`scaleM3` and a nonempty provenance `source`. A missing or zero ID remains
+unconnected. Raw cumulative counter increases are assigned to their recorded
+Berlin calendar day. A missing initial baseline or counter reset remains
+incomplete. Quiet held counters contribute zero. Original archives are never
+rewritten. This reader does not reproduce the old script's daily extrema/reset
+heuristics or sum daily counter averages.
+
+If `WaterHistoryHouseIncludesGarden` is enabled, the house volume is main meter
+minus garden submeter, once. If either volume is unavailable, or garden exceeds
+the main meter, house-only volume remains unknown. Well water always costs zero.
+Confirmed `ConsumptionZeroPeriods` also apply to water; basic fees remain.
+
+`WaterHistoryTariffs` accepts a dated list per `house`/`garden` stream. Each row
+contains `stream`, `from`, inclusive `through` (null for open-ended), `source`,
+`drinkingNetEuroM3`, `vatPercent`, `drinkingBasicNetEuroDay`,
+`sewageGrossEuroM3`, `sewageBasicGrossEuroDay`, `rainAreaPerDay`, `rainGrossRate`.
+The recovered original formula is:
+
+```
+variable = m3 * (drinkingNetEuroM3 * (1 + vatPercent/100) + sewageGrossEuroM3)
+fixed/day = drinkingBasicNetEuroDay * (1 + vatPercent/100)
+          + sewageBasicGrossEuroDay + rainAreaPerDay * rainGrossRate
+```
+
+Shared connection basic/rainwater fees must be assigned once to the house
+stream. Separate documented meter fees can be entered for garden. Garden
+sewage exemptions, tariff dates and meter scales must come from actual source
+settings/documents; no current tariff is backfilled into unknown years. On DST
+days one daily fee applies; today's partial day is charged proportionally.
+Old water-related display settings do not reset the heating learning identity.
+
+Read-only APIs: `LBEP_GetWaterHistory(instanceID,from,through,resolution)` and
+`GET ?view=water-history&from=YYYY-MM-DD&to=YYYY-MM-DD&resolution=auto`.
+
+## Total consumption — 0.3.15
+
+The new tab selects a common inclusive date range and daily/monthly/yearly
+buckets. It lists electricity, gas, house water, garden water and well water,
+with known quantities, costs and incomplete-day counts. A stacked chart switches
+between costs (EUR), energy (electricity plus converted gas kWh) and water (m3).
+Negative electricity costs stack below zero. Unknown source amounts remain
+blank, while available sources still render. A faded stack marks incomplete
+coverage or provisional rates/conversion; no absent source is treated as measured zero. Well cost is zero even
+when its volume has not yet been connected.
+
+Costs use electricity's dated reference-curve tariff costs plus independently
+calculated gas and water supply costs. Invoice residuals and assistance remain
+in their source tabs, outside the selected-period cost stack. Gas kWh remain an
+estimate from billing conversion factors, including provisional carried-forward
+factors. Water and energy are never added as one physical quantity. Coverage
+starts independently for each source; earlier periods or today's unfinished
+meter intervals keep the total incomplete. All endpoints use the existing
+SecretsManager session and origin checks. Refresh every 60 seconds retains the
+selected tab and custom dates, and requests only the active history view.
+
+API: `LBEP_GetTotalConsumption(instanceID,from,through,resolution)` / read-only
+`GET ?view=total-consumption&from=YYYY-MM-DD&to=YYYY-MM-DD&resolution=auto`.
+Ranges are bounded to 2,192 days. Invalid dates are rejected; missing connections
+are reported per stream without hiding the other streams.
+
+### Manual garden readings and invoices
+
+Garden water need not have an electronic meter. The instance form has an
+editable `WaterHistoryGardenPeriods` table with inclusive `from`/`through`,
+consumption `m3` and the reading/invoice `source`. Use the consumed volume for
+that interval, or the difference of its two meter readings. Intervals must be
+ordered and must not overlap. Do not configure both manual periods and an
+electronic garden meter. Archive history is unchanged.
+
+A full manual period contributes its garden volume and, where the main meter
+covers that same complete period without unresolved resets, main-minus-garden
+house volume. A partial selection displays the whole reference row but excludes
+its volume and variable cost from the totals. No daily volume is interpolated.
+Variable costs can be computed only when a documented unit rate covers the full
+period and is constant. If a unit price changes inside a manual period, enter
+actual subdivided readings/periods; no average rate or uniform split is assumed.
+Fixed charges are still calculated by calendar day, once.
+
+`selected` groups the entire selected interval into one stacked bar, including
+its fully selected manual references. For finer daily/monthly/yearly buckets,
+a manual amount is placed only when its whole period fits one bucket. Other
+known manual amounts remain in the total/reference table and are explicitly
+shown as unallocated to the chart. The chart never relocates the volume to its
+reading date or invents daily consumption. Whole-period water invoice
+references and current tariff documents are needed to connect private rates;
+a historic invoice is not proof that its rate is valid today.
+
+### Invoice references and captured main-meter totals
+
+`WaterHistoryInvoicePeriods` preserves supplier main m3, sewage m3, billed garden
+**deduction** m3, gross supply cost, billed gross cost and source per invoice.
+An invoice's zero deduction does not prove zero actual garden use. Actual garden
+consumption comes only from manual readings or explicit supplier private-meter
+records. Whole invoice rows stay visible for overlapping selections; their
+amounts are never prorated into calculated charts. Supplier adjustments remain
+separate from the dated supply calculation.
+
+The captured main meter already includes garden use. Combined physical water
+consumption therefore uses main plus well once, even while the house/garden
+split is unknown. The summary shows both captured main m3 and the known split
+subtotal. Cost/volume stacks continue to show only quantities that can actually
+be assigned to their stream, with incomplete coverage clearly marked. Optional
+`estimated: true` on a tariff period marks provisional carry-forward prices.
+Use `rainExcludeLeapDay: true` only when documented rainwater billing excludes
+29 February from its 365-day allocation. Drinking-water and sewage basic fees
+still accrue on that day. By default all calendar days receive rainwater fees.

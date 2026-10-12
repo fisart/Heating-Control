@@ -133,13 +133,13 @@ final class LichtBlickConsumptionHistory
             $date=(new DateTimeImmutable('@'.$r['start']))->setTimezone($zone);
             $start=match($resolution){'monthly'=>$date->modify('first day of this month')->setTime(0,0),'yearly'=>$date->setDate((int)$date->format('Y'),1,1)->setTime(0,0),default=>$date->setTime(0,0)};
             $key=$resolution==='intervals'?(string)$r['start']:$start->format('Y-m-d');
-            if(!isset($buckets[$key]))$buckets[$key]=['start'=>$r['start'],'end'=>$r['end'],'cleanedKWh'=>0.0,'referenceKWh'=>0.0,'tariffCostEuro'=>0.0,'qualityFlags'=>0,'missingEnergyIntervals'=>0,'missingPriceIntervals'=>0,'intervals'=>0];
+            if(!isset($buckets[$key]))$buckets[$key]=['start'=>$r['start'],'end'=>$r['end'],'cleanedKWh'=>0.0,'referenceKWh'=>0.0,'tariffCostEuro'=>0.0,'qualityFlags'=>0,'missingEnergyIntervals'=>0,'missingPriceIntervals'=>0,'intervals'=>0,'knownReferenceKWh'=>0.0,'knownCleanedKWh'=>0.0,'knownTariffCostEuro'=>0.0,'knownPriceIntervals'=>0];
             $p=&$buckets[$key];$p['end']=$r['end'];$p['intervals']++;$p['qualityFlags']|=$r['qualityFlags'];
             $covered+=$r['end']-$r['start'];
             if($r['cleanedKWh']===null){$p['missingEnergyIntervals']++;$missingEnergy++;}
-            else{$p['cleanedKWh']+=$r['cleanedKWh'];$p['referenceKWh']+=$r['referenceKWh'];$knownEnergy+=$r['cleanedKWh'];$knownRef+=$r['referenceKWh'];}
+            else{$p['cleanedKWh']+=$r['cleanedKWh'];$p['referenceKWh']+=$r['referenceKWh'];$knownEnergy+=$r['cleanedKWh'];$knownRef+=$r['referenceKWh'];$p['knownReferenceKWh']+=$r['referenceKWh'];$p['knownCleanedKWh']+=$r['cleanedKWh'];}
             if($r['unitPriceCt']===null && !($r['confirmedNoConsumption']??false)){$p['missingPriceIntervals']++;$missingPrice++;}
-            if($r['tariffCostEuro']!==null){$p['tariffCostEuro']+=$r['tariffCostEuro'];$knownCost+=$r['tariffCostEuro'];}
+            if($r['tariffCostEuro']!==null){$p['tariffCostEuro']+=$r['tariffCostEuro'];$knownCost+=$r['tariffCostEuro'];$p['knownTariffCostEuro']+=$r['tariffCostEuro'];$p['knownPriceIntervals']++;}
             if($r['qualityFlags']&2)$estimated++;if($r['qualityFlags']&256)$unreferenced++;
             if(!$r['priceVerified'])$unconfirmedPrices++;$resetEstimate+=$r['estimatedResetKWh'];unset($p);
         }
