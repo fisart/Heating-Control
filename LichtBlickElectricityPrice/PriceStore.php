@@ -157,11 +157,12 @@ final class LichtBlickPriceStore
 
     public static function chart(array $rows, int $from, int $to): array
     {
-        $covered = 0; $retail = 0; $confirmed = 0;
+        $covered = 0; $retail = 0; $confirmed = 0; $wholesaleOnly = 0;
         foreach ($rows as $row) {
             $seconds = max(0, min($to, $row['end']) - max($from, $row['start']));
             $covered += $seconds;
             if ($row['price'] !== null) { $retail += $seconds; if ($row['verified']) $confirmed += $seconds; }
+            elseif (isset($row['marketCt'])) $wholesaleOnly += $seconds;
         }
         $intervals = ($to - $from) / 900;
         $daily = $to - $from > 7 * 86400 + 3600;
@@ -185,6 +186,7 @@ final class LichtBlickPriceStore
         }
         return ['from' => $from, 'to' => $to, 'resolution' => $daily ? 'daily mean' : '15-minute intervals', 'expectedIntervals' => $intervals,
             'storedIntervals' => $covered / 900, 'retailIntervals' => $retail / 900, 'confirmedIntervals' => $confirmed / 900,
+            'wholesaleOnlyIntervals' => $wholesaleOnly / 900,
             'missingIntervals' => ($to - $from - $covered) / 900, 'points' => $points];
     }
 }

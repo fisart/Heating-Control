@@ -353,3 +353,5 @@ flap commands, recovery switch transitions, normal fan control, unchanged dry-ru
 publishing, shutdown/bypass behavior and invalid input.
 It does not replace a visual check of the native popup in the Symcon console.
 
+
+Version **0.3.8**, build 18 explains partial retail price history on the dashboard and adds **Show available wholesale history**. Historical market data may be present even when retail prices before today are unavailable; reconstructing those prices still requires dated verified tariff components.

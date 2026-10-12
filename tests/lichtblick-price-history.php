@@ -26,6 +26,7 @@ try {
     [$a,$b]=LichtBlickPriceStore::dates('2026-10-25','2026-10-25');check(($b-$a)/900===100,'Autumn DST has 100 quarter-hours');
     $chart=LichtBlickPriceStore::chart($store->query($id,$from,$to),$from,$to);
     check($chart['missingIntervals']===93&&$chart['confirmedIntervals']===3,'Coverage reports gaps and confirmed retail separately');
+    $wholesaleChart=LichtBlickPriceStore::chart(array_merge([$rows[0]],[$unknown[1]]),$from,$to);check($wholesaleChart['wholesaleOnlyIntervals']===1&&$wholesaleChart['retailIntervals']===1,'Wholesale-only availability distinct from missing data and partial retail coverage');
     $daily=LichtBlickPriceStore::chart($rows,$from,$from+9*86400);check($daily['resolution']==='daily mean'&&count($daily['points'])===1&&$daily['points'][0]['retailIntervals']===3,'Long charts bounded, incomplete day labelled');
     throws(fn()=>LichtBlickPriceStore::dates('2026-02-30','2026-03-01'),'Invalid date normalized silently');
     throws(fn()=>LichtBlickPriceStore::dates('2026-10-02','2026-10-01'),'Reversed dates accepted');
