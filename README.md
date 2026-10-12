@@ -64,6 +64,12 @@ SMARD downloading and tariff reconstruction controls have been removed. Imported
 app-normalized estimates are labelled separately from captured LichtBlick quotes.
 The chart displays retail prices only; the published-interval table opens and closes by clicking its heading. Existing stored history remains intact. See [history and manual imports](docs/lichtblick-electricity-price.md#persistent-price-history-and-manual-import--039).
 
+Version 0.3.11 adds protected electricity consumption/cost history from a reviewed
+one-time archive import, separate cleaned/reference kWh, dated tariff costs and
+explicit invoice reconciliation. Later closed quarter hours use the recorded live
+meter and stored retail prices; missing data remain gaps. The connection is opt-in
+and read-only. See [consumption history](docs/lichtblick-electricity-price.md#reviewed-electricity-consumption-and-costs--0311).
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.

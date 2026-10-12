@@ -164,7 +164,7 @@ trait LichtBlickElectricityPriceWebhook
                 'safetyMarginPercent'=>$this->ReadPropertyFloat('SafetyMarginPercent'),'hysteresisCt'=>$this->ReadPropertyFloat('HysteresisCt'),
                 'weatherEnabled'=>$this->ReadPropertyBoolean('WeatherModelEnabled'),'fanKW'=>$this->ReadPropertyFloat('WeatherFanKW'),
                 'gasPriceCt'=>$this->ReadPropertyFloat('GasPriceCt'),'referenceTemperatureC'=>$this->ReadPropertyFloat('WeatherReferenceTemperatureC'),
-                'referenceGasPriceCt'=>$this->ReadPropertyFloat('WeatherReferenceGasPriceCt')],
+                'referenceGasPriceCt'=>$this->ReadPropertyFloat('WeatherReferenceGasPriceCt')]+$this->consumptionSettings(),
             'curve'=>$curve, 'slots'=>$slots, 'debug'=>substr((string)$this->GetValue('DebugLog'),-32000)];
     }
 
@@ -202,6 +202,13 @@ trait LichtBlickElectricityPriceWebhook
                     if (!is_string($query['from'] ?? null) || !is_string($query['to'] ?? null)) throw new InvalidArgumentException('Select from/to dates');
                     return $reply(200, $this->historyChart($query['from'], $query['to']));
                 } catch (InvalidArgumentException $e) { return $reply(400, ['error' => $e->getMessage()]); }
+            }
+            if (($query['view'] ?? '') === 'consumption-history') {
+                try {
+                    if (!is_string($query['from'] ?? null) || !is_string($query['to'] ?? null) || !is_string($query['resolution'] ?? 'auto')) throw new InvalidArgumentException('Select from/to dates and resolution');
+                    return $reply(200, $this->consumptionChart($query['from'], $query['to'], $query['resolution'] ?? 'auto'));
+                } catch (InvalidArgumentException $e) { return $reply(400, ['error'=>$e->getMessage()]); }
+                catch (RuntimeException $e) { return $reply(503, ['error'=>$e->getMessage()]); }
             }
             if (isset($query['view'])) return $reply(404,['error'=>'Unknown view.']);
             $nonce = base64_encode(random_bytes(24));

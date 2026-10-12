@@ -23,6 +23,7 @@ if (($argv[1]??'') === '--no-auth-api') {check(response($m)['status']===503,'Mis
 check(response($m)['status']===303 && response($m)['headers']['Location']==='/hook/secrets_7?portal=1&return=%2Fhook%2Flichtblick_1','Existing portal login with fixed return path');
 check(response($m,'GET',['view'=>'state'])['status']===401,'Anonymous cannot read data');
 check(response($m,'GET',['view'=>'price-history','from'=>'2026-10-01','to'=>'2026-10-11'])['status']===401,'Anonymous history blocked');
+check(response($m,'GET',['view'=>'consumption-history','from'=>'2024-10-01','to'=>'2025-09-30'])['status']===401,'Anonymous consumption/cost history blocked');
 check(response($m,'HEAD')['status']===401,'Anonymous HEAD blocked');
 check(response($m,'POST')['status']===405,'Read-only methods only');
 $GLOBALS['authenticated']='true';check(response($m)['status']===303,'Strict Boolean authentication');
@@ -49,6 +50,9 @@ check(response($m,'GET',['view'=>'price-history','from'=>'2026-09-30','to'=>'202
 check(response($m,'GET',['view'=>'price-history','from'=>['2026-10-01'],'to'=>'2026-10-11'])['status']===400,'Array query input rejected');
 check(response($m,'GET',['view'=>'price-history','from'=>'2026-10-01','to'=>'2028-01-01'])['status']===400,'Oversized history chart rejected');
 check(response($m,'GET',['view'=>'price-history','from'=>'2026-10-01','to'=>'2026-10-11'],'evil.example')['status']===403,'History origin enforced');
+check(response($m,'GET',['view'=>'consumption-history','from'=>'2024-10-01','to'=>'2025-09-30'],'evil.example')['status']===403,'Consumption history origin enforced');
+check(response($m,'GET',['view'=>'consumption-history','from'=>'2024-10-01','to'=>'2025-09-30'])['status']===503,'Disconnected consumption history is unavailable');
+check(response($m,'GET',['view'=>'consumption-history','from'=>['2024-10-01'],'to'=>'2025-09-30'])['status']===400,'Consumption query rejects array inputs');
 check(serialize([$m->values,$m->attributes,$m->buffers,$m->properties])===$before,'History reads do not mutate stored state');
 $savedValidity=$m->values['PriceValid'];$m->values['PriceValid']=false;
 $data=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
