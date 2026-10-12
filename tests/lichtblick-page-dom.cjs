@@ -9,11 +9,12 @@ const state={updatedAt:now,enabled:true,recommendation:{source:1,valid:true,powe
  outside:{temperatureC:7,updatedAt:now-60},curve:[{outsideC:7,powerPercent:35,cop:5.78,heatPumpKW:1}],
  slots:[{start:now-300,end:now+600,price:19.25},{start:now+600,end:now+1500,price:25.84}],debug:'No errors'};
 const chart={from:now-86400,to:now+86400,resolution:'15-minute intervals',storedIntervals:2,expectedIntervals:192,retailIntervals:2,confirmedIntervals:1,missingIntervals:190,points:[{start:now-900,end:now,price:-2.5,marketCt:-5,source:'lichtblick-quote',verified:true},{start:now+900,end:now+1800,price:29.75,marketCt:10,source:'smard-reconstructed',verified:false}]};
+const consumption={from:now-86400,to:now,resolution:'daily',preparedThrough:'2026-10-12T00:00:00+02:00',points:[{start:now-86400,end:now,cleanedKWh:10,referenceKWh:11,tariffCostEuro:3.3,qualityFlags:129}],references:[{invoice_number:'fixture',from:'2026-10-01',to_inclusive:'2026-10-10',billed_kwh:110,billed_gross_eur:40,dated_tariff_cost_on_reference_curve_eur:39,billing_reconciliation_eur:1,wholeReferenceSelected:false}],totals:{knownCleanedKWh:10,knownReferenceKWh:11,knownTariffCostEuro:3.3,fullPeriodReconciliationEuro:0,knownCostWithFullPeriodReconciliationEuro:3.3,missingEnergyIntervals:0,missingPriceIntervals:0,explicitResetEstimateKWh:.1,withoutConsumptionReferenceIntervals:0,unconfirmedPriceIntervals:0,coveredSeconds:86400,requestedSeconds:86400}};
 let code=200,fail=false,payload=state,calls=[];
 let html=fs.readFileSync(__dirname+'/../LichtBlickElectricityPrice/page.html','utf8').replaceAll('{{NONCE}}','fixture').replaceAll('{{PATH}}','/hook/lichtblick_123').replaceAll('{{INSTANCE}}','123').replaceAll('{{PORTAL}}','/hook/alarm_portal_42').replaceAll('{{LOGIN}}','/hook/secrets_7?portal=1');
 const dom=new JSDOM(html,{url:'https://prices.example/hook/lichtblick_123',runScripts:'dangerously',beforeParse(w){
  w.AbortController=AbortController;
- w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:payload};};
+ w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:payload};};
 }});
 const settle=()=>new Promise(r=>setImmediate(r));
 (async()=>{
@@ -71,6 +72,16 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(d.querySelectorAll('#price-chart rect').length,2,'Wholesale-only rows are not rendered as retail prices');
  assert.ok(d.querySelector('#history-summary').textContent.includes('190 missing retail intervals'));
  assert.equal(d.querySelector('#history-table').closest('table').querySelectorAll('thead th').length,3,'Retail-only accessible table');
+ payload.settings.consumptionHistoryEnabled=true;payload.settings.consumptionHistoryFrom='2022-10-01';payload.settings.consumptionHistoryThrough='2026-10-12';
+ d.querySelector('#refresh').click();await settle();
+ assert.equal(d.querySelector('#consumption-panel').hidden,false,'Connected consumption panel shown');
+ assert.equal(d.querySelector('#consumption-from').value,'2022-10-01','Prepared-period start');assert.equal(d.querySelector('#consumption-to').value,'2026-10-11','Exclusive prepared boundary converted to through date');
+ assert.equal(d.querySelectorAll('#consumption-chart rect').length,1,'Consumption chart rendered');assert.ok(d.querySelector('#consumption-totals').textContent.includes('10.00 kWh'));
+ assert.ok(d.querySelector('#consumption-references').textContent.includes('difference excluded'),'Partial bill residual explicitly excluded');
+ d.querySelector('#consumption-metric').value='tariffCostEuro';d.querySelector('#consumption-metric').dispatchEvent(new dom.window.Event('change'));await settle();assert.ok(d.querySelector('#consumption-chart title').textContent.includes('3.300 EUR'),'Cost metric redraw');
+ consumption.points[0].tariffCostEuro=null;consumption.totals.missingPriceIntervals=1;d.querySelector('#consumption-show').click();await settle();assert.equal(d.querySelectorAll('#consumption-chart rect').length,0,'Missing cost stays blank');assert.ok(d.querySelector('#consumption-status').textContent.includes('Incomplete'));
+ consumption.references[0].invoice_number='<img src=x onerror=alert(1)>';d.querySelector('#consumption-show').click();await settle();assert.equal(d.querySelectorAll('#consumption-references img').length,0,'Invoice text does not become markup');
+ code=401;d.querySelector('#consumption-show').click();await settle();assert.equal(d.querySelector('#dashboard').hidden,true,'Consumption endpoint session expiry hides dashboard');assert.equal(d.querySelectorAll('#consumption-table tr').length,0,'Expired consumption request clears prior table');code=200;
  chart.estimatedIntervals=1;chart.points[1].source='app-normalized-estimate';
  d.querySelector('#refresh').click();await settle();
  assert.equal(d.querySelector('#estimate-notice').hidden,false,'Imported estimate qualification visible');

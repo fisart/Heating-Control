@@ -6,11 +6,13 @@ require_once __DIR__ . '/WeatherModel.php';
 require_once __DIR__ . '/Webhook.php';
 require_once __DIR__ . '/PriceStore.php';
 require_once __DIR__ . '/PriceHistory.php';
+require_once __DIR__ . '/ConsumptionHistory.php';
 
 class LichtBlickElectricityPrice extends IPSModule
 {
     use LichtBlickElectricityPriceWebhook;
     use LichtBlickPriceHistory;
+    use LichtBlickConsumptionHistoryAccess;
 
     private const DEFAULTS = [
         'WebEnabled' => false, 'VaultInstanceID' => 0,
@@ -18,6 +20,8 @@ class LichtBlickElectricityPrice extends IPSModule
         'FetchIntervalMinutes' => 15, 'PriceCorrectionCt' => 0.0, 'MaxCacheAgeHours' => 24,
         // Retired HistoricalFetchEnabled/HistoricalTariffs keys are hidden and inert, retained for old configuration backups.
         'PriceHistoryEnabled' => true, 'HistoricalFetchEnabled' => false, 'HistoricalTariffs' => '[]', 'PriceHistoryStartDate' => '2026-10-01',
+        'PreparedHistoryEnabled' => false, 'PreparedHistoryManifest' => '', 'PreparedCleanedCounterID' => 0,
+        'PreparedReferenceCounterID' => 0, 'PreparedQualityID' => 0, 'ConsumptionCounterID' => 0, 'ConsumptionCounterScale' => 1.0,
         'ThresholdCt' => 0.0, 'SafetyMarginPercent' => 25.0, 'HysteresisCt' => 2.0, 'DebugEnabled' => false,
         'DailyLearningEnabled' => false, 'ArchiveID' => 14817, 'GasPriceCt' => 10.48,
         'GasKWhPerM3' => 11.166973, 'GasCounterID' => 25105, 'GasCounterScale' => 1.0,
@@ -131,6 +135,7 @@ class LichtBlickElectricityPrice extends IPSModule
             'FetchIntervalMinutes' => [5, 1440], 'MaxCacheAgeHours' => [1, 48], 'PriceCorrectionCt' => [-100, 100],
             'GasPriceCt' => [0.001, 100], 'GasKWhPerM3' => [1, 20], 'GasCounterScale' => [0.000001, 100],
             'HeatPumpCounterScale' => [0.000001, 100], 'AuxCounterScale' => [0.000001, 100],
+            'ConsumptionCounterScale' => [0.000001, 100],
             'ElectricalBackgroundKW' => [0, 10], 'ReferenceCapacityPercent' => [1, 100], 'MinimumReferenceDays' => [1, 14],
             'WeatherReferenceTemperatureC'=>[-30,30], 'WeatherReferenceGasPriceCt'=>[0.001,100],
             'WeatherFanKW'=>[0,3], 'WeatherPowerStepPercent'=>[1,10],
@@ -182,6 +187,7 @@ class LichtBlickElectricityPrice extends IPSModule
             foreach (['Enabled','PostalCode','TariffVerified','FetchIntervalMinutes','PriceCorrectionCt','MaxCacheAgeHours',
                 'ThresholdCt','SafetyMarginPercent','HysteresisCt','DebugEnabled','DailyLearningEnabled','WebEnabled','VaultInstanceID',
                 'PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'] as $key) unset($model[$key]);
+            foreach (array_keys($model) as $key) if (str_starts_with($key,'Prepared') || str_starts_with($key,'Consumption')) unset($model[$key]);
             $identity = hash('sha256', json_encode($model));
             if ($identity !== $this->ReadAttributeString('LearningIdentity')) {
                 $this->WriteAttributeString('LearningIdentity', $identity);
@@ -455,7 +461,7 @@ class LichtBlickElectricityPrice extends IPSModule
                 || !is_array($backup['configuration'] ?? null)) throw new InvalidArgumentException('Unsupported backup');
             $c = $backup['configuration'];
             // Schema-1 backups predating weather compensation remain valid; no existing setting is filled silently.
-            foreach (self::DEFAULTS as $key=>$default) if ((str_starts_with($key,'Weather') || in_array($key,['OutsideTemperatureMaxAgeSeconds','WebEnabled','VaultInstanceID','PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'],true)) && !array_key_exists($key,$c)) $c[$key]=$default;
+            foreach (self::DEFAULTS as $key=>$default) if ((str_starts_with($key,'Weather') || str_starts_with($key,'Prepared') || str_starts_with($key,'Consumption') || in_array($key,['OutsideTemperatureMaxAgeSeconds','WebEnabled','VaultInstanceID','PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'],true)) && !array_key_exists($key,$c)) $c[$key]=$default;
             if (array_diff(array_keys($c), array_keys(self::DEFAULTS))) throw new InvalidArgumentException('Unknown configuration keys');
             $this->validate($c); // Atomic validation before any writes.
             $c['HistoricalFetchEnabled'] = false; $c['HistoricalTariffs'] = '[]'; // Retired keys accepted for schema-1 compatibility only.

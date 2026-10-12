@@ -1,4 +1,4 @@
-# LichtBlick electricity prices and air-heating recommendation — reviewed 0.3.10
+# LichtBlick electricity prices and air-heating recommendation — reviewed 0.3.11
 
 Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. Library 0.3.2 adds an editable weather/power model and a protected dashboard alongside the optional, initially disabled HeatingControl integration; see [setup and exact source commands](automatic-source-selection.md).
 
@@ -211,3 +211,56 @@ Take the median of the qualifying candidates. Move the original threshold 20% to
 Export shows versioned JSON in the form. Import validates the complete backup before writing, includes the latest learned threshold and chosen safety margin, clears the live price cache and learning references, preserves persistent price files, and leaves web access, recommendation, daily learning and tariff confirmation **disabled**. Recheck IDs/tariff and reenable explicitly. Learned reference records/debug logs and persistent price files are not configuration and are not exported. Include the persistent price directory in the normal Symcon data backup.
 
 `php tests/lichtblick.php` checks interval coverage, invalid responses, negative prices, margin/hysteresis, outage cache handling, configuration restore, DST day boundaries, accepted matched learning, repeat-update prevention and rejection of resets, sensor failures, radiator contamination and incomplete archive requests. It uses local fixtures, not live heating hardware. `tests/lichtblick-webhook.php` checks session/origin enforcement, read-only behavior, stale decisions and deferred hook ownership. `tests/lichtblick-page-dom.cjs` verifies displayed values, text escaping, refresh and expired-session/outage handling. Weather interpolation, sensor expiry and end-to-end normalized learning are covered by the price tests. Existing HeatingControl behavior/security tests remain in the workflow. A live public response was also parsed successfully during development; deployment and testing against the user's IP-Symcon installation remain to be done.
+
+## Reviewed electricity consumption and costs — 0.3.11
+
+The protected dashboard now has a separate consumption/cost history, independent
+of the current heating recommendation and the LichtBlick contract start date.
+Connect an already reviewed one-time import in **Reviewed electricity consumption
+and costs**: select its cleaned kWh counter, reference-adjusted kWh counter and
+quality variable; enter the import manifest path relative to the Symcon kernel
+directory. Enable the history after the import succeeds. Set the later whole-house
+meter and its scale to kWh. Defaults are disabled and IDs zero; another installation
+is never silently connected to this site's private variables.
+
+Historical kWh come from the dedicated archived counter boundaries. The module
+checks their values and quality against the reviewed dataset, rather than repairing
+the raw past again. The manifest binds the target IDs, archive and dataset SHA256.
+Missing/mismatched boundaries or changed evidence fail visibly. Aggregation can be
+original intervals (maximum 31 days), daily, monthly or yearly; automatic grouping
+uses original intervals for up to seven days, daily for up to 100 days and monthly
+thereafter. Dates use Europe/Berlin, including 23/25-hour days. Native daily history
+is never expanded into pretend quarter-hour measurements.
+
+Cleaned consumption and reference-adjusted consumption remain separate. Cost is
+reference kWh times the dated gross unit price plus documented interval fixed cost.
+Invoice/app totals and their cost residual are displayed in a separate table. A
+complete selected reference period receives its full reconciliation once; partial
+selections show the whole-period reference but exclude its residual. A verified
+stored LichtBlick quote can replace an earlier app price estimate without altering
+either consumption archive; the complete app cost residual is recomputed accordingly.
+Normalization is confined to the documented invoice/app period. It never calibrates
+future meter readings or claims an actual daily supplier allocation.
+
+After the reviewed snapshot ends, completed quarter hours are read from the later
+meter's archived counter values and paired with stored retail quotes. Short boundary
+gaps interpolate over at most 180 seconds; resets, implausible jumps, longer missing
+meter sections and unavailable prices remain gaps. Archive reads split saturated
+queries rather than truncate them. No initial accumulator, power-based reset energy,
+daily average price or constant latest price is invented. An unlogged consumption
+counter cannot yield historical consumption from its current value.
+
+Later costs contain energy charges only. The module adds no undocumented basic fee;
+app-normalized price estimates may already absorb such fees. Known partial sums are
+labelled as such; a missing cost is blank, not zero. The imported counters remain a
+fixed reviewed snapshot; opening/refreshing the page neither extends them nor writes
+any raw archive or commands heating. Later consumption appears automatically from
+the live meter archive as it is recorded. New invoice reconciliation still requires
+new reviewed evidence. An absent closing invoice stays absent.
+
+Public module API: `LBEP_GetConsumptionHistory($instanceID, 'YYYY-MM-DD',
+'YYYY-MM-DD', 'auto')` returns JSON; the second date is inclusive. The authenticated
+dashboard uses `?view=consumption-history&from=...&to=...&resolution=...` with the same
+passkey, HTTPS-origin and no-store controls as other history requests. The full
+window is limited to 2,192 calendar days. Configuration backup/restore includes the
+connection; older backups fill these new properties with their disabled defaults.

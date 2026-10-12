@@ -441,6 +441,54 @@
           "caption": "Live LichtBlick schedules are collected automatically. Earlier estimates are imported once with a standalone script; the module does not download or reconstruct historical prices."
         }
       ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Reviewed electricity consumption and costs",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "PreparedHistoryEnabled",
+          "caption": "Show imported consumption history and later recorded meter/price periods"
+        },
+        {
+          "type": "ValidationTextBox",
+          "name": "PreparedHistoryManifest",
+          "caption": "Import manifest path relative to the Symcon kernel directory"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "PreparedCleanedCounterID",
+          "caption": "Imported cleaned cumulative consumption (kWh)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "PreparedReferenceCounterID",
+          "caption": "Imported reference-adjusted cumulative consumption (kWh)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "PreparedQualityID",
+          "caption": "Imported interval quality bitmask"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "ConsumptionCounterID",
+          "caption": "Whole-house cumulative electricity meter for later periods"
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "ConsumptionCounterScale",
+          "caption": "Later meter scale to kWh",
+          "minimum": 1e-06,
+          "maximum": 100,
+          "digits": 6
+        },
+        {
+          "type": "Label",
+          "caption": "Reviewed history is read from its own archive counters. Invoice totals, tariff costs and billing residuals are separate. Later closed quarter hours use recorded meter deltas and stored retail prices; missing data stay blank. No guessed reset energy or additional undocumented basic charges. The imported archives remain a fixed snapshot."
+        }
+      ]
     }
   ],
   "actions": [
