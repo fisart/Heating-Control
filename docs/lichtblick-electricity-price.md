@@ -1,4 +1,4 @@
-# LichtBlick electricity prices and air-heating recommendation — reviewed 0.3.9
+# LichtBlick electricity prices and air-heating recommendation — reviewed 0.3.10
 
 Available in Heating-Control 0.3.0, build 10 as a separate **LichtBlickElectricityPrice** instance. It imports prices, publishes a price-based recommendation and optionally learns a break-even threshold. It never writes to external variables or commands a boiler, heat pump, mixer or pump. Library 0.3.2 adds an editable weather/power model and a protected dashboard alongside the optional, initially disabled HeatingControl integration; see [setup and exact source commands](automatic-source-selection.md).
 
@@ -153,13 +153,12 @@ learning and tariff confirmation disabled. Live collection uses the restored
 `PriceHistoryEnabled` switch independently.
 
 The protected page offers Today, Yesterday, Last 7 days, Since contract start and
-custom dates. Retail gross and wholesale net remain separate selections. Up to
+custom dates. The chart displays retail gross prices only. The wholesale selector and legend have been removed. Up to
 seven days shows actual intervals; longer periods show daily arithmetic means,
 not consumption-weighted billing prices. The page reports imported-estimate,
-confirmed-retail and missing interval counts, with exact hover values and a table.
+confirmed-retail and missing interval counts, with exact hover values and a retail price table. **Published price intervals** is a collapsed section; click its heading to open or close it. Refreshing the page data preserves the open/closed state.
 Read-only chart requests require the existing SecretsManager session/origin gate.
-Network/session failures clear previous values. `Show available wholesale history`
-selects retained market prices explicitly without treating them as retail prices.
+Network/session failures clear previous values. The accessible table also displays retail prices only. Wholesale samples remain in stored records for provenance and later analysis.
 
 A complete **1–11 October** import does not fill a gap on **12 October**. The
 observed live 12 October response stored **88 of 96** local-day intervals; the

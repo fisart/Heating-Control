@@ -58,11 +58,11 @@ SecretsManager vault, at `/hook/alarm_portal_<instanceID>`. If no unambiguous
 matching portal is available, a browser **Back** button is shown. The
 SecretsManager login redirect remains separate from this navigation link.
 
-Version **0.3.9**, build 19 retains live LichtBlick schedules and the protected
+Version **0.3.10**, build 20 retains live LichtBlick schedules and the protected
 history chart. Earlier prices are maintained by standalone imports; historical
 SMARD downloading and tariff reconstruction controls have been removed. Imported
 app-normalized estimates are labelled separately from captured LichtBlick quotes.
-Existing stored history remains intact. See [history and manual imports](docs/lichtblick-electricity-price.md#persistent-price-history-and-manual-import--039).
+The chart displays retail prices only; the published-interval table opens and closes by clicking its heading. Existing stored history remains intact. See [history and manual imports](docs/lichtblick-electricity-price.md#persistent-price-history-and-manual-import--039).
 
 ## Installation and safe handover
 
