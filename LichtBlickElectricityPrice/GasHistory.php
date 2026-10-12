@@ -132,22 +132,39 @@ final class LichtBlickGasHistory
         return $points;
     }
 
-    public static function report(array $points, array $data, int $from, int $to, string $resolution): array
+    public static function report(array $points, array $data, int $from, int $to, string $resolution, array $tariffs = []): array
     {
         $zone = new DateTimeZone('Europe/Berlin'); $buckets = [];
         $totals = ['knownObservedM3'=>0.0,'missingObservationDays'=>0,'resetIntervalDays'=>0,
             'laterUnreviewedDays'=>0,'invoicedM3'=>0.0,'invoicedKWh'=>0.0,'supplyGrossEuro'=>0.0,
-            'creditsEuro'=>0.0,'costAfterAidEuro'=>0.0,'completeInvoices'=>0];
+            'creditsEuro'=>0.0,'costAfterAidEuro'=>0.0,'completeInvoices'=>0,
+            'knownConvertedKWh'=>0.0,'knownVariableCostEuro'=>0.0,'knownFixedCostEuro'=>0.0,
+            'knownCalculatedCostEuro'=>0.0,'missingTariffDays'=>0,'incompleteCostDays'=>0,'estimatedConversionDays'=>0,'confirmedZeroDays'=>0];
         // Merge the snapshot's partial last day with later events without double counting.
         $days = [];
         foreach ($points as $point) {
             $key = (new DateTimeImmutable('@'.$point['start']))->setTimezone($zone)->format('Y-m-d');
             if (!isset($days[$key])) $days[$key] = ['start'=>$point['start'],'end'=>$point['end'],
-                'knownObservedM3'=>0.0,'observedM3'=>0.0,'qualityFlags'=>0,'missingParts'=>0];
+                'knownObservedM3'=>0.0,'observedM3'=>0.0,'qualityFlags'=>0,'missingParts'=>0,
+                'knownConvertedKWh'=>0.0,'knownVariableCostEuro'=>0.0,'knownFixedCostEuro'=>0.0,
+                'knownCalculatedCostEuro'=>0.0,'missingTariffParts'=>0,'incompleteCostParts'=>0,'conversionEstimated'=>false,
+                'unitGrossCtMin'=>null,'unitGrossCtMax'=>null,'confirmedNoConsumption'=>true];
             $d = &$days[$key]; $d['start']=min($d['start'],$point['start']); $d['end']=max($d['end'],$point['end']);
             $d['qualityFlags'] |= $point['qualityFlags'];
+            $d['confirmedNoConsumption']=$d['confirmedNoConsumption'] && ($point['confirmedNoConsumption']??false);
             if ($point['observedM3'] === null) $d['missingParts']++;
             else { $d['knownObservedM3'] += $point['observedM3']; $d['observedM3'] += $point['observedM3']; }
+            foreach (['convertedKWh'=>'knownConvertedKWh','variableCostEuro'=>'knownVariableCostEuro',
+                'fixedCostEuro'=>'knownFixedCostEuro','knownCalculatedCostEuro'=>'knownCalculatedCostEuro'] as $input=>$output) {
+                if (is_numeric($point[$input]??null)) $d[$output]+=$point[$input];
+            }
+            if ($point['tariffMissing']??true) $d['missingTariffParts']++;
+            if (($point['calculatedCostEuro']??null)===null) $d['incompleteCostParts']++;
+            $d['conversionEstimated']=$d['conversionEstimated']||($point['conversionEstimated']??false);
+            if (is_numeric($point['unitGrossCt']??null)) {
+                $d['unitGrossCtMin']=$d['unitGrossCtMin']===null ? $point['unitGrossCt'] : min($d['unitGrossCtMin'],$point['unitGrossCt']);
+                $d['unitGrossCtMax']=$d['unitGrossCtMax']===null ? $point['unitGrossCt'] : max($d['unitGrossCtMax'],$point['unitGrossCt']);
+            }
             unset($d);
         }
         ksort($days);
@@ -158,23 +175,53 @@ final class LichtBlickGasHistory
                 'yearly'=>$date->setDate((int)$date->format('Y'),1,1)->format('Y-m-d'), default=>$key
             };
             if (!isset($buckets[$bucket])) $buckets[$bucket] = ['start'=>$day['start'],'end'=>$day['end'],
-                'knownObservedM3'=>0.0,'observedM3'=>0.0,'qualityFlags'=>0,'missingObservationDays'=>0];
+                'knownObservedM3'=>0.0,'observedM3'=>0.0,'qualityFlags'=>0,'missingObservationDays'=>0,
+                'knownConvertedKWh'=>0.0,'knownVariableCostEuro'=>0.0,'knownFixedCostEuro'=>0.0,
+                'knownCalculatedCostEuro'=>0.0,'calculatedCostEuro'=>null,'missingTariffDays'=>0,'incompleteCostDays'=>0,
+                'estimatedConversionDays'=>0,'unitGrossCtMin'=>null,'unitGrossCtMax'=>null,'confirmedNoConsumption'=>true];
             $b = &$buckets[$bucket]; $b['end']=$day['end']; $b['qualityFlags']|=$day['qualityFlags'];
+            $b['confirmedNoConsumption']=$b['confirmedNoConsumption'] && $day['confirmedNoConsumption'];
+            if ($day['confirmedNoConsumption']) $totals['confirmedZeroDays']++;
             $b['knownObservedM3'] += $day['knownObservedM3']; $totals['knownObservedM3'] += $day['knownObservedM3'];
             if ($day['missingParts']) { $b['missingObservationDays']++; $totals['missingObservationDays']++; }
             else $b['observedM3'] += $day['observedM3'];
-            if ($day['qualityFlags'] & (1|256|512)) $totals['resetIntervalDays']++;
+            if (!$day['confirmedNoConsumption'] && ($day['qualityFlags'] & (1|256|512))) $totals['resetIntervalDays']++;
             if ($day['qualityFlags'] & 1024) $totals['laterUnreviewedDays']++;
+            foreach (['knownConvertedKWh','knownVariableCostEuro','knownFixedCostEuro','knownCalculatedCostEuro'] as $key) {
+                $b[$key]+=$day[$key]; $totals[$key]+=$day[$key];
+            }
+            foreach (['missingTariffParts'=>'missingTariffDays','incompleteCostParts'=>'incompleteCostDays','conversionEstimated'=>'estimatedConversionDays'] as $input=>$output) {
+                if ($day[$input]) { $b[$output]++; $totals[$output]++; }
+            }
+            if ($day['unitGrossCtMin']!==null) {
+                $b['unitGrossCtMin']=$b['unitGrossCtMin']===null ? $day['unitGrossCtMin'] : min($b['unitGrossCtMin'],$day['unitGrossCtMin']);
+                $b['unitGrossCtMax']=$b['unitGrossCtMax']===null ? $day['unitGrossCtMax'] : max($b['unitGrossCtMax'],$day['unitGrossCtMax']);
+            }
             unset($b);
         }
-        foreach ($buckets as &$bucket) if ($bucket['missingObservationDays']) $bucket['observedM3']=null;
+        foreach ($buckets as &$bucket) {
+            if ($bucket['missingObservationDays']) $bucket['observedM3']=null;
+            if (!$bucket['incompleteCostDays']) $bucket['calculatedCostEuro']=$bucket['knownCalculatedCostEuro'];
+        }
         unset($bucket);
         $invoices = [];
         foreach ($data['invoices'] as $invoice) {
             [$a, $b] = LichtBlickPriceStore::dates($invoice['from'], $invoice['to'], 400);
             if ($a >= $to || $b <= $from) continue;
             $full = $a >= $from && $b <= $to;
-            $invoices[] = $invoice + ['wholeInvoiceSelected'=>$full];
+            $calc=null; $incomplete=false;
+            if ($full && $tariffs) {
+                $calc=0.0; $seconds=0;
+                foreach ($points as $point) if ($point['start']>=$a && $point['end']<=$b) {
+                    $seconds+=$point['end']-$point['start'];
+                    if (($point['calculatedCostEuro']??null)===null) $incomplete=true;
+                    $calc+=$point['knownCalculatedCostEuro']??0.0;
+                }
+                if ($seconds!==$b-$a) $calc=null;
+            }
+            $invoices[] = $invoice + ['wholeInvoiceSelected'=>$full,'calculatedKnownSupplyGrossEuro'=>$calc,
+                'supplyMinusCalculatedKnownEuro'=>$calc===null ? null : $invoice['supply_gross_eur']-$calc,
+                'calculationIncomplete'=>$incomplete];
             if ($full) {
                 $totals['completeInvoices']++; $totals['invoicedM3'] += $invoice['supplier_m3'];
                 $totals['invoicedKWh'] += $invoice['supplier_kwh']; $totals['supplyGrossEuro'] += $invoice['supply_gross_eur'];
@@ -184,8 +231,12 @@ final class LichtBlickGasHistory
         }
         return ['from'=>$from,'to'=>$to,'resolution'=>$resolution,'preparedThrough'=>$data['to'],
             'points'=>array_values($buckets),'invoices'=>$invoices,'totals'=>$totals,
-            'qualityBits'=>$data['quality_bits'] + ['512'=>'later_unresolved_counter_drop','1024'=>'later_unreviewed_meter_archive'],
-            'dailyReferenceAllocation'=>false,'dailyKWhConversion'=>false,'dailyCostAllocation'=>false];
+            'qualityBits'=>$data['quality_bits'] + ['512'=>'later_unresolved_counter_drop','1024'=>'later_unreviewed_meter_archive',
+                '2048'=>'dated_tariff_missing','4096'=>'conversion_factor_carried_forward_estimate',
+                '8192'=>'user_confirmed_no_consumption','16384'=>'recorded_or_allocated_energy_conflicts_with_confirmed_no_use'],
+            'tariffs'=>array_values(array_filter($tariffs,static fn($r)=>$r['start']<$to && $r['end']>$from)),
+            'costsCalculationEnabled'=>(bool)$tariffs,
+            'dailyReferenceAllocation'=>false,'dailyKWhConversion'=>(bool)$tariffs,'dailyCostAllocation'=>false];
     }
 }
 
@@ -233,6 +284,9 @@ trait LichtBlickGasHistoryAccess
         $laterStart=max($a,$last+1); $now=time()+1;
         if ($laterStart<min($b,$now)) $points=array_merge($points,$adapter->later(
             $this->ReadPropertyInteger('GasHistoryLaterCounterID'),$this->ReadPropertyFloat('GasHistoryLaterCounterScale'),$laterStart,min($b,$now)));
-        return LichtBlickGasHistory::report($points,$data,$a,$b,$resolution);
+        $points=LichtBlickNoConsumption::apply($points,LichtBlickNoConsumption::periods($this->ReadPropertyString('ConsumptionZeroPeriods')),'gas');
+        $tariffs=LichtBlickGasCosts::tariffs($this->ReadPropertyString('GasHistoryTariffs'));
+        $points=LichtBlickGasCosts::apply($points,$tariffs);
+        return LichtBlickGasHistory::report($points,$data,$a,$b,$resolution,$tariffs);
     }
 }

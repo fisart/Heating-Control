@@ -1,4 +1,4 @@
-# Verbrauch & Kosten — 0.3.12, build 22
+# Verbrauch & Kosten — 0.3.13, build 23
 
 The protected page has three tabs: **Strom**, **Gas**, **Wasser**. Strom retains
 the electricity price, consumption, invoice reconciliation and heating-model
@@ -13,7 +13,7 @@ external client requests, commands or heating-control parameters are introduced.
 
 ## Connect an existing reviewed gas import
 
-1. Update Heating-Control to **0.3.12, build 22**.
+1. Update Heating-Control to **0.3.13, build 23**.
 2. In **Reviewed gas consumption and invoice costs**, select the verified import
    metadata, cleaned cumulative m³, observed daily m³, sparse reference m³,
    sparse reference kWh and daily quality variables.
@@ -52,8 +52,31 @@ learning identity.
   costs. Totals include only **whole invoice periods** within the selection; a
   partially overlapping invoice is shown as a whole reference row with a partial
   selection label, and contributes no prorated cost.
-- Daily kWh and daily costs are not calculated from a constant conversion or an
-  undocumented tariff. Invoice kWh and costs belong to their own complete periods.
+- With `GasHistoryTariffs` connected, daily estimated kWh use observed m³ times
+  the dated invoice conversion factor (calorific value times condition factor).
+  Independently calculated gross costs use the dated gross unit rate plus the
+  dated basic charge. Later periods can carry forward the last factor, explicitly
+  marked provisional. Missing prices or consumption leave an incomplete subtotal.
+- The tariff history records inclusive dates, gross ct/kWh, annual gross basic
+  charge, its 365/366-day convention, kWh/m³, conversion status and both sources.
+  Rate changes split at Berlin midnight. DST days receive one daily basic charge;
+  a partial snapshot day and its later segment share that day's charge.
+- The current-year selection shows its own calculated subtotal even when no
+  whole invoice falls inside the year. Invoice residuals and assistance remain
+  separate; no residual is used to adjust consumption or tariff rates.
+
+## Confirmed periods without consumption
+
+`ConsumptionZeroPeriods` stores inclusive full calendar dates, affected utilities
+(`electricity`, `gas`, `water`) and the confirmation source. Only observations
+entirely inside a confirmed interval are treated as zero. Partial boundary days
+remain unresolved unless their times are known. Original archives and supplier
+invoice references remain unchanged; conflicting observations/allocations are
+flagged. Electricity reference allocations within those periods are overridden
+at read time and their cost difference remains in the invoice reconciliation.
+Gas variable charges are zero; documented basic charges remain payable in the
+calculation. Water rules can be retained before its history reader is connected.
+These display settings do not alter the heating learning identity.
 
 Archive logging is enabled so Symcon permits archive access. There is no writer
 updating the prepared snapshot. Enabling logging can add an asynchronous current

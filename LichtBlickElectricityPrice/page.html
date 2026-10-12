@@ -49,14 +49,15 @@
 <section class="panel"><h2>Gasverbrauch &amp; Rechnungen</h2>
 <p>Bereinigte beobachtete Zählerzunahmen in m³. Rechnungswerte sind die verbindliche Referenz für kWh und Kosten.</p>
 <p id="gas-status" role="status">Gasdaten sind noch nicht verbunden.</p>
-<div id="gas-controls" class="history-controls" hidden><label>Zeitraum<select id="gas-range"><option value="all">Gesamter Zeitraum</option><option value="year">Dieses Jahr</option><option value="month">Dieser Monat</option><option value="7">Letzte 7 Tage</option><option value="custom">Eigene Auswahl</option></select></label><label>Von<input id="gas-from" type="date"></label><label>Bis<input id="gas-to" type="date"></label><label>Gruppierung<select id="gas-resolution"><option value="auto">Automatisch</option><option value="daily">Tage</option><option value="monthly">Monate</option><option value="yearly">Jahre</option></select></label><button id="gas-show">Zeitraum anzeigen</button></div>
-<dl id="gas-totals" class="gas-summary"></dl>
+<div id="gas-controls" class="history-controls" hidden><label>Zeitraum<select id="gas-range"><option value="all">Gesamter Zeitraum</option><option value="year">Dieses Jahr</option><option value="month">Dieser Monat</option><option value="7">Letzte 7 Tage</option><option value="custom">Eigene Auswahl</option></select></label><label>Von<input id="gas-from" type="date"></label><label>Bis<input id="gas-to" type="date"></label><label>Diagramm<select id="gas-metric"><option value="knownObservedM3">Verbrauch m³</option><option value="knownConvertedKWh">Umgerechnete kWh</option><option value="knownCalculatedCostEuro">Berechnete Kosten EUR</option></select></label><label>Gruppierung<select id="gas-resolution"><option value="auto">Automatisch</option><option value="daily">Tage</option><option value="monthly">Monate</option><option value="yearly">Jahre</option></select></label><button id="gas-show">Zeitraum anzeigen</button></div>
+<dl id="gas-totals" class="gas-summary"></dl><p id="gas-cost-status" class="note"></p>
 <svg id="gas-chart" viewBox="0 0 1000 310" role="img" aria-label="Beobachtete Gaszählerzunahmen in Kubikmetern"></svg>
-<p class="legend">Grün: beobachtete Werte · Orange: bekannte Teilmenge bei fehlenden oder unklaren Intervallen.</p>
+<p class="legend">Grün: beobachtete Werte / bestätigter Nullverbrauch · Orange: Teilmenge, unklare Intervalle oder vorläufige Umrechnung.</p>
 <p class="note">Fehlende Archiveinträge bedeuten nicht automatisch Nullverbrauch. Rücksetzungen und Abweichungen zu Rechnungen sind gekennzeichnet. Die ungeklärten Differenzen werden nicht auf Tage verteilt. Spätere Messwerte sind noch nicht anhand einer Rechnung geprüft.</p>
-<details><summary>Beobachtete Werte und Qualität</summary><div class="table-wrap"><table><thead><tr><th>Zeitraum ab</th><th>Beobachtet m³</th><th>Bekannte Teilmenge m³</th><th>Qualität</th></tr></thead><tbody id="gas-table"></tbody></table></div></details>
+<details><summary>Beobachtete Werte und Qualität</summary><div class="table-wrap"><table><thead><tr><th>Zeitraum ab</th><th>Beobachtet m³</th><th>Bekannte Teilmenge m³</th><th>Umgerechnete kWh</th><th>Arbeitspreis ct/kWh</th><th>Berechnete Kosten EUR</th><th>Qualität</th></tr></thead><tbody id="gas-table"></tbody></table></div></details>
+<h2>Datierte Gaspreise</h2><div class="table-wrap"><table><thead><tr><th>Gültig</th><th>Brutto ct/kWh</th><th>Grundpreis EUR/Monat</th><th>kWh/m³</th><th>Umrechnung</th><th>Quelle</th></tr></thead><tbody id="gas-tariffs"></tbody></table></div>
 <h2>Rechnungsvergleich</h2><p>Die Summe enthält nur vollständig ausgewählte Rechnungsperioden. Bei einer Teilauswahl zeigt die Tabelle die gesamte Rechnung zur Orientierung; ihre Kosten werden nicht anteilig angesetzt. Entlastungen sind separat ausgewiesen.</p>
-<div class="table-wrap"><table><thead><tr><th>Rechnungszeitraum</th><th>Rechnung m³</th><th>Beobachtet m³</th><th>Rechnung − beobachtet m³</th><th>Rechnung kWh</th><th>Brutto EUR</th><th>Entlastung EUR</th><th>Nach Entlastung EUR</th><th>Auswahl</th></tr></thead><tbody id="gas-invoices"></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Rechnungszeitraum</th><th>Rechnung m³</th><th>Beobachtet m³</th><th>Rechnung − beobachtet m³</th><th>Rechnung kWh</th><th>Brutto EUR</th><th>Eigene bekannte Kosten EUR</th><th>Rechnung − Berechnung EUR</th><th>Entlastung EUR</th><th>Nach Entlastung EUR</th><th>Auswahl</th></tr></thead><tbody id="gas-invoices"></tbody></table></div>
 </section></div>
 <div id="panel-wasser" role="tabpanel" aria-labelledby="tab-wasser" hidden><section class="panel"><h2>Wasserverbrauch &amp; Kosten</h2><p>Wasserdaten sind noch nicht verbunden.</p><p>Für diesen Bereich müssen wir zuerst Wasserzähler, Archivaufzeichnung und Rechnungen prüfen.</p></section></div>
 <details class="panel"><summary>Diagnoseprotokoll</summary><pre id="debug"></pre></details>
@@ -153,7 +154,7 @@ function chooseConsumptionDates(){const today=berlinDay(),range=el('consumption-
  el('consumption-from').value=from<consumptionStart?consumptionStart:from;
  el('consumption-to').value=range==='prepared'&&consumptionThrough?dayShift(consumptionThrough,-1):today;
 }
-function qualityText(flags){return [[1,'Boundary interpolation'],[2,'Gap / estimate'],[4,'Clock correction'],[8,'Reset correction'],[16,'Counter correction'],[32,'Outage zero'],[64,'Outage edge estimate'],[128,'Reference adjusted'],[256,'No consumption reference'],[512,'Estimated / unconfirmed price'],[2048,'Missing meter data'],[4096,'Missing retail price']].filter(([bit])=>flags&bit).map(([,label])=>label).join(' · ')||'Recorded';}
+function qualityText(flags){return [[1,'Boundary interpolation'],[2,'Gap / estimate'],[4,'Clock correction'],[8,'Reset correction'],[16,'Counter correction'],[32,'Outage zero'],[64,'Outage edge estimate'],[128,'Reference adjusted'],[256,'No consumption reference'],[512,'Estimated / unconfirmed price'],[2048,'Missing meter data'],[4096,'Missing retail price'],[8192,'Confirmed no consumption'],[16384,'Allocation conflicts with confirmed no use']].filter(([bit])=>flags&bit).map(([,label])=>label).join(' · ')||'Recorded';}
 function drawConsumption(h){consumptionData=h;const t=h.totals,complete=t.missingEnergyIntervals===0&&t.missingPriceIntervals===0;
  rows('consumption-totals',[
  ['Known cleaned consumption',num(t.knownCleanedKWh)+' kWh'],['Known reference consumption',num(t.knownReferenceKWh)+' kWh'],
@@ -181,9 +182,9 @@ async function loadConsumption(){if(consumptionBusy||el('consumption-panel').hid
 el('consumption-range').addEventListener('change',()=>{chooseConsumptionDates();loadConsumption();});
 el('consumption-show').addEventListener('click',()=>{el('consumption-range').value='custom';loadConsumption();});
 el('consumption-resolution').addEventListener('change',loadConsumption);el('consumption-metric').addEventListener('change',()=>{if(consumptionData)drawConsumption(consumptionData);});
-let activeConsumptionTab='strom',gasEnabled=false,gasStart='',gasThrough='',gasConfigError='',gasBusy=false,gasRequest=0;
+let activeConsumptionTab='strom',gasEnabled=false,gasStart='',gasThrough='',gasConfigError='',gasBusy=false,gasRequest=0,gasData=null;
 const numDE=(v,d=2)=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
-function clearGas(){for(const id of ['gas-chart','gas-totals','gas-table','gas-invoices'])el(id).replaceChildren();}
+function clearGas(){gasData=null;el('gas-cost-status').textContent='';for(const id of ['gas-chart','gas-totals','gas-table','gas-invoices','gas-tariffs'])el(id).replaceChildren();}
 function renderGasSettings(c){
  gasEnabled=c.gasHistoryEnabled===true;gasStart=c.gasHistoryFrom||'';gasThrough=c.gasHistoryThrough||'';gasConfigError=c.gasHistoryError||'';
  el('gas-controls').hidden=!gasEnabled||!!gasConfigError;el('gas-from').min=gasStart;el('gas-to').min=gasStart;
@@ -196,31 +197,42 @@ function chooseGasDates(){
  el('gas-from').value=from<gasStart?gasStart:from;el('gas-to').value=today;
 }
 function gasQuality(flags){
- const labels=[[1,'Rücksetzung'],[2,'Veraltete Werte bereinigt'],[4,'Langer Änderungsabstand'],[8,'Keine Archiveinträge'],[16,'Ableseuhrzeit unbekannt'],[32,'Rechnungsabweichung unverteilt'],[64,'Ohne Rechnungsreferenz'],[128,'Teiltag'],[256,'Ungeklärtes Resetintervall'],[512,'Ungeklärter späterer Rücksprung'],[1024,'Spätere ungeprüfte Messwerte']];
+ const labels=[[1,'Rücksetzung'],[2,'Veraltete Werte bereinigt'],[4,'Langer Änderungsabstand'],[8,'Keine Archiveinträge'],[16,'Ableseuhrzeit unbekannt'],[32,'Rechnungsabweichung unverteilt'],[64,'Ohne Rechnungsreferenz'],[128,'Teiltag'],[256,'Ungeklärtes Resetintervall'],[512,'Ungeklärter späterer Rücksprung'],[1024,'Spätere ungeprüfte Messwerte'],[2048,'Datierter Tarif fehlt'],[4096,'Umrechnung aus Vorperiode geschätzt'],[8192,'Bestätigt kein Verbrauch'],[16384,'Archiv/Zuordnung widerspricht bestätigtem Stillstand']];
  return labels.filter(([bit])=>flags&bit).map(([,label])=>label).join(' · ')||'Beobachtet';
 }
 function drawGas(h){
- const t=h.totals,hasInvoices=t.completeInvoices>0;
+ gasData=h;const t=h.totals,hasInvoices=t.completeInvoices>0,priced=h.costsCalculationEnabled===true;
+ const rangePrice=p=>p.unitGrossCtMin===null||p.unitGrossCtMin===undefined?'—':numDE(p.unitGrossCtMin)+(Math.abs(p.unitGrossCtMax-p.unitGrossCtMin)>1e-7?' – '+numDE(p.unitGrossCtMax):'');
  el('gas-status').textContent='Geprüfter Archivstand bis '+h.preparedThrough.slice(0,10)+' · '+h.points.length+' Zeiträume · spätere Messungen getrennt gekennzeichnet.';
  rows('gas-totals',[
   ['Bekannte beobachtete Zunahmen',numDE(t.knownObservedM3)+' m³'],
   ['Tage mit fehlenden Beobachtungen',String(t.missingObservationDays)],['Tage mit Reset-/Rücksprungintervallen',String(t.resetIntervalDays)],
   ['Tage mit späteren ungeprüften Messwerten',String(t.laterUnreviewedDays)],
+  ['Bestätigte Tage ohne Verbrauch',String(t.confirmedZeroDays||0)],
+  ['Aus Beobachtungen umgerechnete Energie',priced?numDE(t.knownConvertedKWh)+' kWh':'—'],
+  ['Berechnete bekannte Verbrauchskosten brutto',priced?numDE(t.knownVariableCostEuro)+' EUR':'—'],
+  ['Berechneter bekannter Grundpreis brutto',priced?numDE(t.knownFixedCostEuro)+' EUR':'—'],
+  ['Berechnete bekannte Gesamtkosten brutto',priced?numDE(t.knownCalculatedCostEuro)+' EUR':'—'],
+  ['Tage mit unvollständiger Kostenberechnung',priced?String(t.incompleteCostDays):'—'],
+  ['Tage mit geschätztem Umrechnungsfaktor',priced?String(t.estimatedConversionDays):'—'],
   ['Vollständig ausgewählte Rechnungen',String(t.completeInvoices)],
   ['Rechnungsverbrauch dieser Perioden',hasInvoices?numDE(t.invoicedM3)+' m³ / '+numDE(t.invoicedKWh,0)+' kWh':'—'],
   ['Rechnungskosten brutto',hasInvoices?numDE(t.supplyGrossEuro)+' EUR':'—'],
   ['Entlastungen',hasInvoices?numDE(t.creditsEuro)+' EUR':'—'],
   ['Kosten nach Entlastung',hasInvoices?numDE(t.costAfterAidEuro)+' EUR':'—']]);
- table('gas-table',h.points.map(p=>[stamp(p.start),numDE(p.observedM3),numDE(p.knownObservedM3),gasQuality(p.qualityFlags)]));
- table('gas-invoices',h.invoices.map(r=>[r.from+' – '+r.to,numDE(r.supplier_m3),numDE(r.cleaned_observed_m3),numDE(r.supplier_minus_cleaned_m3),numDE(r.supplier_kwh,0),numDE(r.supply_gross_eur),numDE(r.december_aid_gross_eur+r.price_brake_credit_eur),numDE(r.cost_after_aid_eur),r.wholeInvoiceSelected?'Vollständig':'Teilauswahl · ganze Rechnung gezeigt']));
+ el('gas-cost-status').textContent=priced?'Berechnung: beobachtete m³ × datierter Umrechnungsfaktor × datierter Arbeitspreis plus zeitanteiliger Grundpreis. Bei Datenlücken sind die Beträge bekannte Teilmengen. Nach dem letzten Abrechnungszeitraum ist der Umrechnungsfaktor vorläufig. Entlastungen und Rechnungsabweichungen werden separat gezeigt. Bestätigte Ausfalltage haben keinen Verbrauch; der Grundpreis bleibt enthalten.':'Die datierten Gaspreise sind noch nicht verbunden; Verbrauch und Rechnungen bleiben verfügbar.';
+ table('gas-table',h.points.map(p=>[stamp(p.start),numDE(p.observedM3),numDE(p.knownObservedM3),numDE(priced?p.knownConvertedKWh:null),rangePrice(p),numDE(priced?p.knownCalculatedCostEuro:null),gasQuality(p.qualityFlags)]));
+ table('gas-tariffs',(h.tariffs||[]).map(r=>[r.from+' – '+(r.through||'bis zur nächsten Änderung'),numDE(r.unitGrossCt),numDE(r.basicAnnualGrossEuro/12),numDE(r.kwhPerM3,6),r.conversionEstimated?'Vorläufig aus letzter Rechnung':'Aus Rechnung',r.source]));
+ table('gas-invoices',h.invoices.map(r=>[r.from+' – '+r.to,numDE(r.supplier_m3),numDE(r.cleaned_observed_m3),numDE(r.supplier_minus_cleaned_m3),numDE(r.supplier_kwh,0),numDE(r.supply_gross_eur),numDE(r.calculatedKnownSupplyGrossEuro)+(r.calculationIncomplete?' (Teilmenge)':''),numDE(r.supplyMinusCalculatedKnownEuro),numDE(r.december_aid_gross_eur+r.price_brake_credit_eur),numDE(r.cost_after_aid_eur),r.wholeInvoiceSelected?'Vollständig':'Teilauswahl · ganze Rechnung gezeigt']));
  const root=el('gas-chart');root.replaceChildren();
- const points=h.points.filter(p=>typeof p.knownObservedM3==='number'&&Number.isFinite(p.knownObservedM3)&&(p.observedM3!==null||p.knownObservedM3>0));
+ const metric=el('gas-metric').value,key=metric==='knownObservedM3'||priced?metric:'knownObservedM3',unit=key==='knownConvertedKWh'?'kWh':key==='knownCalculatedCostEuro'?'EUR':'m³';
+ const points=h.points.filter(p=>typeof p[key]==='number'&&Number.isFinite(p[key])&&(key!=='knownObservedM3'||p.observedM3!==null||p[key]>0));
  if(!points.length){root.append(svgNode('text',{x:40,y:50,fill:'#566f6b'},'Keine beobachteten Werte im Zeitraum.'));return;}
- const max=Math.max(1,...points.map(p=>p.knownObservedM3)),left=65,right=970,top=25,bottom=255,span=Math.max(1,h.to-h.from);
+ const max=Math.max(1,...points.map(p=>p[key])),left=65,right=970,top=25,bottom=255,span=Math.max(1,h.to-h.from);
  const x=t=>left+(right-left)*(t-h.from)/span,y=v=>bottom-(bottom-top)*v/max;
  root.append(svgNode('line',{x1:left,y1:bottom,x2:right,y2:bottom,stroke:'#dbe6df'}));
  for(let i=0;i<5;i++){const v=max*i/4;root.append(svgNode('text',{x:left-8,y:y(v)+4,'text-anchor':'end',fill:'#566f6b','font-size':12},numDE(v,1)));}
- for(const p of points){const partial=p.observedM3===null||!!(p.qualityFlags&(1|8|256|512));const bar=svgNode('rect',{x:x(p.start),y:y(p.knownObservedM3),width:Math.max(1,x(Math.min(p.end,h.to))-x(p.start)-1),height:Math.max(0,bottom-y(p.knownObservedM3)),fill:partial?'#a96914':'#216352'});bar.append(svgNode('title',{},stamp(p.start)+' · '+numDE(p.knownObservedM3)+' m³'+(partial?' · bekannte Teilmenge':'')+' · '+gasQuality(p.qualityFlags)));root.append(bar);}
+ for(const p of points){const partial=p.observedM3===null||!!(p.qualityFlags&(2048|4096|16384))||(!p.confirmedNoConsumption&&!!(p.qualityFlags&(1|8|256|512)));const bar=svgNode('rect',{x:x(p.start),y:y(p[key]),width:Math.max(1,x(Math.min(p.end,h.to))-x(p.start)-1),height:Math.max(0,bottom-y(p[key])),fill:partial?'#a96914':'#216352'});bar.append(svgNode('title',{},stamp(p.start)+' · '+numDE(p[key])+' '+unit+(partial?' · bekannte Teilmenge':'')+' · '+gasQuality(p.qualityFlags)));root.append(bar);}
  root.append(svgNode('text',{x:left,y:285,fill:'#566f6b','font-size':12},stamp(h.from)));
  root.append(svgNode('text',{x:right,y:285,'text-anchor':'end',fill:'#566f6b','font-size':12},stamp(h.to)));
 }
@@ -249,6 +261,7 @@ consumptionTabs.forEach((button,index)=>{
 el('gas-range').addEventListener('change',()=>{chooseGasDates();loadGas();});
 el('gas-show').addEventListener('click',()=>{el('gas-range').value='custom';loadGas();});
 el('gas-resolution').addEventListener('change',loadGas);
+el('gas-metric').addEventListener('change',()=>{if(gasData)drawGas(gasData);});
 
 let busy=false;
 async function load(){if(busy)return;busy=true;el('refresh').disabled=true;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);try{

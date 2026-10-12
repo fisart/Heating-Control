@@ -72,6 +72,8 @@ and read-only. See [consumption history](docs/lichtblick-electricity-price.md#re
 
 Version **0.3.12**, build 22 names the protected page **Verbrauch & Kosten** and separates **Strom**, **Gas** and **Wasser** tabs. The existing hook and electricity functions remain compatible. Gas reads a reviewed snapshot, sparse invoice references and later raw-counter events without changing the prepared archives. Daily kWh/costs and missing reset consumption are not invented. Water awaits its source review. See [gas history and page setup](docs/consumption-and-costs.md).
 
+Version **0.3.13**, build 23 adds independently calculated gas costs from dated gross tariffs, basic charges and documented conversion factors. Current-year costs appear even when invoice periods cross the year boundary. Missing data and provisional later conversion factors remain marked. Confirmed outage periods show zero energy without rewriting archives; documented basic charges remain separate. See [gas cost calculation](docs/consumption-and-costs.md).
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.

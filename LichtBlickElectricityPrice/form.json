@@ -485,6 +485,11 @@
           "digits": 6
         },
         {
+          "type": "ValidationTextBox",
+          "name": "ConsumptionZeroPeriods",
+          "caption": "Confirmed no-consumption periods for electricity, gas and future water history (JSON)"
+        },
+        {
           "type": "Label",
           "caption": "Reviewed history is read from its own archive counters. Invoice totals, tariff costs and billing residuals are separate. Later closed quarter hours use recorded meter deltas and stored retail prices; missing data stay blank. No guessed reset energy or additional undocumented basic charges. The imported archives remain a fixed snapshot."
         }
@@ -543,8 +548,13 @@
           "digits": 6
         },
         {
+          "type": "ValidationTextBox",
+          "name": "GasHistoryTariffs",
+          "caption": "Dated gas tariffs, basic charges and billing conversion factors (JSON)"
+        },
+        {
           "type": "Label",
-          "caption": "Invoice references remain sparse. Daily m3 are observed values, not invoice-normalized or converted to guessed kWh. Costs and aid apply to complete invoice periods only. Later source reads leave the reviewed archives unchanged. Water has a separate tab awaiting source review."
+          "caption": "Invoice references stay separate. Calculated costs use observed m3, dated gross unit rates, dated basic charges and the applicable billing conversion. Estimated future conversion and missing consumption remain marked. Aid and invoice residuals are not spread across days."
         }
       ]
     }

@@ -138,7 +138,7 @@ final class LichtBlickConsumptionHistory
             $covered+=$r['end']-$r['start'];
             if($r['cleanedKWh']===null){$p['missingEnergyIntervals']++;$missingEnergy++;}
             else{$p['cleanedKWh']+=$r['cleanedKWh'];$p['referenceKWh']+=$r['referenceKWh'];$knownEnergy+=$r['cleanedKWh'];$knownRef+=$r['referenceKWh'];}
-            if($r['unitPriceCt']===null){$p['missingPriceIntervals']++;$missingPrice++;}
+            if($r['unitPriceCt']===null && !($r['confirmedNoConsumption']??false)){$p['missingPriceIntervals']++;$missingPrice++;}
             if($r['tariffCostEuro']!==null){$p['tariffCostEuro']+=$r['tariffCostEuro'];$knownCost+=$r['tariffCostEuro'];}
             if($r['qualityFlags']&2)$estimated++;if($r['qualityFlags']&256)$unreferenced++;
             if(!$r['priceVerified'])$unconfirmedPrices++;$resetEstimate+=$r['estimatedResetKWh'];unset($p);
@@ -228,6 +228,8 @@ trait LichtBlickConsumptionHistoryAccess
             for($t=$laterFrom;$t<$laterTo;$t=$end){$end=min($laterTo,$t+360*86400);$prices=array_merge($prices,$this->priceStore()->query($this->historyIdentity(),$t,$end));}
             $rows=array_merge($rows,$adapter->later($this->ReadPropertyInteger('ConsumptionCounterID'),$this->ReadPropertyFloat('ConsumptionCounterScale'),$prices,$laterFrom,$laterTo,$now));
         }
+        $rows=LichtBlickNoConsumption::apply($rows,LichtBlickNoConsumption::periods($this->ReadPropertyString('ConsumptionZeroPeriods')),'electricity');
         return LichtBlickConsumptionHistory::report($rows,$data,$a,$b,$resolution);
     }
 }
+

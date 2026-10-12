@@ -8,6 +8,8 @@ require_once __DIR__ . '/PriceStore.php';
 require_once __DIR__ . '/PriceHistory.php';
 require_once __DIR__ . '/ConsumptionHistory.php';
 require_once __DIR__ . '/GasHistory.php';
+require_once __DIR__ . '/GasCosts.php';
+require_once __DIR__ . '/NoConsumption.php';
 
 class LichtBlickElectricityPrice extends IPSModule
 {
@@ -23,10 +25,10 @@ class LichtBlickElectricityPrice extends IPSModule
         // Retired HistoricalFetchEnabled/HistoricalTariffs keys are hidden and inert, retained for old configuration backups.
         'PriceHistoryEnabled' => true, 'HistoricalFetchEnabled' => false, 'HistoricalTariffs' => '[]', 'PriceHistoryStartDate' => '2026-10-01',
         'PreparedHistoryEnabled' => false, 'PreparedHistoryManifest' => '', 'PreparedCleanedCounterID' => 0,
-        'PreparedReferenceCounterID' => 0, 'PreparedQualityID' => 0, 'ConsumptionCounterID' => 0, 'ConsumptionCounterScale' => 1.0,
+        'PreparedReferenceCounterID' => 0, 'PreparedQualityID' => 0, 'ConsumptionCounterID' => 0, 'ConsumptionCounterScale' => 1.0, 'ConsumptionZeroPeriods'=>'[]',
         'GasHistoryEnabled'=>false, 'GasHistoryMetadataID'=>0, 'GasHistoryCleanedCounterID'=>0,
         'GasHistoryDailyID'=>0, 'GasHistoryReferenceM3ID'=>0, 'GasHistoryReferenceKWhID'=>0, 'GasHistoryQualityID'=>0,
-        'GasHistoryLaterCounterID'=>0, 'GasHistoryLaterCounterScale'=>0.01,
+        'GasHistoryLaterCounterID'=>0, 'GasHistoryLaterCounterScale'=>0.01, 'GasHistoryTariffs'=>'[]',
         'ThresholdCt' => 0.0, 'SafetyMarginPercent' => 25.0, 'HysteresisCt' => 2.0, 'DebugEnabled' => false,
         'DailyLearningEnabled' => false, 'ArchiveID' => 14817, 'GasPriceCt' => 10.48,
         'GasKWhPerM3' => 11.166973, 'GasCounterID' => 25105, 'GasCounterScale' => 1.0,
@@ -147,6 +149,8 @@ class LichtBlickElectricityPrice extends IPSModule
             'WeatherTemperatureHysteresisC'=>[0,2], 'OutsideTemperatureMaxAgeSeconds'=>[60,7200]] as $key => $bounds) {
             if ($c[$key] < $bounds[0] || $c[$key] > $bounds[1]) throw new InvalidArgumentException('Out of range: ' . $key);
         }
+        LichtBlickGasCosts::tariffs($c['GasHistoryTariffs']);
+        LichtBlickNoConsumption::periods($c['ConsumptionZeroPeriods']);
         $curve=LichtBlickWeatherModel::curve($c['WeatherCurve']);
         LichtBlickPriceStore::dates($c['PriceHistoryStartDate'], $c['PriceHistoryStartDate']);
         if ($c['WeatherReferenceTemperatureC'] < $curve[0]['outsideC']
