@@ -82,7 +82,7 @@ HeatingControl still determines demand and permissions. Update the curve after s
 ## Protected HTML dashboard and portal link
 
 1. Update **Heating-Control** to **0.3.7, build 17** and **MyAlarmSystem** from `main`.
-2. In the LichtBlick form, open **Protected LichtBlick web page**, enable **WebEnabled** and select **SecretsManager**. ID 0 selects the only eligible vault; multiple eligible vaults require an explicit choice. The vault must have its HTTPS portal enabled and expose `SEC_IsPortalAuthenticated`.
+2. In the LichtBlick form, open **Protected consumption and costs web page**, enable **WebEnabled** and select **SecretsManager**. ID 0 selects the only eligible vault; multiple eligible vaults require an explicit choice. The vault must have its HTTPS portal enabled and expose `SEC_IsPortalAuthenticated`.
 3. Apply. Deferred registration adds `/hook/lichtblick_<instanceID>` to WebhookControl. The child **WebPath** shows the result. Open it on the configured SecretsManager HTTPS origin.
 4. Use **Refresh pages** on AlarmPortal. **Smart Home → LichtBlick prices & heating** appears automatically for each registered, web-enabled LichtBlick instance.
 
@@ -264,3 +264,9 @@ dashboard uses `?view=consumption-history&from=...&to=...&resolution=...` with t
 passkey, HTTPS-origin and no-store controls as other history requests. The full
 window is limited to 2,192 calendar days. Configuration backup/restore includes the
 connection; older backups fill these new properties with their disabled defaults.
+
+
+
+## Consumption & costs page — 0.3.12
+
+The provider-independent title is **Verbrauch & Kosten**, with **Strom**, **Gas** and **Wasser** tabs. The class/prefix and `/hook/lichtblick_<instanceID>` URL remain compatible. See [reviewed gas data, invoice semantics and connection](consumption-and-costs.md). Use a targeted AlarmPortal PageOverrides name to label the existing card; no additional hook or authentication setup is needed.

@@ -164,7 +164,7 @@ trait LichtBlickElectricityPriceWebhook
                 'safetyMarginPercent'=>$this->ReadPropertyFloat('SafetyMarginPercent'),'hysteresisCt'=>$this->ReadPropertyFloat('HysteresisCt'),
                 'weatherEnabled'=>$this->ReadPropertyBoolean('WeatherModelEnabled'),'fanKW'=>$this->ReadPropertyFloat('WeatherFanKW'),
                 'gasPriceCt'=>$this->ReadPropertyFloat('GasPriceCt'),'referenceTemperatureC'=>$this->ReadPropertyFloat('WeatherReferenceTemperatureC'),
-                'referenceGasPriceCt'=>$this->ReadPropertyFloat('WeatherReferenceGasPriceCt')]+$this->consumptionSettings(),
+                'referenceGasPriceCt'=>$this->ReadPropertyFloat('WeatherReferenceGasPriceCt')]+$this->consumptionSettings()+$this->gasHistorySettings(),
             'curve'=>$curve, 'slots'=>$slots, 'debug'=>substr((string)$this->GetValue('DebugLog'),-32000)];
     }
 
@@ -185,7 +185,7 @@ trait LichtBlickElectricityPriceWebhook
             'body'=>is_string($data) ? $data : json_encode($data,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE|JSON_THROW_ON_ERROR)];
         $method = strtoupper((string)($server['REQUEST_METHOD'] ?? 'GET'));
         if (!in_array($method,['GET','HEAD'],true)) return $reply(405,['error'=>'Read-only page; method not allowed.'],['Allow'=>'GET, HEAD']);
-        if (!$this->ReadPropertyBoolean('WebEnabled')) return $reply(503,['error'=>'LichtBlick web page disabled.']);
+        if (!$this->ReadPropertyBoolean('WebEnabled')) return $reply(503,['error'=>'Verbrauch & Kosten web page disabled.']);
         $vault = $this->webVault();
         if (!$vault || !function_exists('SEC_IsPortalAuthenticated')) return $reply(503,['error'=>'An enabled SecretsManager HTTPS portal is required.']);
         try {
@@ -210,6 +210,13 @@ trait LichtBlickElectricityPriceWebhook
                 } catch (InvalidArgumentException $e) { return $reply(400, ['error'=>$e->getMessage()]); }
                 catch (RuntimeException $e) { return $reply(503, ['error'=>$e->getMessage()]); }
             }
+            if (($query['view'] ?? '') === 'gas-history') {
+                try {
+                    if (!is_string($query['from'] ?? null) || !is_string($query['to'] ?? null) || !is_string($query['resolution'] ?? 'auto')) throw new InvalidArgumentException('Select from/to dates and resolution');
+                    return $reply(200, $this->gasHistoryChart($query['from'], $query['to'], $query['resolution'] ?? 'auto'));
+                } catch (InvalidArgumentException $e) { return $reply(400, ['error'=>$e->getMessage()]); }
+                catch (RuntimeException $e) { return $reply(503, ['error'=>$e->getMessage()]); }
+            }
             if (isset($query['view'])) return $reply(404,['error'=>'Unknown view.']);
             $nonce = base64_encode(random_bytes(24));
             $escape = static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
@@ -222,8 +229,9 @@ trait LichtBlickElectricityPriceWebhook
                 'Content-Security-Policy'=>"default-src 'none'; script-src 'nonce-$nonce'; style-src 'nonce-$nonce'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"]);
         } catch (Throwable $e) {
             $this->debug('WEB ERROR '.$e->getMessage());
-            return $reply(503,['error'=>'LichtBlick request failed. Check module configuration and debug log.']);
+            return $reply(503,['error'=>'Consumption page request failed. Check module configuration and debug log.']);
         }
     }
 }
+
 

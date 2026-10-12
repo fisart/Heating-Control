@@ -10,11 +10,12 @@ const state={updatedAt:now,enabled:true,recommendation:{source:1,valid:true,powe
  slots:[{start:now-300,end:now+600,price:19.25},{start:now+600,end:now+1500,price:25.84}],debug:'No errors'};
 const chart={from:now-86400,to:now+86400,resolution:'15-minute intervals',storedIntervals:2,expectedIntervals:192,retailIntervals:2,confirmedIntervals:1,missingIntervals:190,points:[{start:now-900,end:now,price:-2.5,marketCt:-5,source:'lichtblick-quote',verified:true},{start:now+900,end:now+1800,price:29.75,marketCt:10,source:'smard-reconstructed',verified:false}]};
 const consumption={from:now-86400,to:now,resolution:'daily',preparedThrough:'2026-10-12T00:00:00+02:00',points:[{start:now-86400,end:now,cleanedKWh:10,referenceKWh:11,tariffCostEuro:3.3,qualityFlags:129}],references:[{invoice_number:'fixture',from:'2026-10-01',to_inclusive:'2026-10-10',billed_kwh:110,billed_gross_eur:40,dated_tariff_cost_on_reference_curve_eur:39,billing_reconciliation_eur:1,wholeReferenceSelected:false}],totals:{knownCleanedKWh:10,knownReferenceKWh:11,knownTariffCostEuro:3.3,fullPeriodReconciliationEuro:0,knownCostWithFullPeriodReconciliationEuro:3.3,missingEnergyIntervals:0,missingPriceIntervals:0,explicitResetEstimateKWh:.1,withoutConsumptionReferenceIntervals:0,unconfirmedPriceIntervals:0,coveredSeconds:86400,requestedSeconds:86400}};
+const gas={from:now-86400,to:now,resolution:'daily',preparedThrough:'2026-10-12T17:50:15+02:00',points:[{start:now-86400,end:now,observedM3:4,knownObservedM3:4,qualityFlags:32}],invoices:[{from:'2026-10-01',to:'2026-10-10',supplier_m3:12,cleaned_observed_m3:10,supplier_minus_cleaned_m3:2,supplier_kwh:133,supply_gross_eur:25,december_aid_gross_eur:0,price_brake_credit_eur:2,cost_after_aid_eur:23,wholeInvoiceSelected:false}],totals:{knownObservedM3:4,missingObservationDays:0,resetIntervalDays:0,laterUnreviewedDays:0,completeInvoices:0,invoicedM3:0,invoicedKWh:0,supplyGrossEuro:0,creditsEuro:0,costAfterAidEuro:0}};
 let code=200,fail=false,payload=state,calls=[];
 let html=fs.readFileSync(__dirname+'/../LichtBlickElectricityPrice/page.html','utf8').replaceAll('{{NONCE}}','fixture').replaceAll('{{PATH}}','/hook/lichtblick_123').replaceAll('{{INSTANCE}}','123').replaceAll('{{PORTAL}}','/hook/alarm_portal_42').replaceAll('{{LOGIN}}','/hook/secrets_7?portal=1');
 const dom=new JSDOM(html,{url:'https://prices.example/hook/lichtblick_123',runScripts:'dangerously',beforeParse(w){
  w.AbortController=AbortController;
- w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:payload};};
+ w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');return {status:code,ok:code===200,json:async()=>url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:url.includes('view=gas-history')?gas:payload};};
 }});
 const settle=()=>new Promise(r=>setImmediate(r));
 (async()=>{
@@ -87,6 +88,30 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(d.querySelector('#estimate-notice').hidden,false,'Imported estimate qualification visible');
  assert.ok(d.querySelector('#history-summary').textContent.includes('1 imported estimates'));
  assert.ok(d.querySelector('#history-table').textContent.includes('Imported estimate, not tariff-confirmed'));
+ assert.equal(d.title,'Verbrauch & Kosten','Provider-independent page name');
+ assert.deepEqual([...d.querySelectorAll('[role=tab]')].map(e=>e.textContent),['Strom','Gas','Wasser'],'Separate consumption tabs');
+ assert.equal(d.querySelector('#panel-strom').hidden,false);assert.equal(d.querySelector('#panel-gas').hidden,true);
+ payload.settings.gasHistoryEnabled=true;payload.settings.gasHistoryFrom='2022-05-30';payload.settings.gasHistoryThrough='2026-10-12';
+ d.querySelector('#refresh').click();await settle();
+ d.querySelector('#tab-gas').click();await settle();
+ assert.equal(d.querySelector('#panel-strom').hidden,true);assert.equal(d.querySelector('#panel-gas').hidden,false);
+ assert.equal(d.querySelector('#tab-gas').getAttribute('aria-selected'),'true');assert.equal(d.querySelector('#tab-strom').tabIndex,-1);
+ assert.ok(calls.some(c=>c.url.includes('view=gas-history&from=2022-05-30')),'Gas API called after tab selection');
+ assert.equal(d.querySelectorAll('#gas-chart rect').length,1);assert.ok(d.querySelector('#gas-totals').textContent.includes('4,00 m³'));
+ assert.ok(d.querySelector('#gas-invoices').textContent.includes('Teilauswahl'),'Partial invoice is clearly labelled');
+ gas.invoices[0].from='<img src=x onerror=alert(1)>';d.querySelector('#gas-show').click();await settle();
+ assert.equal(d.querySelectorAll('#gas-invoices img').length,0,'Gas invoice text never becomes HTML');
+ d.querySelector('#tab-gas').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await settle();
+ assert.equal(d.querySelector('#panel-wasser').hidden,false);assert.equal(d.querySelector('#panel-gas').hidden,true);assert.equal(d.activeElement.id,'tab-wasser','Keyboard focus follows selected tab');
+ assert.ok(d.querySelector('#panel-wasser').textContent.includes('noch nicht verbunden'),'Water does not show invented readings');
+ d.querySelector('#tab-gas').click();await settle();d.querySelector('#refresh').click();await settle();
+ assert.equal(d.querySelector('#panel-gas').hidden,false,'Refresh preserves tab selection');
+ code=401;d.querySelector('#gas-show').click();await settle();
+ assert.equal(d.querySelector('#dashboard').hidden,true,'Gas session expiry hides all tabs');assert.equal(d.querySelectorAll('#gas-invoices tr').length,0,'Expired gas request clears gas invoices');
+ code=200;d.querySelector('#refresh').click();await settle();
+ payload.settings.gasHistoryEnabled=false;d.querySelector('#refresh').click();await settle();
+ assert.equal(d.querySelector('#gas-controls').hidden,true);assert.equal(d.querySelectorAll('#gas-table tr').length,0,'Disconnected gas clears previous data');
  assert.ok(calls.every(c=>c.options.method==='GET'),'No commands or external requests');
  dom.window.close();console.log('LichtBlick page display, injection, refresh and session-expiry checks passed.');
 })().catch(e=>{dom.window.close();console.error(e);process.exitCode=1;});
+

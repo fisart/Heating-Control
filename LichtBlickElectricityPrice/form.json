@@ -403,7 +403,7 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Protected LichtBlick web page",
+      "caption": "Protected consumption and costs web page",
       "items": [
         {
           "type": "CheckBox",
@@ -487,6 +487,64 @@
         {
           "type": "Label",
           "caption": "Reviewed history is read from its own archive counters. Invoice totals, tariff costs and billing residuals are separate. Later closed quarter hours use recorded meter deltas and stored retail prices; missing data stay blank. No guessed reset energy or additional undocumented basic charges. The imported archives remain a fixed snapshot."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Reviewed gas consumption and invoice costs",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "GasHistoryEnabled",
+          "caption": "Show reviewed gas history in Verbrauch & Kosten"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasHistoryMetadataID",
+          "caption": "Verified gas import metadata (JSON)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasHistoryCleanedCounterID",
+          "caption": "Reviewed observed cumulative gas (m3)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasHistoryDailyID",
+          "caption": "Reviewed observed daily gas (m3)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasHistoryReferenceM3ID",
+          "caption": "Sparse invoice-reference cumulative gas (m3)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasHistoryReferenceKWhID",
+          "caption": "Sparse invoice-reference cumulative gas (kWh)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasHistoryQualityID",
+          "caption": "Reviewed daily quality bitmask"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasHistoryLaterCounterID",
+          "caption": "Original raw gas counter for later recorded events"
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "GasHistoryLaterCounterScale",
+          "caption": "Later raw counter scale to m3",
+          "minimum": 1e-06,
+          "maximum": 100,
+          "digits": 6
+        },
+        {
+          "type": "Label",
+          "caption": "Invoice references remain sparse. Daily m3 are observed values, not invoice-normalized or converted to guessed kWh. Costs and aid apply to complete invoice periods only. Later source reads leave the reviewed archives unchanged. Water has a separate tab awaiting source review."
         }
       ]
     }

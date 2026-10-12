@@ -70,6 +70,8 @@ explicit invoice reconciliation. Later closed quarter hours use the recorded liv
 meter and stored retail prices; missing data remain gaps. The connection is opt-in
 and read-only. See [consumption history](docs/lichtblick-electricity-price.md#reviewed-electricity-consumption-and-costs--0311).
 
+Version **0.3.12**, build 22 names the protected page **Verbrauch & Kosten** and separates **Strom**, **Gas** and **Wasser** tabs. The existing hook and electricity functions remain compatible. Gas reads a reviewed snapshot, sparse invoice references and later raw-counter events without changing the prepared archives. Daily kWh/costs and missing reset consumption are not invented. Water awaits its source review. See [gas history and page setup](docs/consumption-and-costs.md).
+
 ## Installation and safe handover
 
 1. Add `https://github.com/fisart/Heating-Control` in IP-Symcon Module Control.
@@ -357,3 +359,4 @@ Symcon stub to check legacy conversion, multiple sensor subscriptions, typed
 flap commands, recovery switch transitions, normal fan control, unchanged dry-run decisions, backup/restore, external status
 publishing, shutdown/bypass behavior and invalid input.
 It does not replace a visual check of the native popup in the Symcon console.
+

@@ -1,17 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LichtBlick · Heating decision</title>
+<title>Verbrauch &amp; Kosten</title>
 <style nonce="{{NONCE}}">
 :root{color-scheme:light;--ink:#183b38;--muted:#566f6b;--line:#dbe6df;--paper:#f3f6f1;--green:#216352}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,sans-serif}main{max-width:1140px;margin:auto;padding:30px 22px 60px}header{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.2;margin:5px 0}h2{font-size:1.15rem;margin:0 0 15px}.eyebrow{text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--muted)}p{margin:8px 0;color:var(--muted)}button,.button{display:inline-block;border:1px solid var(--line);border-radius:8px;background:white;padding:10px 15px;font:inherit;color:var(--ink);text-decoration:none;cursor:pointer}button:disabled{opacity:.5;cursor:wait}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #ce8f2f;outline-offset:3px}.toolbar{display:flex;gap:10px;flex-wrap:wrap}.status{padding:13px 16px;border-radius:10px;background:#e5eee6;margin:24px 0}.status.error{background:#ffe6d5;color:#743617}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card,section.panel,#published-intervals{background:white;border:1px solid var(--line);border-radius:14px;padding:22px}.card label{color:var(--muted);font-size:.88rem}.value{font-size:2.1rem;font-weight:650;letter-spacing:-.03em;margin:10px 0 2px}.unit{font-size:.85rem;color:var(--muted);font-weight:400;letter-spacing:0}.card small{display:block;color:var(--muted)}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}dt{color:var(--muted)}dd{margin:0;text-align:right;font-weight:550}.note{border-left:3px solid #c79335;padding-left:14px;font-size:.9rem}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}thead{color:var(--muted)}tr.current{background:#eaf2ea}section.panel{margin-top:16px}details{margin-top:16px}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto;font-size:.8rem}footer{margin-top:22px;color:var(--muted);font-size:.85rem}[hidden]{display:none!important}@media(max-width:750px){.grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}.value{font-size:1.9rem}main{padding:20px 14px}dl{gap:10px;font-size:.92rem}}
-.history-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px}.history-controls label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted)}input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--ink)}#price-chart,#consumption-chart{display:block;width:100%;height:auto;min-height:220px}#history-data{max-height:320px;overflow:auto}.legend{font-size:.85rem}.legend span{display:inline-block;margin-right:16px}.quote-key{color:#216352}.reconstruction-key{color:#a96914}#published-intervals>summary{font-size:1.15rem}#published-intervals[open]>summary{margin-bottom:15px}</style>
+.history-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px}.history-controls label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted)}input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--ink)}#price-chart,#consumption-chart{display:block;width:100%;height:auto;min-height:220px}#history-data{max-height:320px;overflow:auto}.legend{font-size:.85rem}.legend span{display:inline-block;margin-right:16px}.quote-key{color:#216352}.reconstruction-key{color:#a96914}#published-intervals>summary{font-size:1.15rem}#published-intervals[open]>summary{margin-bottom:15px}.consumption-tabs{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}.consumption-tabs [aria-selected="true"]{background:var(--green);color:white;border-color:var(--green)}#gas-chart{display:block;width:100%;height:auto;min-height:220px}.gas-summary{margin:16px 0}button[role="tab"]:focus-visible{outline:3px solid #ce8f2f;outline-offset:3px}</style>
 </head>
 <body data-path="{{PATH}}">
 <main>
-<header><div><div class="eyebrow">Energy · Instance {{INSTANCE}}</div><h1>LichtBlick & heating</h1><p>Electricity prices and the air-heating source recommendation.</p></div><nav class="toolbar" aria-label="Page controls"><a id="portal" class="button" href="{{PORTAL}}" hidden>Back to portal</a><button id="back">Back</button><button id="refresh">Refresh data</button></nav></header>
-<div id="status" class="status" role="status">Loading protected data…</div><a id="login" class="button" href="{{LOGIN}}" hidden>Sign in with your portal passkey</a>
+<header><div><div class="eyebrow">Hausverbrauch · Instanz {{INSTANCE}}</div><h1>Verbrauch &amp; Kosten</h1><p>Strom, Gas und Wasser im Überblick.</p></div><nav class="toolbar" aria-label="Page controls"><a id="portal" class="button" href="{{PORTAL}}" hidden>Zurück zum Portal</a><button id="back">Zurück</button><button id="refresh">Daten aktualisieren</button></nav></header>
+<div id="status" class="status" role="status">Geschützte Daten werden geladen…</div><a id="login" class="button" href="{{LOGIN}}" hidden>Mit Portal-Passkey anmelden</a>
 <div id="dashboard" hidden>
+<nav class="consumption-tabs" role="tablist" aria-label="Verbrauchsarten">
+<button id="tab-strom" type="button" role="tab" aria-selected="true" aria-controls="panel-strom" data-consumption-tab="strom">Strom</button>
+<button id="tab-gas" type="button" role="tab" aria-selected="false" aria-controls="panel-gas" data-consumption-tab="gas" tabindex="-1">Gas</button>
+<button id="tab-wasser" type="button" role="tab" aria-selected="false" aria-controls="panel-wasser" data-consumption-tab="wasser" tabindex="-1">Wasser</button>
+</nav>
+<div id="panel-strom" role="tabpanel" aria-labelledby="tab-strom" lang="en">
 <div class="grid">
 <article class="card"><label>Current electricity price</label><div class="value" id="price">—</div><small id="price-period"></small><small id="price-valid"></small></article>
 <article class="card"><label>Air-heating recommendation</label><div class="value" id="source">—</div><small id="power"></small><small id="valid-until"></small></article>
@@ -38,9 +44,24 @@
 <p class="note">Invoice totals are authoritative. The billing difference is shown separately for complete invoice periods; it is not spread across days or used to alter unit prices. Later periods show energy charges only. Missing meter data or retail prices stay blank; known subtotals are not complete bills.</p>
 <details><summary>Period values and quality</summary><div class="table-wrap"><table><thead><tr><th>Berlin period · start</th><th>Cleaned kWh</th><th>Reference kWh</th><th>Tariff EUR</th><th>Quality</th></tr></thead><tbody id="consumption-table"></tbody></table></div></details>
 <details open><summary>Invoice / app reconciliation</summary><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Period</th><th>Reference kWh</th><th>Invoice / app EUR</th><th>Tariff curve EUR</th><th>Difference EUR</th><th>Selection</th></tr></thead><tbody id="consumption-references"></tbody></table></div></details></section>
-<details class="panel"><summary>Debug log</summary><pre id="debug"></pre></details>
 </div>
-<footer>Read-only. A source recommendation is not evidence that equipment is running. HeatingControl applies heating demand, permissions and transfer delays. Data refreshes every 60 seconds.</footer>
+<div id="panel-gas" role="tabpanel" aria-labelledby="tab-gas" hidden>
+<section class="panel"><h2>Gasverbrauch &amp; Rechnungen</h2>
+<p>Bereinigte beobachtete Zählerzunahmen in m³. Rechnungswerte sind die verbindliche Referenz für kWh und Kosten.</p>
+<p id="gas-status" role="status">Gasdaten sind noch nicht verbunden.</p>
+<div id="gas-controls" class="history-controls" hidden><label>Zeitraum<select id="gas-range"><option value="all">Gesamter Zeitraum</option><option value="year">Dieses Jahr</option><option value="month">Dieser Monat</option><option value="7">Letzte 7 Tage</option><option value="custom">Eigene Auswahl</option></select></label><label>Von<input id="gas-from" type="date"></label><label>Bis<input id="gas-to" type="date"></label><label>Gruppierung<select id="gas-resolution"><option value="auto">Automatisch</option><option value="daily">Tage</option><option value="monthly">Monate</option><option value="yearly">Jahre</option></select></label><button id="gas-show">Zeitraum anzeigen</button></div>
+<dl id="gas-totals" class="gas-summary"></dl>
+<svg id="gas-chart" viewBox="0 0 1000 310" role="img" aria-label="Beobachtete Gaszählerzunahmen in Kubikmetern"></svg>
+<p class="legend">Grün: beobachtete Werte · Orange: bekannte Teilmenge bei fehlenden oder unklaren Intervallen.</p>
+<p class="note">Fehlende Archiveinträge bedeuten nicht automatisch Nullverbrauch. Rücksetzungen und Abweichungen zu Rechnungen sind gekennzeichnet. Die ungeklärten Differenzen werden nicht auf Tage verteilt. Spätere Messwerte sind noch nicht anhand einer Rechnung geprüft.</p>
+<details><summary>Beobachtete Werte und Qualität</summary><div class="table-wrap"><table><thead><tr><th>Zeitraum ab</th><th>Beobachtet m³</th><th>Bekannte Teilmenge m³</th><th>Qualität</th></tr></thead><tbody id="gas-table"></tbody></table></div></details>
+<h2>Rechnungsvergleich</h2><p>Die Summe enthält nur vollständig ausgewählte Rechnungsperioden. Bei einer Teilauswahl zeigt die Tabelle die gesamte Rechnung zur Orientierung; ihre Kosten werden nicht anteilig angesetzt. Entlastungen sind separat ausgewiesen.</p>
+<div class="table-wrap"><table><thead><tr><th>Rechnungszeitraum</th><th>Rechnung m³</th><th>Beobachtet m³</th><th>Rechnung − beobachtet m³</th><th>Rechnung kWh</th><th>Brutto EUR</th><th>Entlastung EUR</th><th>Nach Entlastung EUR</th><th>Auswahl</th></tr></thead><tbody id="gas-invoices"></tbody></table></div>
+</section></div>
+<div id="panel-wasser" role="tabpanel" aria-labelledby="tab-wasser" hidden><section class="panel"><h2>Wasserverbrauch &amp; Kosten</h2><p>Wasserdaten sind noch nicht verbunden.</p><p>Für diesen Bereich müssen wir zuerst Wasserzähler, Archivaufzeichnung und Rechnungen prüfen.</p></section></div>
+<details class="panel"><summary>Diagnoseprotokoll</summary><pre id="debug"></pre></details>
+</div>
+<footer>Nur lesender Zugriff. Datenaktualisierung alle 60 Sekunden.</footer>
 </main>
 <script nonce="{{NONCE}}">
 'use strict';
@@ -51,6 +72,7 @@ function rows(id,entries){const root=el(id);root.replaceChildren();for(const [la
 function table(id,entries,current=-1){const root=el(id);root.replaceChildren();entries.forEach((row,i)=>{const tr=document.createElement('tr');if(i===current)tr.className='current';row.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.append(td);});root.append(tr);});}
 function render(s){
  const v=s.values,c=s.settings,r=s.recommendation,model=c.weatherEnabled&&v.WeatherModelValid;
+ renderGasSettings(c);
  el('consumption-panel').hidden=!c.consumptionHistoryEnabled;
  consumptionStart=c.consumptionHistoryFrom||'';consumptionThrough=c.consumptionHistoryThrough||'';
  el('consumption-from').min=consumptionStart;el('consumption-to').min=consumptionStart;
@@ -159,15 +181,85 @@ async function loadConsumption(){if(consumptionBusy||el('consumption-panel').hid
 el('consumption-range').addEventListener('change',()=>{chooseConsumptionDates();loadConsumption();});
 el('consumption-show').addEventListener('click',()=>{el('consumption-range').value='custom';loadConsumption();});
 el('consumption-resolution').addEventListener('change',loadConsumption);el('consumption-metric').addEventListener('change',()=>{if(consumptionData)drawConsumption(consumptionData);});
+let activeConsumptionTab='strom',gasEnabled=false,gasStart='',gasThrough='',gasConfigError='',gasBusy=false,gasRequest=0;
+const numDE=(v,d=2)=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+function clearGas(){for(const id of ['gas-chart','gas-totals','gas-table','gas-invoices'])el(id).replaceChildren();}
+function renderGasSettings(c){
+ gasEnabled=c.gasHistoryEnabled===true;gasStart=c.gasHistoryFrom||'';gasThrough=c.gasHistoryThrough||'';gasConfigError=c.gasHistoryError||'';
+ el('gas-controls').hidden=!gasEnabled||!!gasConfigError;el('gas-from').min=gasStart;el('gas-to').min=gasStart;
+ if(!gasEnabled||gasConfigError){++gasRequest;clearGas();el('gas-status').textContent=gasConfigError||'Gasdaten sind noch nicht verbunden.';}
+ if(gasEnabled&&!gasConfigError&&el('gas-range').value!=='custom')chooseGasDates();
+}
+function chooseGasDates(){
+ if(!gasStart)return;const today=berlinDay(),range=el('gas-range').value;if(range==='custom')return;
+ const from=range==='all'?gasStart:range==='year'?today.slice(0,4)+'-01-01':range==='month'?today.slice(0,7)+'-01':dayShift(today,-6);
+ el('gas-from').value=from<gasStart?gasStart:from;el('gas-to').value=today;
+}
+function gasQuality(flags){
+ const labels=[[1,'Rücksetzung'],[2,'Veraltete Werte bereinigt'],[4,'Langer Änderungsabstand'],[8,'Keine Archiveinträge'],[16,'Ableseuhrzeit unbekannt'],[32,'Rechnungsabweichung unverteilt'],[64,'Ohne Rechnungsreferenz'],[128,'Teiltag'],[256,'Ungeklärtes Resetintervall'],[512,'Ungeklärter späterer Rücksprung'],[1024,'Spätere ungeprüfte Messwerte']];
+ return labels.filter(([bit])=>flags&bit).map(([,label])=>label).join(' · ')||'Beobachtet';
+}
+function drawGas(h){
+ const t=h.totals,hasInvoices=t.completeInvoices>0;
+ el('gas-status').textContent='Geprüfter Archivstand bis '+h.preparedThrough.slice(0,10)+' · '+h.points.length+' Zeiträume · spätere Messungen getrennt gekennzeichnet.';
+ rows('gas-totals',[
+  ['Bekannte beobachtete Zunahmen',numDE(t.knownObservedM3)+' m³'],
+  ['Tage mit fehlenden Beobachtungen',String(t.missingObservationDays)],['Tage mit Reset-/Rücksprungintervallen',String(t.resetIntervalDays)],
+  ['Tage mit späteren ungeprüften Messwerten',String(t.laterUnreviewedDays)],
+  ['Vollständig ausgewählte Rechnungen',String(t.completeInvoices)],
+  ['Rechnungsverbrauch dieser Perioden',hasInvoices?numDE(t.invoicedM3)+' m³ / '+numDE(t.invoicedKWh,0)+' kWh':'—'],
+  ['Rechnungskosten brutto',hasInvoices?numDE(t.supplyGrossEuro)+' EUR':'—'],
+  ['Entlastungen',hasInvoices?numDE(t.creditsEuro)+' EUR':'—'],
+  ['Kosten nach Entlastung',hasInvoices?numDE(t.costAfterAidEuro)+' EUR':'—']]);
+ table('gas-table',h.points.map(p=>[stamp(p.start),numDE(p.observedM3),numDE(p.knownObservedM3),gasQuality(p.qualityFlags)]));
+ table('gas-invoices',h.invoices.map(r=>[r.from+' – '+r.to,numDE(r.supplier_m3),numDE(r.cleaned_observed_m3),numDE(r.supplier_minus_cleaned_m3),numDE(r.supplier_kwh,0),numDE(r.supply_gross_eur),numDE(r.december_aid_gross_eur+r.price_brake_credit_eur),numDE(r.cost_after_aid_eur),r.wholeInvoiceSelected?'Vollständig':'Teilauswahl · ganze Rechnung gezeigt']));
+ const root=el('gas-chart');root.replaceChildren();
+ const points=h.points.filter(p=>typeof p.knownObservedM3==='number'&&Number.isFinite(p.knownObservedM3)&&(p.observedM3!==null||p.knownObservedM3>0));
+ if(!points.length){root.append(svgNode('text',{x:40,y:50,fill:'#566f6b'},'Keine beobachteten Werte im Zeitraum.'));return;}
+ const max=Math.max(1,...points.map(p=>p.knownObservedM3)),left=65,right=970,top=25,bottom=255,span=Math.max(1,h.to-h.from);
+ const x=t=>left+(right-left)*(t-h.from)/span,y=v=>bottom-(bottom-top)*v/max;
+ root.append(svgNode('line',{x1:left,y1:bottom,x2:right,y2:bottom,stroke:'#dbe6df'}));
+ for(let i=0;i<5;i++){const v=max*i/4;root.append(svgNode('text',{x:left-8,y:y(v)+4,'text-anchor':'end',fill:'#566f6b','font-size':12},numDE(v,1)));}
+ for(const p of points){const partial=p.observedM3===null||!!(p.qualityFlags&(1|8|256|512));const bar=svgNode('rect',{x:x(p.start),y:y(p.knownObservedM3),width:Math.max(1,x(Math.min(p.end,h.to))-x(p.start)-1),height:Math.max(0,bottom-y(p.knownObservedM3)),fill:partial?'#a96914':'#216352'});bar.append(svgNode('title',{},stamp(p.start)+' · '+numDE(p.knownObservedM3)+' m³'+(partial?' · bekannte Teilmenge':'')+' · '+gasQuality(p.qualityFlags)));root.append(bar);}
+ root.append(svgNode('text',{x:left,y:285,fill:'#566f6b','font-size':12},stamp(h.from)));
+ root.append(svgNode('text',{x:right,y:285,'text-anchor':'end',fill:'#566f6b','font-size':12},stamp(h.to)));
+}
+async function loadGas(){
+ if(gasBusy||!gasEnabled||gasConfigError||activeConsumptionTab!=='gas')return;
+ gasBusy=true;const ticket=++gasRequest;el('gas-show').disabled=true;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+ try{
+  const url=path+'?'+new URLSearchParams({view:'gas-history',from:el('gas-from').value,to:el('gas-to').value,resolution:el('gas-resolution').value});
+  const reply=await fetch(url,{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
+  if(ticket!==gasRequest)return;
+  if(reply.status===401||reply.status===403){el('dashboard').hidden=true;el('login').hidden=false;throw new Error('Passkey-Sitzung abgelaufen oder Zugriff verweigert.');}
+  const h=await reply.json();if(!reply.ok)throw new Error(h.error||'Gasdaten sind nicht verfügbar.');if(ticket===gasRequest)drawGas(h);
+ }catch(e){if(ticket===gasRequest){clearGas();el('gas-status').textContent=e.name==='AbortError'?'Gasabfrage hat das Zeitlimit erreicht.':e.message;}}
+ finally{clearTimeout(timeout);gasBusy=false;el('gas-show').disabled=false;}
+}
+const consumptionTabs=[...document.querySelectorAll('[data-consumption-tab]')];
+function activateConsumptionTab(name){
+ activeConsumptionTab=name;
+ for(const button of consumptionTabs){const selected=button.dataset.consumptionTab===name;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;el('panel-'+button.dataset.consumptionTab).hidden=!selected;}
+ if(name==='gas')loadGas();if(name==='strom'){loadHistory();loadConsumption();}
+}
+consumptionTabs.forEach((button,index)=>{
+ button.addEventListener('click',()=>activateConsumptionTab(button.dataset.consumptionTab));
+ button.addEventListener('keydown',event=>{let next=index;if(event.key==='ArrowRight')next=(index+1)%consumptionTabs.length;else if(event.key==='ArrowLeft')next=(index+consumptionTabs.length-1)%consumptionTabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=consumptionTabs.length-1;else return;event.preventDefault();consumptionTabs[next].focus();activateConsumptionTab(consumptionTabs[next].dataset.consumptionTab);});
+});
+el('gas-range').addEventListener('change',()=>{chooseGasDates();loadGas();});
+el('gas-show').addEventListener('click',()=>{el('gas-range').value='custom';loadGas();});
+el('gas-resolution').addEventListener('change',loadGas);
+
 let busy=false;
 async function load(){if(busy)return;busy=true;el('refresh').disabled=true;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);try{
  const reply=await fetch(path+'?view=state',{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
  if(reply.status===401||reply.status===403){el('login').hidden=false;throw new Error('Portal session expired or origin rejected. Sign in through the configured HTTPS portal.');}
- if(!reply.ok)throw new Error('Data unavailable. Check the module and SecretsManager configuration.');render(await reply.json());if(el('history-range').value!=='custom')chooseHistoryDates();if(!el('history-from').value)chooseHistoryDates();loadHistory();if(el('consumption-range').value!=='custom')chooseConsumptionDates();loadConsumption();
- }catch(error){++historyRequest;++consumptionRequest;consumptionData=null;el('price-chart').replaceChildren();el('history-table').replaceChildren();el('consumption-chart').replaceChildren();el('consumption-table').replaceChildren();el('consumption-references').replaceChildren();el('consumption-totals').replaceChildren();el('dashboard').hidden=true;el('status').classList.add('error');el('status').textContent=error.name==='AbortError'?'Request timed out; displayed data has been cleared.':error.message;}
+ if(!reply.ok)throw new Error('Data unavailable. Check the module and SecretsManager configuration.');render(await reply.json());if(el('history-range').value!=='custom')chooseHistoryDates();if(!el('history-from').value)chooseHistoryDates();if(activeConsumptionTab==='strom')loadHistory();if(el('consumption-range').value!=='custom')chooseConsumptionDates();if(activeConsumptionTab==='strom')loadConsumption();if(activeConsumptionTab==='gas')loadGas();
+ }catch(error){++historyRequest;++consumptionRequest;++gasRequest;clearGas();consumptionData=null;el('price-chart').replaceChildren();el('history-table').replaceChildren();el('consumption-chart').replaceChildren();el('consumption-table').replaceChildren();el('consumption-references').replaceChildren();el('consumption-totals').replaceChildren();el('dashboard').hidden=true;el('status').classList.add('error');el('status').textContent=error.name==='AbortError'?'Request timed out; displayed data has been cleared.':error.message;}
  finally{clearTimeout(timeout);busy=false;el('refresh').disabled=false;}}
 if(el('portal').getAttribute('href')){el('portal').hidden=false;el('back').hidden=true;}
 el('refresh').addEventListener('click',load);el('back').addEventListener('click',()=>history.back());load();setInterval(load,60000);
 </script>
 </body>
 </html>
+

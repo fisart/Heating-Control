@@ -24,11 +24,12 @@ check(response($m)['status']===303 && response($m)['headers']['Location']==='/ho
 check(response($m,'GET',['view'=>'state'])['status']===401,'Anonymous cannot read data');
 check(response($m,'GET',['view'=>'price-history','from'=>'2026-10-01','to'=>'2026-10-11'])['status']===401,'Anonymous history blocked');
 check(response($m,'GET',['view'=>'consumption-history','from'=>'2024-10-01','to'=>'2025-09-30'])['status']===401,'Anonymous consumption/cost history blocked');
+check(response($m,'GET',['view'=>'gas-history','from'=>'2024-10-26','to'=>'2024-10-28'])['status']===401,'Anonymous gas history blocked');
 check(response($m,'HEAD')['status']===401,'Anonymous HEAD blocked');
 check(response($m,'POST')['status']===405,'Read-only methods only');
 $GLOBALS['authenticated']='true';check(response($m)['status']===303,'Strict Boolean authentication');
 $GLOBALS['authenticated']=true;$page=response($m);
-check($page['status']===200 && str_contains($page['body'],'LichtBlick & heating') && !str_contains($page['body'],'{{'),'Authenticated template resolved');
+check($page['status']===200 && str_contains($page['body'],'Verbrauch &amp; Kosten') && !str_contains($page['body'],'{{'),'Authenticated template resolved');
 check(str_contains($page['headers']['Content-Security-Policy'],"script-src 'nonce-") && str_contains($page['headers']['Content-Security-Policy'],"frame-ancestors 'none'"),'Nonce CSP and no frames');
 check($page['headers']['Content-Security-Policy']!==response($m)['headers']['Content-Security-Policy'],'Fresh nonce');
 check($page['headers']['Cache-Control']==='private, no-store, max-age=0','Private data never cached');
@@ -53,6 +54,9 @@ check(response($m,'GET',['view'=>'price-history','from'=>'2026-10-01','to'=>'202
 check(response($m,'GET',['view'=>'consumption-history','from'=>'2024-10-01','to'=>'2025-09-30'],'evil.example')['status']===403,'Consumption history origin enforced');
 check(response($m,'GET',['view'=>'consumption-history','from'=>'2024-10-01','to'=>'2025-09-30'])['status']===503,'Disconnected consumption history is unavailable');
 check(response($m,'GET',['view'=>'consumption-history','from'=>['2024-10-01'],'to'=>'2025-09-30'])['status']===400,'Consumption query rejects array inputs');
+check(response($m,'GET',['view'=>'gas-history','from'=>'2024-10-26','to'=>'2024-10-28'],'evil.example')['status']===403,'Gas history origin enforced');
+check(response($m,'GET',['view'=>'gas-history','from'=>'2024-10-26','to'=>'2024-10-28'])['status']===503,'Disconnected gas history unavailable');
+check(response($m,'GET',['view'=>'gas-history','from'=>['2024-10-26'],'to'=>'2024-10-28'])['status']===400,'Gas dates reject array inputs');
 check(serialize([$m->values,$m->attributes,$m->buffers,$m->properties])===$before,'History reads do not mutate stored state');
 $savedValidity=$m->values['PriceValid'];$m->values['PriceValid']=false;
 $data=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
@@ -85,3 +89,4 @@ $m->properties['WebEnabled']=false;$m->SetupHook();check(json_decode($GLOBALS['i
 $m->properties['WebEnabled']=true;$GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/lichtblick_1","TargetID":99}]';$m->SetupHook();
 check(str_contains($m->values['WebPath'],'another object') && $GLOBALS['hookApplies']===$count+1,'Cannot steal a route from another owner');
 echo "LichtBlick secure read-only page and webhook lifecycle checks passed.\n";
+
