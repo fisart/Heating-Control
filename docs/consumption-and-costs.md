@@ -1,4 +1,4 @@
-# Verbrauch & Kosten — 0.3.18, build 28
+# Verbrauch & Kosten — 0.3.19, build 29
 
 The protected page has five tabs: **Strom**, **Gas**, **Wasser**, **Total consumption**, **Heizung**.
 Strom shows electricity prices, consumption and invoice reconciliation. Heizung
@@ -246,3 +246,26 @@ and provisional historical calibration remain visible. Optional
 Use `rainExcludeLeapDay: true` only when documented rainwater billing excludes
 29 February from its 365-day allocation. Drinking-water and sewage basic fees
 still accrue on that day. By default all calendar days receive rainwater fees.
+
+## Cursor tooltips and dataset selection — 0.3.19
+
+All five utility charts have immediate cursor tooltips showing the actual bucket
+period, visible dataset values, units and quality. Zero is distinct from an
+unrecorded value; gaps stay unrecorded. SVG screen transforms handle responsive
+layouts. Tap a chart on touch devices, or focus it and use Left/Right/Home/End
+for keyboard inspection. Escape, leaving the chart or session expiry clears the
+tooltip and its cached data.
+
+Checkbox legends select each dataset independently. Use **None** and then check
+one dataset to isolate it, or select several. The vertical axis and visible chart
+subtotal rescale to the chosen datasets. The selected-period summary and source
+tables remain the full data totals. Selection is retained per chart/metric across
+60-second refreshes, grouping/date changes and tab switches. Electricity cleaned
+and reference kWh may be compared as separate bars, without summing two views of
+the same consumption. Price sources have their own controls.
+
+An included garden quantity and its parent main quantity are mutually exclusive
+in a volume chart. Garden manual volumes are shown only when a complete recorded
+period fits a chart bucket; finer buckets stay unrecorded. Select Whole-period
+total for an eligible multi-day manual reference. Dated tariff adjustments remain
+signed cost datasets. These controls and tooltips never write any archive data.

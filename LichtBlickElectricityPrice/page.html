@@ -5,7 +5,7 @@
 <title>Verbrauch &amp; Kosten</title>
 <style nonce="{{NONCE}}">
 :root{color-scheme:light;--ink:#183b38;--muted:#566f6b;--line:#dbe6df;--paper:#f3f6f1;--green:#216352}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,sans-serif}main{max-width:1140px;margin:auto;padding:30px 22px 60px}header{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.2;margin:5px 0}h2{font-size:1.15rem;margin:0 0 15px}.eyebrow{text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;color:var(--muted)}p{margin:8px 0;color:var(--muted)}button,.button{display:inline-block;border:1px solid var(--line);border-radius:8px;background:white;padding:10px 15px;font:inherit;color:var(--ink);text-decoration:none;cursor:pointer}button:disabled{opacity:.5;cursor:wait}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #ce8f2f;outline-offset:3px}.toolbar{display:flex;gap:10px;flex-wrap:wrap}.status{padding:13px 16px;border-radius:10px;background:#e5eee6;margin:24px 0}.status.error{background:#ffe6d5;color:#743617}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card,section.panel,#published-intervals{background:white;border:1px solid var(--line);border-radius:14px;padding:22px}.card label{color:var(--muted);font-size:.88rem}.value{font-size:2.1rem;font-weight:650;letter-spacing:-.03em;margin:10px 0 2px}.unit{font-size:.85rem;color:var(--muted);font-weight:400;letter-spacing:0}.card small{display:block;color:var(--muted)}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}dt{color:var(--muted)}dd{margin:0;text-align:right;font-weight:550}.note{border-left:3px solid #c79335;padding-left:14px;font-size:.9rem}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}thead{color:var(--muted)}tr.current{background:#eaf2ea}section.panel{margin-top:16px}details{margin-top:16px}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto;font-size:.8rem}footer{margin-top:22px;color:var(--muted);font-size:.85rem}[hidden]{display:none!important}@media(max-width:750px){.grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}.value{font-size:1.9rem}main{padding:20px 14px}dl{gap:10px;font-size:.92rem}}
-.history-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px}.history-controls label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted)}input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--ink)}#price-chart,#consumption-chart,#water-chart,#total-chart{display:block;width:100%;height:auto;min-height:220px}#history-data{max-height:320px;overflow:auto}.legend{font-size:.85rem}.legend span{display:inline-block;margin-right:16px}.quote-key{color:#216352}.reconstruction-key{color:#a96914}#published-intervals>summary{font-size:1.15rem}#published-intervals[open]>summary{margin-bottom:15px}.consumption-tabs{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}.consumption-tabs [aria-selected="true"]{background:var(--green);color:white;border-color:var(--green)}#gas-chart{display:block;width:100%;height:auto;min-height:220px}.gas-summary{margin:16px 0}button[role="tab"]:focus-visible{outline:3px solid #ce8f2f;outline-offset:3px}</style>
+.history-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px}.history-controls label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted)}input,select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--ink)}#price-chart,#consumption-chart,#water-chart,#total-chart{display:block;width:100%;height:auto;min-height:220px}#history-data{max-height:320px;overflow:auto}.legend{font-size:.85rem}.legend span{display:inline-block;margin-right:16px}.quote-key{color:#216352}.reconstruction-key{color:#a96914}#published-intervals>summary{font-size:1.15rem}#published-intervals[open]>summary{margin-bottom:15px}.consumption-tabs{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}.consumption-tabs [aria-selected="true"]{background:var(--green);color:white;border-color:var(--green)}#gas-chart{display:block;width:100%;height:auto;min-height:220px}.gas-summary{margin:16px 0}button[role="tab"]:focus-visible{outline:3px solid #ce8f2f;outline-offset:3px}.chart-series{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.chart-series label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}.chart-series input{accent-color:var(--green)}.chart-series input:not(:checked)+span{opacity:.55}.chart-series button{padding:4px 9px;font-size:.8rem}.chart-tooltip{position:fixed;z-index:1000;max-width:min(390px,calc(100vw - 24px));padding:10px 13px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);box-shadow:0 4px 20px #183b3826;white-space:pre-line;overflow-wrap:anywhere;pointer-events:none;font-size:.85rem;line-height:1.55}.chart-cursor{stroke:#486b66;stroke-width:1;stroke-dasharray:4 3;pointer-events:none}[data-interactive-chart]:focus-visible{outline:2px solid #ce8f2f;outline-offset:2px}</style>
 </head>
 <body data-path="{{PATH}}">
 <main>
@@ -24,7 +24,7 @@
 <details id="published-intervals" class="panel"><summary>Published price intervals</summary><p id="coverage">Only actual intervals returned by LichtBlick are shown.</p><div class="table-wrap"><table><thead><tr><th>Berlin time · start</th><th>End</th><th>ct/kWh</th></tr></thead><tbody id="schedule"></tbody></table></div></details>
 <section class="panel"><h2>Price history</h2><p>Contract starts <span id="history-start">1 October 2026</span>. Stored LichtBlick quotes and imported estimates are shown separately. Missing prices are left blank.</p>
 <div class="history-controls"><label>Period<select id="history-range"><option value="7">Last 7 days</option><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="contract">Since contract start</option><option value="custom">Custom dates</option></select></label><label>From<input id="history-from" type="date"></label><label>Through<input id="history-to" type="date"></label><button id="history-show">Show chart</button></div>
-<p id="history-summary" role="status">Loading stored history…</p><div id="history-notice" class="status" role="status" hidden><p id="history-notice-text"></p></div><div class="legend"><span class="quote-key">● Stored LichtBlick quote</span><span class="reconstruction-key">● Imported estimate / other imported price</span></div>
+<p id="history-summary" role="status">Loading stored history…</p><div id="history-notice" class="status" role="status" hidden><p id="history-notice-text"></p></div><div id="price-legend" class="legend"></div>
 <svg id="price-chart" viewBox="0 0 1000 310" role="img" aria-label="Price history in cents per kilowatt-hour"></svg><p class="note">Daily means for longer periods are time averages of available prices, not consumption-weighted billing prices. Stored quote basic charges are separate. App-normalized estimates may already absorb basic charges included in the reference total. Imported estimate market data: Bundesnetzagentur | SMARD.de (CC BY 4.0).</p>
 <p id="estimate-notice" class="note" hidden>Imported estimates are fitted to the app total, not verified tariff quotes. Their effective addition may include fixed charges already present in that total; do not add those charges again.</p><p id="history-status"></p><details><summary>Accessible price table</summary><div id="history-data" class="table-wrap"><table><thead><tr><th>Berlin time · start</th><th>Retail gross ct/kWh</th><th>Source / verification</th></tr></thead><tbody id="history-table"></tbody></table></div></details></section>
 <section id="consumption-panel" class="panel" hidden><h2>Electricity consumption & costs</h2>
@@ -126,8 +126,57 @@ function chooseHistoryDates(){const today=berlinDay(),range=el('history-range').
  let from=range==='contract'?historyStart:range==='yesterday'?dayShift(today,-1):range==='today'?today:dayShift(today,-6);
  el('history-from').value=from<historyStart?historyStart:from;el('history-to').value=range==='yesterday'?dayShift(today,-1):today;}
 function svgNode(name,attrs,text){const n=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;}
-function drawHistory(h){const root=el('price-chart');root.replaceChildren();const key='price';
- const points=h.points.filter(p=>typeof p[key]==='number'&&Number.isFinite(p[key]));
+const chartSelections=new Map(),chartBindings=new WeakMap();
+let chartTooltip=null;
+function clearChart(root){hideChartTooltip();const b=chartBindings.get(root);if(b){b.options=null;b.cursor=null;}if(root.tagName.toLowerCase()==='svg')el(root.id.replace('-chart','-legend'))?.replaceChildren();root.replaceChildren();}
+function hideChartTooltip(){if(chartTooltip){chartTooltip.hidden=true;chartTooltip.textContent='';}for(const root of document.querySelectorAll('[data-interactive-chart]')){const c=chartBindings.get(root);if(c?.cursor){c.cursor.hidden=true;c.cursor.setAttribute('visibility','hidden');}}}
+function chartSeries(root,series,redraw,selectionKey=root.id,defaults=null){
+ let state=chartSelections.get(selectionKey);if(!state){state=new Map();chartSelections.set(selectionKey,state);}
+ let legend=el(root.id.replace('-chart','-legend'));if(!legend){legend=document.createElement('div');legend.id=root.id.replace('-chart','-legend');legend.className='legend';root.before(legend);}
+ legend.classList.add('chart-series');legend.replaceChildren();
+ for(const s of series){if(!state.has(s.key))state.set(s.key,defaults?defaults.includes(s.key):(s.defaultEnabled??true));
+  const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');input.type='checkbox';input.checked=state.get(s.key);input.dataset.series=s.key;input.setAttribute('aria-label',s.label);
+  text.textContent='● '+s.label;text.style.color=s.color;label.append(input,text);legend.append(label);
+  input.addEventListener('change',()=>{const focused=document.activeElement===input;state.set(s.key,input.checked);if(input.checked)for(const other of s.exclusiveWith||[])state.set(other,false);hideChartTooltip();redraw();if(focused)[...legend.querySelectorAll('input')].find(n=>n.dataset.series===s.key)?.focus();});
+ }
+ for(const [label,value] of [['All',true],['None',false]]){const button=document.createElement('button');button.type='button';button.textContent=label;button.addEventListener('click',()=>{const focused=document.activeElement===button;for(const s of series)state.set(s.key,value&&s.defaultEnabled!==false);hideChartTooltip();redraw();if(focused)[...legend.querySelectorAll('button')].find(n=>n.textContent===label)?.focus();});legend.append(button);}
+ return series.filter(s=>state.get(s.key));
+}
+function chartHover(root,options){
+ if(!chartTooltip){chartTooltip=document.createElement('div');chartTooltip.id='chart-tooltip';chartTooltip.className='chart-tooltip';chartTooltip.setAttribute('role','tooltip');chartTooltip.hidden=true;document.body.append(chartTooltip);document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('[data-interactive-chart]'))hideChartTooltip();});window.addEventListener('scroll',hideChartTooltip,{passive:true});}
+ let binding=chartBindings.get(root);
+ if(!binding){binding={options:null,index:0,cursor:null};chartBindings.set(root,binding);root.dataset.interactiveChart='true';root.tabIndex=0;root.setAttribute('aria-describedby','chart-tooltip');
+  const show=(index,clientX,clientY,svgX,gapTime=null)=>{
+   const c=binding.options,p=index<0?null:c.points[index];if((index>=0&&!p)||!c.series.length){hideChartTooltip();return;}if(index>=0)binding.index=index;
+   const lines=[p?stamp(p.start)+' – '+stamp(p.end):stamp(gapTime)+' · no recorded interval'];let sum=0,known=0,missing=false;
+   for(const s of c.series){const value=p?s.value(p):null,valid=typeof value==='number'&&Number.isFinite(value);const detail=p?s.detail?.(p)||'':'';
+    lines.push(s.label+': '+(valid?numDE(value,3)+' '+s.unit:'Not recorded')+(detail?' · '+detail:''));if(valid){sum+=value;known++;}else missing=true;
+   }
+   if(c.subtotal&&c.series.length>1)lines.push('Visible '+(missing?'known subtotal':'subtotal')+': '+(known?numDE(sum,3)+' '+c.series[0].unit:'Not recorded'));
+   chartTooltip.textContent=lines.join('\n');chartTooltip.hidden=false;
+   const r=chartTooltip.getBoundingClientRect(),vw=window.innerWidth||1024,vh=window.innerHeight||768;
+   chartTooltip.style.left=Math.max(8,Math.min(clientX+14,vw-r.width-8))+'px';chartTooltip.style.top=Math.max(8,Math.min(clientY+14,vh-r.height-8))+'px';
+   if(binding.cursor){root.append(binding.cursor);binding.cursor.hidden=false;binding.cursor.setAttribute('visibility','visible');binding.cursor.setAttribute('x1',svgX);binding.cursor.setAttribute('x2',svgX);}
+  };
+  const pointAt=e=>{
+   const c=binding.options,r=root.getBoundingClientRect();if(!c||!r.width||!r.height)return;
+   let x,y;const matrix=root.getScreenCTM?.();if(matrix?.inverse){const m=matrix.inverse();x=m.a*e.clientX+m.c*e.clientY+m.e;y=m.b*e.clientX+m.d*e.clientY+m.f;}else{const scale=Math.min(r.width/1000,r.height/310);x=(e.clientX-r.left-(r.width-1000*scale)/2)/scale;y=(e.clientY-r.top-(r.height-310*scale)/2)/scale;}
+   if(x<c.left||x>c.right||y<c.top||y>c.bottom){hideChartTooltip();return;}
+   const t=c.from+(x-c.left)/(c.right-c.left)*(c.to-c.from);let lo=0,hi=c.points.length-1,index=-1;
+   while(lo<=hi){const mid=(lo+hi)>>1;if(c.points[mid].start<=t){index=mid;lo=mid+1;}else hi=mid-1;}
+   if(index<0||t>=c.points[index].end){show(-1,e.clientX,e.clientY,x,t);return;}show(index,e.clientX,e.clientY,x);
+  };
+  const keyboard=()=>{const c=binding.options;if(!c?.points.length||!c.series.length)return;binding.index=Math.min(binding.index,c.points.length-1);const p=c.points[binding.index],x=c.left+((p.start+p.end)/2-c.from)/(c.to-c.from)*(c.right-c.left),r=root.getBoundingClientRect();show(binding.index,r.left+x*(r.width||1000)/1000,r.top+50,x);};
+  root.addEventListener('pointermove',pointAt);root.addEventListener('pointerdown',pointAt);root.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch')hideChartTooltip();});root.addEventListener('focus',keyboard);root.addEventListener('blur',hideChartTooltip);
+  root.addEventListener('keydown',e=>{if(e.key==='Escape'){hideChartTooltip();return;}if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const n=binding.options?.points.length||0;if(!n)return;binding.index=e.key==='Home'?0:e.key==='End'?n-1:Math.max(0,Math.min(n-1,binding.index+(e.key==='ArrowRight'?1:-1)));keyboard();});
+ }
+ binding.options={...options,points:[...options.points].sort((a,b)=>a.start-b.start)};binding.cursor=svgNode('line',{class:'chart-cursor',y1:options.top,y2:options.bottom,visibility:'hidden','aria-hidden':'true'});root.append(binding.cursor);
+}
+
+function drawHistory(h){hideChartTooltip();const root=el('price-chart');clearChart(root);const key='price';
+ const defs=[...new Set(h.points.filter(p=>typeof p.price==='number').map(p=>p.source))].map(source=>({key:source,label:source==='lichtblick-quote'?'Stored LichtBlick quote':source.includes('app-normalized-estimate')?'Imported estimate':'Imported price · '+source.replaceAll('-',' '),color:source==='lichtblick-quote'?'#216352':'#a96914',unit:'ct/kWh',value:p=>p.source===source?p.price:null,detail:p=>p.source===source?(p.verified?'confirmed':'unconfirmed'):''}));
+ const series=chartSeries(root,defs,()=>drawHistory(h));chartHover(root,{points:h.points,series,from:h.from,to:h.to,left:70,right:970,top:35,bottom:270});
+ const points=h.points.filter(p=>typeof p[key]==='number'&&Number.isFinite(p[key])&&series.some(d=>d.key===p.source));
  const missingRetail=Math.max(0,h.expectedIntervals-h.retailIntervals);
  const notice=missingRetail>0;
  const estimated=Number(h.estimatedIntervals||0);el('estimate-notice').hidden=estimated===0;
@@ -136,15 +185,15 @@ function drawHistory(h){const root=el('price-chart');root.replaceChildren();cons
  el('history-summary').textContent=h.retailIntervals+' / '+h.expectedIntervals+' intervals with retail prices · '+h.confirmedIntervals+' tariff-confirmed · '+estimated+' imported estimates · '+missingRetail+' missing retail intervals · '+h.resolution+'.';
  const sourceLabel=p=>p.price===null?'Retail price unavailable':p.source.includes('app-normalized-estimate')?'Imported estimate, not tariff-confirmed':p.source==='lichtblick-quote'?'LichtBlick quote · '+(p.verified?'tariff confirmed':'unconfirmed'):'Imported price · '+(p.verified?'tariff confirmed':'unconfirmed');
  table('history-table',h.points.map(p=>[stamp(p.start),num(p.price,3),sourceLabel(p)+(p.retailIntervals!==undefined?' · '+p.retailIntervals+'/'+p.expectedIntervals+' retail intervals':'')]));
- root.append(svgNode('title',{},'Historical retail prices, gross ct/kWh'));
- if(!points.length){root.append(svgNode('text',{x:70,y:150,fill:'#566f6b','font-size':18},'No retail history in this period. Live quotes are collected automatically; earlier estimates require a separate import.'));return;}
+ root.append(svgNode('desc',{},'Historical retail prices, gross ct/kWh'));
+ if(!points.length){root.append(svgNode('text',{x:70,y:150,fill:'#566f6b','font-size':18},series.length?'No retail history in this period. Live quotes are collected automatically; earlier estimates require a separate import.':'Select a dataset to display it.'));return;}
  const lo=Math.min(0,...points.map(p=>p[key])),hi=Math.max(1,...points.map(p=>p[key])),pad=(hi-lo)*.08,min=lo-pad,max=hi+pad;
  const x=t=>70+(t-h.from)/(h.to-h.from)*900,y=v=>270-(v-min)/(max-min)*235;
  for(let i=0;i<=4;i++){const v=min+(max-min)*i/4;root.append(svgNode('line',{x1:70,x2:970,y1:y(v),y2:y(v),stroke:'#dbe6df'}),svgNode('text',{x:62,y:y(v)+4,'text-anchor':'end',fill:'#566f6b','font-size':12},num(v,1)));}
  root.append(svgNode('line',{x1:70,x2:970,y1:y(0),y2:y(0),stroke:'#566f6b'}));
  for(const p of points){const value=p[key],start=Math.max(h.from,p.start),end=Math.min(h.to,p.end),color=p.source==='lichtblick-quote'?'#216352':'#a96914';
  const rect=svgNode('rect',{x:x(start),y:Math.min(y(value),y(0)),width:Math.max(.4,x(end)-x(start)-.4),height:Math.max(1,Math.abs(y(value)-y(0))),fill:color,opacity:p.verified?1:.55});
- rect.append(svgNode('title',{},stamp(p.start)+' – '+stamp(p.end)+' · '+num(value,3)+' ct/kWh · '+p.source+(p.source.includes('app-normalized-estimate')?' · imported estimate':p.verified?' · confirmed':' · unconfirmed')));root.append(rect);}
+ rect.append(svgNode('desc',{},stamp(p.start)+' – '+stamp(p.end)+' · '+num(value,3)+' ct/kWh · '+p.source+(p.source.includes('app-normalized-estimate')?' · imported estimate':p.verified?' · confirmed':' · unconfirmed')));root.append(rect);}
  for(let i=0;i<=3;i++){const t=h.from+(h.to-h.from)*i/3;root.append(svgNode('text',{x:x(t),y:295,'text-anchor':i===0?'start':i===3?'end':'middle',fill:'#566f6b','font-size':12},stamp(t)));}
  root.append(svgNode('text',{x:70,y:18,fill:'#183b38','font-size':13},'Retail gross · ct/kWh'));
 }
@@ -153,7 +202,7 @@ async function loadHistory(){if(historyBusy)return;historyBusy=true;const ticket
  const reply=await fetch(path+'?view=price-history&from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to),{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
  if(ticket!==historyRequest)return;if(reply.status===401||reply.status===403){el('dashboard').hidden=true;el('login').hidden=false;throw new Error('Portal session expired or origin rejected.');}
  const data=await reply.json();if(!reply.ok)throw new Error(data.error||'History unavailable.');if(ticket===historyRequest)drawHistory(data);
- }catch(error){if(ticket===historyRequest){el('price-chart').replaceChildren();el('history-table').replaceChildren();el('history-summary').textContent=error.name==='AbortError'?'History request timed out.':error.message;}}
+ }catch(error){hideChartTooltip();if(ticket===historyRequest){clearChart(el('price-chart'));el('history-table').replaceChildren();el('history-summary').textContent=error.name==='AbortError'?'History request timed out.':error.message;}}
  finally{clearTimeout(timeout);historyBusy=false;el('history-show').disabled=false;}}
 el('history-range').addEventListener('change',()=>{chooseHistoryDates();loadHistory();});el('history-show').addEventListener('click',()=>{el('history-range').value='custom';loadHistory();});
 let consumptionStart='',consumptionThrough='',consumptionBusy=false,consumptionRequest=0,consumptionData=null;
@@ -163,7 +212,7 @@ function chooseConsumptionDates(){const today=berlinDay(),range=el('consumption-
  el('consumption-to').value=range==='prepared'&&consumptionThrough?dayShift(consumptionThrough,-1):today;
 }
 function qualityText(flags){return [[1,'Boundary interpolation'],[2,'Gap / estimate'],[4,'Clock correction'],[8,'Reset correction'],[16,'Counter correction'],[32,'Outage zero'],[64,'Outage edge estimate'],[128,'Reference adjusted'],[256,'No consumption reference'],[512,'Estimated / unconfirmed price'],[2048,'Missing meter data'],[4096,'Missing retail price'],[8192,'Confirmed no consumption'],[16384,'Allocation conflicts with confirmed no use']].filter(([bit])=>flags&bit).map(([,label])=>label).join(' · ')||'Recorded';}
-function drawConsumption(h){consumptionData=h;const t=h.totals,complete=t.missingEnergyIntervals===0&&t.missingPriceIntervals===0;
+function drawConsumption(h){hideChartTooltip();consumptionData=h;const t=h.totals,complete=t.missingEnergyIntervals===0&&t.missingPriceIntervals===0;
  rows('consumption-totals',[
  ['Known cleaned consumption',num(t.knownCleanedKWh)+' kWh'],['Known reference consumption',num(t.knownReferenceKWh)+' kWh'],
  ['Known tariff cost',num(t.knownTariffCostEuro)+' EUR'],['Full reference-period billing difference',num(t.fullPeriodReconciliationEuro)+' EUR'],
@@ -173,11 +222,14 @@ function drawConsumption(h){consumptionData=h;const t=h.totals,complete=t.missin
  el('consumption-status').textContent=(complete?'All displayed intervals priced. ':'Incomplete cost coverage. ')+h.points.length+' '+h.resolution+' periods · reviewed archive through '+stamp(Date.parse(h.preparedThrough)/1000)+' · '+num(100*t.coveredSeconds/t.requestedSeconds,1)+'% closed-interval time coverage.';
  table('consumption-table',h.points.map(p=>[stamp(p.start),num(p.cleanedKWh,3),num(p.referenceKWh,3),num(p.tariffCostEuro),qualityText(p.qualityFlags)]));
  table('consumption-references',h.references.map(r=>[r.invoice_number?'Invoice '+r.invoice_number:r.reference,r.from+' – '+r.to_inclusive,num(r.billed_kwh,3),num(r.billed_gross_eur),num(r.dated_tariff_cost_on_reference_curve_eur),num(r.billing_reconciliation_eur),r.wholeReferenceSelected?'Complete; difference included':'Partial; full-reference figures, difference excluded']));
- const root=el('consumption-chart');root.replaceChildren();const key=el('consumption-metric').value,points=h.points.filter(p=>typeof p[key]==='number'&&Number.isFinite(p[key]));
- if(!points.length){root.append(svgNode('text',{x:70,y:150,fill:'#566f6b'},'No complete values for this chart.'));return;}
- const values=points.map(p=>p[key]),low=Math.min(0,...values),high=Math.max(1,...values),x=v=>70+(v-h.from)/(h.to-h.from)*900,y=v=>270-(v-low)/(high-low)*235;
+ const root=el('consumption-chart');clearChart(root);const key=el('consumption-metric').value,unit=key==='tariffCostEuro'?'EUR':'kWh';
+ const defs=(unit==='EUR'?[['tariffCostEuro','Tariff cost','#216352']]:[['cleanedKWh','Cleaned consumption','#2868a5'],['referenceKWh','Reference consumption','#216352']]).map(([key,label,color])=>({key,label,color,unit,value:p=>p[key],detail:p=>qualityText(p.qualityFlags)}));
+ const series=chartSeries(root,defs,()=>drawConsumption(h),'consumption-chart|'+key,[key]);chartHover(root,{points:h.points,series,from:h.from,to:h.to,left:70,right:970,top:35,bottom:270});
+ const points=h.points.filter(p=>series.some(d=>typeof d.value(p)==='number'&&Number.isFinite(d.value(p))));
+ if(!points.length){root.append(svgNode('text',{x:70,y:150,fill:'#566f6b'},series.length?'No complete values for this chart.':'Select a dataset to display it.'));return;}
+ const values=points.flatMap(p=>series.map(s=>s.value(p)).filter(v=>typeof v==='number'&&Number.isFinite(v))),low=Math.min(0,...values),high=Math.max(1,...values),x=v=>70+(v-h.from)/(h.to-h.from)*900,y=v=>270-(v-low)/(high-low)*235;
  for(let i=0;i<=4;i++){const v=low+(high-low)*i/4;root.append(svgNode('line',{x1:70,x2:970,y1:y(v),y2:y(v),stroke:'#dbe6df'}),svgNode('text',{x:62,y:y(v)+4,'text-anchor':'end',fill:'#566f6b','font-size':12},num(v,1)));}
- for(const p of points){const bar=svgNode('rect',{x:x(p.start),y:Math.min(y(0),y(p[key])),width:Math.max(.4,x(p.end)-x(p.start)-.5),height:Math.max(1,Math.abs(y(p[key])-y(0))),fill:p.qualityFlags& (2|2048|4096)?'#a96914':'#216352'});bar.append(svgNode('title',{},stamp(p.start)+' · '+num(p[key],3)+' '+(key==='tariffCostEuro'?'EUR':'kWh')+' · '+qualityText(p.qualityFlags)));root.append(bar);}
+ for(const p of points)series.forEach((s,i)=>{const value=s.value(p);if(typeof value!=='number'||!Number.isFinite(value))return;const width=Math.max(.4,(x(p.end)-x(p.start)-.5)/series.length),bar=svgNode('rect',{x:x(p.start)+i*width,y:Math.min(y(0),y(value)),width,height:Math.max(1,Math.abs(y(value)-y(0))),fill:s.color,opacity:p.qualityFlags&(2|2048|4096)?.6:1});bar.append(svgNode('desc',{},stamp(p.start)+' · '+s.label+' · '+num(value,3)+' '+unit+' · '+qualityText(p.qualityFlags)));root.append(bar);});
  for(let i=0;i<=3;i++){const v=h.from+(h.to-h.from)*i/3;root.append(svgNode('text',{x:x(v),y:295,'text-anchor':i===0?'start':i===3?'end':'middle',fill:'#566f6b','font-size':12},stamp(v)));}
 }
 async function loadConsumption(){if(consumptionBusy||el('consumption-panel').hidden)return;consumptionBusy=true;const ticket=++consumptionRequest;el('consumption-show').disabled=true;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
@@ -185,14 +237,14 @@ async function loadConsumption(){if(consumptionBusy||el('consumption-panel').hid
  const reply=await fetch(path+'?view=consumption-history&from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to)+'&resolution='+encodeURIComponent(el('consumption-resolution').value),{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
  if(reply.status===401||reply.status===403){el('dashboard').hidden=true;el('login').hidden=false;throw new Error('Portal session expired or origin rejected.');}
  const data=await reply.json();if(!reply.ok)throw new Error(data.error||'Consumption history unavailable.');if(ticket===consumptionRequest)drawConsumption(data);
- }catch(error){if(ticket===consumptionRequest){consumptionData=null;el('consumption-chart').replaceChildren();el('consumption-table').replaceChildren();el('consumption-references').replaceChildren();el('consumption-totals').replaceChildren();el('consumption-status').textContent=error.name==='AbortError'?'Consumption request timed out.':error.message;}}
+ }catch(error){hideChartTooltip();if(ticket===consumptionRequest){consumptionData=null;clearChart(el('consumption-chart'));el('consumption-table').replaceChildren();el('consumption-references').replaceChildren();el('consumption-totals').replaceChildren();el('consumption-status').textContent=error.name==='AbortError'?'Consumption request timed out.':error.message;}}
  finally{clearTimeout(timeout);consumptionBusy=false;el('consumption-show').disabled=false;}}
 el('consumption-range').addEventListener('change',()=>{chooseConsumptionDates();loadConsumption();});
 el('consumption-show').addEventListener('click',()=>{el('consumption-range').value='custom';loadConsumption();});
 el('consumption-resolution').addEventListener('change',loadConsumption);el('consumption-metric').addEventListener('change',()=>{if(consumptionData)drawConsumption(consumptionData);});
 let activeConsumptionTab='strom',gasEnabled=false,gasStart='',gasThrough='',gasConfigError='',gasBusy=false,gasRequest=0,gasData=null;
 const numDE=(v,d=2)=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
-function clearGas(){gasData=null;el('gas-cost-status').textContent='';for(const id of ['gas-chart','gas-totals','gas-table','gas-invoices','gas-tariffs'])el(id).replaceChildren();}
+function clearGas(){hideChartTooltip();gasData=null;el('gas-cost-status').textContent='';for(const id of ['gas-chart','gas-totals','gas-table','gas-invoices','gas-tariffs'])clearChart(el(id));}
 function renderGasSettings(c){
  gasEnabled=c.gasHistoryEnabled===true;gasStart=c.gasHistoryFrom||'';gasThrough=c.gasHistoryThrough||'';gasConfigError=c.gasHistoryError||'';
  el('gas-controls').hidden=!gasEnabled||!!gasConfigError;el('gas-from').min=gasStart;el('gas-to').min=gasStart;
@@ -209,7 +261,7 @@ function gasQuality(flags){
  return labels.filter(([bit])=>flags&bit).map(([,label])=>label).join(' · ')||'Beobachtet';
 }
 function drawGas(h){
- gasData=h;const t=h.totals,hasInvoices=t.completeInvoices>0,priced=h.costsCalculationEnabled===true;
+ hideChartTooltip();gasData=h;const t=h.totals,hasInvoices=t.completeInvoices>0,priced=h.costsCalculationEnabled===true;
  const rangePrice=p=>p.unitGrossCtMin===null||p.unitGrossCtMin===undefined?'—':numDE(p.unitGrossCtMin)+(Math.abs(p.unitGrossCtMax-p.unitGrossCtMin)>1e-7?' – '+numDE(p.unitGrossCtMax):'');
  el('gas-status').textContent='Geprüfter Archivstand bis '+h.preparedThrough.slice(0,10)+' · '+h.points.length+' Zeiträume · spätere Messungen getrennt gekennzeichnet.';
  rows('gas-totals',[
@@ -232,15 +284,17 @@ function drawGas(h){
  table('gas-table',h.points.map(p=>[stamp(p.start),numDE(p.observedM3),numDE(p.knownObservedM3),numDE(priced?p.knownConvertedKWh:null),rangePrice(p),numDE(priced?p.knownCalculatedCostEuro:null),gasQuality(p.qualityFlags)]));
  table('gas-tariffs',(h.tariffs||[]).map(r=>[r.from+' – '+(r.through||'bis zur nächsten Änderung'),numDE(r.unitGrossCt),numDE(r.basicAnnualGrossEuro/12),numDE(r.kwhPerM3,6),r.conversionEstimated?'Vorläufig aus letzter Rechnung':'Aus Rechnung',r.source]));
  table('gas-invoices',h.invoices.map(r=>[r.from+' – '+r.to,numDE(r.supplier_m3),numDE(r.cleaned_observed_m3),numDE(r.supplier_minus_cleaned_m3),numDE(r.supplier_kwh,0),numDE(r.supply_gross_eur),numDE(r.calculatedKnownSupplyGrossEuro)+(r.calculationIncomplete?' (Teilmenge)':''),numDE(r.supplyMinusCalculatedKnownEuro),numDE(r.december_aid_gross_eur+r.price_brake_credit_eur),numDE(r.cost_after_aid_eur),r.wholeInvoiceSelected?'Vollständig':'Teilauswahl · ganze Rechnung gezeigt']));
- const root=el('gas-chart');root.replaceChildren();
+ const root=el('gas-chart');clearChart(root);
  const metric=el('gas-metric').value,key=metric==='knownObservedM3'||priced?metric:'knownObservedM3',unit=key==='knownConvertedKWh'?'kWh':key==='knownCalculatedCostEuro'?'EUR':'m³';
- const points=h.points.filter(p=>typeof p[key]==='number'&&Number.isFinite(p[key])&&(key!=='knownObservedM3'||p.observedM3!==null||p[key]>0));
- if(!points.length){root.append(svgNode('text',{x:40,y:50,fill:'#566f6b'},'Keine beobachteten Werte im Zeitraum.'));return;}
+ const series=chartSeries(root,[{key,label:key==='knownConvertedKWh'?'Converted gas energy':key==='knownCalculatedCostEuro'?'Calculated gas costs':'Observed gas consumption',color:'#216352',unit,value:p=>key==='knownObservedM3'&&p.observedM3===null&&p[key]===0?null:p[key],detail:p=>gasQuality(p.qualityFlags)}],()=>drawGas(h),'gas-chart|'+unit);
+ chartHover(root,{points:h.points,series,from:h.from,to:h.to,left:65,right:970,top:25,bottom:255});
+ const points=h.points.filter(p=>series.length&&typeof p[key]==='number'&&Number.isFinite(p[key])&&(key!=='knownObservedM3'||p.observedM3!==null||p[key]>0));
+ if(!points.length){root.append(svgNode('text',{x:40,y:50,fill:'#566f6b'},series.length?'Keine beobachteten Werte im Zeitraum.':'Select a dataset to display it.'));return;}
  const max=Math.max(1,...points.map(p=>p[key])),left=65,right=970,top=25,bottom=255,span=Math.max(1,h.to-h.from);
  const x=t=>left+(right-left)*(t-h.from)/span,y=v=>bottom-(bottom-top)*v/max;
  root.append(svgNode('line',{x1:left,y1:bottom,x2:right,y2:bottom,stroke:'#dbe6df'}));
  for(let i=0;i<5;i++){const v=max*i/4;root.append(svgNode('text',{x:left-8,y:y(v)+4,'text-anchor':'end',fill:'#566f6b','font-size':12},numDE(v,1)));}
- for(const p of points){const partial=p.observedM3===null||!!(p.qualityFlags&(2048|4096|16384))||(!p.confirmedNoConsumption&&!!(p.qualityFlags&(1|8|256|512)));const bar=svgNode('rect',{x:x(p.start),y:y(p[key]),width:Math.max(1,x(Math.min(p.end,h.to))-x(p.start)-1),height:Math.max(0,bottom-y(p[key])),fill:partial?'#a96914':'#216352'});bar.append(svgNode('title',{},stamp(p.start)+' · '+numDE(p[key])+' '+unit+(partial?' · bekannte Teilmenge':'')+' · '+gasQuality(p.qualityFlags)));root.append(bar);}
+ for(const p of points){const partial=p.observedM3===null||!!(p.qualityFlags&(2048|4096|16384))||(!p.confirmedNoConsumption&&!!(p.qualityFlags&(1|8|256|512)));const bar=svgNode('rect',{x:x(p.start),y:y(p[key]),width:Math.max(1,x(Math.min(p.end,h.to))-x(p.start)-1),height:Math.max(0,bottom-y(p[key])),fill:partial?'#a96914':'#216352'});bar.append(svgNode('desc',{},stamp(p.start)+' · '+numDE(p[key])+' '+unit+(partial?' · bekannte Teilmenge':'')+' · '+gasQuality(p.qualityFlags)));root.append(bar);}
  root.append(svgNode('text',{x:left,y:285,fill:'#566f6b','font-size':12},stamp(h.from)));
  root.append(svgNode('text',{x:right,y:285,'text-anchor':'end',fill:'#566f6b','font-size':12},stamp(h.to)));
 }
@@ -253,7 +307,7 @@ async function loadGas(){
   if(ticket!==gasRequest)return;
   if(reply.status===401||reply.status===403){el('dashboard').hidden=true;el('login').hidden=false;throw new Error('Passkey-Sitzung abgelaufen oder Zugriff verweigert.');}
   const h=await reply.json();if(!reply.ok)throw new Error(h.error||'Gasdaten sind nicht verfügbar.');if(ticket===gasRequest)drawGas(h);
- }catch(e){if(ticket===gasRequest){clearGas();el('gas-status').textContent=e.name==='AbortError'?'Gasabfrage hat das Zeitlimit erreicht.':e.message;}}
+ }catch(e){hideChartTooltip();if(ticket===gasRequest){clearGas();el('gas-status').textContent=e.name==='AbortError'?'Gasabfrage hat das Zeitlimit erreicht.':e.message;}}
  finally{clearTimeout(timeout);gasBusy=false;el('gas-show').disabled=false;}
 }
 const utilityLabels={electricity:'Strom',gas:'Gas',house:'Hauswasser',garden:'Gartenwasser',well:'Brunnenwasser'};
@@ -265,25 +319,36 @@ function chooseUtilityDates(prefix){const range=el(prefix+'-range').value,today=
 }
 function utilityLabel(key,h){return key==='house'&&h.waterDisplayMode==='main-includes-garden'?'Hauptwasser · Haus und Garten':key==='garden'&&h.waterDisplayMode==='main-includes-garden'?'Gartenwasser · bereits enthalten':utilityLabels[key];}
 function showManualWater(prefix,h){table(prefix+'-manual',(h.manualGardenPeriods||[]).map(r=>[r.from+' – '+r.through,numDE(r.m3,3),numDE(r.houseOnlyM3,3),numDE(r.gardenVariableCostEuro),numDE(r.houseVariableCostEuro),numDE(r.mainCostCreditEuro),(r.wholePeriodSelected?'Whole period included':'Partial selection · excluded')+' · '+r.source]));el(prefix+'-manual-note').textContent=(h.manualGardenPeriods||[]).length?'Garden amounts are included manual period references. Documented tariff differences adjust main costs once; no daily interpolation. '+(h.unallocatedManualCostEuro||h.unallocatedManualVolumeM3?'The totals include '+numDE(h.unallocatedManualCostEuro||0)+' EUR / '+numDE(h.unallocatedManualVolumeM3||0,3)+' m³ of manual period amounts outside these chart buckets; choose Selected period.':''):'';}
-function clearUtility(prefix){el(prefix+'-manual-note').textContent='';el(prefix+'-legend').replaceChildren();if(prefix==='water')el('water-invoices').replaceChildren();if(prefix==='total')totalData=null;else waterData=null;for(const suffix of ['chart','summary','table','periods','manual'])el(prefix+'-'+suffix).replaceChildren();}
+function clearUtility(prefix){hideChartTooltip();el(prefix+'-manual-note').textContent='';el(prefix+'-legend').replaceChildren();if(prefix==='water')el('water-invoices').replaceChildren();if(prefix==='total')totalData=null;else waterData=null;for(const suffix of ['chart','summary','table','periods','manual'])clearChart(el(prefix+'-'+suffix));}
 function stackedUtilityChart(prefix,h,metric){
- const root=el(prefix+'-chart');root.replaceChildren();const energy=['electricity','gas'],water=['house','garden','well'];
- const keys=(metric==='energy'?energy:metric==='water'?water:prefix==='water'?water:Object.keys(utilityLabels)).filter(k=>metric==='cost'||!h.streams[k]?.referenceOnlyVolume),field=metric==='cost'?'knownCostEuro':'knownVolume',unit=metric==='cost'?'EUR':metric==='energy'?'kWh':'m³';
+ hideChartTooltip();const root=el(prefix+'-chart');clearChart(root);const energy=['electricity','gas'],water=['house','garden','well'];
+ const candidates=metric==='energy'?energy:metric==='water'?water:prefix==='water'?water:Object.keys(utilityLabels),field=metric==='cost'?'knownCostEuro':'knownVolume',unit=metric==='cost'?'EUR':metric==='energy'?'kWh':'m³';
+ const defs=candidates.map(k=>{const reference=metric!=='cost'&&h.streams[k]?.referenceOnlyVolume;
+  return {key:k,label:utilityLabel(k,h),color:utilityColors[k],unit,defaultEnabled:!reference,exclusiveWith:reference?['house']:k==='house'&&metric!=='cost'&&h.streams.garden?.referenceOnlyVolume?['garden']:[],
+   value:p=>{if(!reference)return p.streams[k]?.[field];const refs=(h.manualGardenPeriods||[]).filter(r=>r.wholePeriodSelected&&r.start>=p.start&&r.end<=p.end);return refs.length?refs.reduce((sum,r)=>sum+r.m3,0):null;},
+   detail:p=>{const s=p.streams[k];return reference?'Manual period reference · no daily interpolation':(metric==='cost'?s?.incompleteCostDays:s?.incompleteVolumeDays)?'known subtotal'+(s?.provisionalDays?' · provisional':''):s?.provisionalDays?'provisional':'';}
+  };
+ });
+ const series=chartSeries(root,defs,()=>stackedUtilityChart(prefix,h,metric),root.id+'|'+metric),points=h.points||[],a=h.from,b=h.to;
  root.setAttribute('aria-label','Stacked '+unit+' by selected period');
- const points=h.points||[],a=h.from,b=h.to;if(!points.length||b<=a)return;
- let lo=0,hi=0;for(const p of points){let positive=0,negative=0;for(const k of keys){const v=p.streams[k]?.[field];if(typeof v==='number'){if(v>=0)positive+=v;else negative+=v;}}hi=Math.max(hi,positive);lo=Math.min(lo,negative);}
- if(hi===lo){hi=1;}const left=75,right=975,top=25,bottom=255,x=t=>left+(t-a)/(b-a)*(right-left),y=v=>bottom-(v-lo)/(hi-lo)*(bottom-top);
+ chartHover(root,{points,series,from:a,to:b,left:75,right:975,top:25,bottom:255,subtotal:true});
+ if(!points.length||b<=a)return;
+ let lo=0,hi=0,numeric=0;for(const p of points){let positive=0,negative=0;for(const d of series){const v=d.value(p);if(typeof v==='number'&&Number.isFinite(v)){numeric++;if(v>=0)positive+=v;else negative+=v;}}hi=Math.max(hi,positive);lo=Math.min(lo,negative);}
+ const zeroOnly=numeric>0&&lo===0&&hi===0;if(hi===lo){hi=1;}const left=75,right=975,top=25,bottom=255,x=t=>left+(t-a)/(b-a)*(right-left),y=v=>bottom-(v-lo)/(hi-lo)*(bottom-top);
  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,yy=y(v);root.append(svgNode('line',{x1:left,y1:yy,x2:right,y2:yy,stroke:'#dbe6df'}));root.append(svgNode('text',{x:left-10,y:yy+4,'text-anchor':'end',fill:'#566f6b','font-size':12},numDE(v)+' '+unit));}
- for(const p of points){let positive=0,negative=0;for(const k of keys){const s=p.streams[k],v=s?.[field];if(typeof v!=='number'||!Number.isFinite(v)||v===0)continue;const start=v>=0?positive:negative,end=start+v;if(v>=0)positive=end;else negative=end;
-   const incomplete=metric==='cost'?s.incompleteCostDays:s.incompleteVolumeDays,provisional=s.provisionalDays||0;
-   const rect=svgNode('rect',{x:x(p.start),y:Math.min(y(start),y(end)),width:Math.max(1,x(Math.min(p.end,b))-x(p.start)-1),height:Math.abs(y(start)-y(end)),fill:utilityColors[k],opacity:(incomplete||provisional)?0.6:1});
-   rect.append(svgNode('title',{},stamp(p.start)+' · '+utilityLabel(k,h)+' · '+numDE(v,3)+' '+unit+(incomplete?' · known subtotal':'')+(provisional?' · provisional rates / conversion':'')));root.append(rect);
+ for(const p of points){let positive=0,negative=0;for(const d of series){const s=p.streams[d.key],v=d.value(p);if(typeof v!=='number'||!Number.isFinite(v)||v===0)continue;const start=v>=0?positive:negative,end=start+v;if(v>=0)positive=end;else negative=end;
+   const incomplete=metric==='cost'?s?.incompleteCostDays:s?.incompleteVolumeDays,provisional=s?.provisionalDays||0;
+   const rect=svgNode('rect',{'data-series':d.key,x:x(p.start),y:Math.min(y(start),y(end)),width:Math.max(1,x(Math.min(p.end,b))-x(p.start)-1),height:Math.abs(y(start)-y(end)),fill:d.color,opacity:(incomplete||provisional)?0.6:1});
+   rect.append(svgNode('desc',{},stamp(p.start)+' · '+d.label+' · '+numDE(v,3)+' '+unit+(incomplete?' · known subtotal':'')+(provisional?' · provisional':'')));root.append(rect);
  }}
+ if(zeroOnly)root.append(svgNode('text',{x:left+12,y:top+28,fill:'#566f6b','font-size':14},'Visible recorded values are zero.'));
+ if(!series.length||!numeric)root.append(svgNode('text',{x:left+12,y:top+28,fill:'#566f6b','font-size':14},!series.length?'Select a dataset to display it.':'No recorded values for these datasets in the chart buckets.'));
  root.append(svgNode('text',{x:left,y:285,fill:'#566f6b','font-size':12},stamp(a)));root.append(svgNode('text',{x:right,y:285,'text-anchor':'end',fill:'#566f6b','font-size':12},stamp(b)));
- const legend=el(prefix+'-legend');legend.replaceChildren();for(const k of keys){const span=document.createElement('span');span.textContent='● '+utilityLabel(k,h);span.style.color=utilityColors[k];legend.append(span);}
- table(prefix+'-periods',points.map(p=>[stamp(p.start),...keys.map(k=>numDE(p.streams[k]?.[field],3)),numDE(keys.reduce((sum,k)=>sum+(p.streams[k]?.[field]||0),0),3)]));
- const headers=el(prefix+'-period-head');headers.replaceChildren();for(const value of ['Period',...keys.map(k=>utilityLabel(k,h)),'Known subtotal · '+unit]){const th=document.createElement('th');th.textContent=value;headers.append(th);}
+ const subtotal=p=>{const values=series.map(d=>d.value(p)).filter(v=>typeof v==='number'&&Number.isFinite(v));return values.length?values.reduce((sum,v)=>sum+v,0):null;};
+ table(prefix+'-periods',points.map(p=>[stamp(p.start),...series.map(d=>numDE(d.value(p),3)),numDE(subtotal(p),3)]));
+ const headers=el(prefix+'-period-head');headers.replaceChildren();for(const value of ['Period',...series.map(d=>d.label),'Visible known subtotal · '+unit]){const th=document.createElement('th');th.textContent=value;headers.append(th);}
 }
+
 function drawTotal(h){showManualWater('total',h);totalData=h;const t=h.totals;
  el('total-status').textContent='Selected period: '+stamp(h.from)+' – '+stamp(h.to)+' · '+(t.completeCost?'Complete calculated cost coverage':'Incomplete coverage · known subtotals');
  rows('total-summary',[['Known supply costs',numDE(t.knownCostEuro)+' EUR'],['Known energy consumption',numDE(t.knownEnergyKWh)+' kWh'],['Known water consumption',numDE(t.knownWaterM3)+' m³'],['Captured main meter · includes garden',numDE(t.knownMainMeterM3,3)+' m³'],['Garden is included in main water',h.waterDisplayMode==='main-includes-garden'?'Counted once · manual period references':'Separate meters']]);
@@ -313,7 +378,7 @@ async function loadUtility(prefix){
   if(ticket!==(prefix==='total'?totalRequest:waterRequest))return;
   if(reply.status===401||reply.status===403){el('dashboard').hidden=true;el('login').hidden=false;throw new Error('Portal session expired.');}
   const body=await reply.text();let h;try{h=JSON.parse(body);}catch{throw new Error('The server returned an invalid consumption response (HTTP '+reply.status+'). Check Symcon messages for the PHP error.');}if(!reply.ok)throw new Error(h.error||'Consumption data unavailable.');if(prefix==='total')drawTotal(h);else drawWater(h);
- }catch(e){if(ticket===(prefix==='total'?totalRequest:waterRequest)){clearUtility(prefix);el(prefix+'-status').textContent=e.name==='AbortError'?'Request timed out.':e.message;}}
+ }catch(e){hideChartTooltip();if(ticket===(prefix==='total'?totalRequest:waterRequest)){clearUtility(prefix);el(prefix+'-status').textContent=e.name==='AbortError'?'Request timed out.':e.message;}}
  finally{clearTimeout(timeout);if(prefix==='total')totalBusy=false;else waterBusy=false;el(prefix+'-show').disabled=false;}
 }
 for(const prefix of ['total','water']){
@@ -324,7 +389,7 @@ for(const prefix of ['total','water']){
 }
 
 const consumptionTabs=[...document.querySelectorAll('[data-consumption-tab]')];
-function activateConsumptionTab(name){
+function activateConsumptionTab(name){hideChartTooltip();
  activeConsumptionTab=name;
  for(const button of consumptionTabs){const selected=button.dataset.consumptionTab===name;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;el('panel-'+button.dataset.consumptionTab).hidden=!selected;}
  if(name==='gas')loadGas();if(name==='total')loadUtility('total');if(name==='wasser')loadUtility('water');if(name==='strom'){loadHistory();loadConsumption();}
@@ -343,7 +408,7 @@ async function load(){if(busy)return;busy=true;el('refresh').disabled=true;const
  const reply=await fetch(path+'?view=state',{method:'GET',credentials:'same-origin',cache:'no-store',signal:controller.signal});
  if(reply.status===401||reply.status===403){el('login').hidden=false;throw new Error('Portal session expired or origin rejected. Sign in through the configured HTTPS portal.');}
  if(!reply.ok)throw new Error('Data unavailable. Check the module and SecretsManager configuration.');render(await reply.json());if(el('history-range').value!=='custom')chooseHistoryDates();if(!el('history-from').value)chooseHistoryDates();if(activeConsumptionTab==='strom')loadHistory();if(el('consumption-range').value!=='custom')chooseConsumptionDates();if(activeConsumptionTab==='strom')loadConsumption();if(activeConsumptionTab==='gas')loadGas();if(activeConsumptionTab==='total'||activeConsumptionTab==='wasser'){const prefix=activeConsumptionTab==='total'?'total':'water';chooseUtilityDates(prefix);loadUtility(prefix);}
- }catch(error){++totalRequest;++waterRequest;clearUtility('total');clearUtility('water');++historyRequest;++consumptionRequest;++gasRequest;clearGas();consumptionData=null;el('price-chart').replaceChildren();el('history-table').replaceChildren();el('consumption-chart').replaceChildren();el('consumption-table').replaceChildren();el('consumption-references').replaceChildren();el('consumption-totals').replaceChildren();el('dashboard').hidden=true;el('status').classList.add('error');el('status').textContent=error.name==='AbortError'?'Request timed out; displayed data has been cleared.':error.message;}
+ }catch(error){hideChartTooltip();++totalRequest;++waterRequest;clearUtility('total');clearUtility('water');++historyRequest;++consumptionRequest;++gasRequest;clearGas();consumptionData=null;clearChart(el('price-chart'));el('history-table').replaceChildren();clearChart(el('consumption-chart'));el('consumption-table').replaceChildren();el('consumption-references').replaceChildren();el('consumption-totals').replaceChildren();el('dashboard').hidden=true;el('status').classList.add('error');el('status').textContent=error.name==='AbortError'?'Request timed out; displayed data has been cleared.':error.message;}
  finally{clearTimeout(timeout);busy=false;el('refresh').disabled=false;}}
 if(el('portal').getAttribute('href')){el('portal').hidden=false;el('back').hidden=true;}
 el('refresh').addEventListener('click',load);el('back').addEventListener('click',()=>history.back());load();setInterval(load,60000);
