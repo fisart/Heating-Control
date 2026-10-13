@@ -11,6 +11,7 @@ require_once __DIR__ . '/GasHistory.php';
 require_once __DIR__ . '/GasCosts.php';
 require_once __DIR__ . '/NoConsumption.php';
 require_once __DIR__ . '/WaterHistory.php';
+require_once __DIR__ . '/ReviewedWater.php';
 require_once __DIR__ . '/ManualWater.php';
 require_once __DIR__ . '/TotalHistory.php';
 
@@ -24,7 +25,7 @@ class LichtBlickElectricityPrice extends IPSModule
     use LichtBlickTotalHistoryAccess;
 
     private const DEFAULTS = [
-        'WaterHistoryInvoicePeriods'=>'[]','WaterHistoryGardenPeriods'=>'[]','WaterHistoryEnabled'=>false,'WaterHistorySources'=>'{}','WaterHistoryTariffs'=>'[]','WaterHistoryHouseIncludesGarden'=>false,
+        'WaterHistoryInvoicePeriods'=>'[]','WaterHistoryGardenPeriods'=>'[]','WaterHistoryEnabled'=>false,'WaterHistorySources'=>'{}','WaterHistoryTariffs'=>'[]','WaterHistoryHouseIncludesGarden'=>false,'WaterHistoryReviewedMetadataID'=>0,
         'WebEnabled' => false, 'VaultInstanceID' => 0,
         'Enabled' => false, 'PostalCode' => '', 'TariffVerified' => false,
         'FetchIntervalMinutes' => 15, 'PriceCorrectionCt' => 0.0, 'MaxCacheAgeHours' => 24,

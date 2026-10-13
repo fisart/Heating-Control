@@ -21,7 +21,7 @@ check($water['streams']['well']['totals']['knownM3']==0. && $water['streams']['w
 unset($water);
 $total=json_decode($m->GetTotalConsumption('2024-01-01','2024-12-31','monthly'),true,64,JSON_THROW_ON_ERROR);
 check(abs($total['totals']['knownWaterM3']-$expected)<1e-7 && count($total['points'])===12,'Total-consumption year uses bounded raw reads and monthly buckets');
-check(abs($total['unallocatedManualVolumeM3']-$expected)<1e-7,'Annual garden split stays outside monthly chart without interpolation');
+check(abs($total['unallocatedManualVolumeM3'])<1e-7,'Annual garden reference is not added twice to the electronic main-water chart');
 check(memory_get_peak_usage(true)<32*1048576,'Dense year stays below 32 MiB rather than retaining every raw event');
 unset($GLOBALS['archiveReader']);
 $GLOBALS['history'][9001]=[['TimeStamp'=>10,'Value'=>1],['TimeStamp'=>10,'Value'=>1],['TimeStamp'=>11,'Value'=>2]];

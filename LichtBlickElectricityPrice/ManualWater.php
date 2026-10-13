@@ -4,6 +4,32 @@ declare(strict_types=1);
 /** Manual garden volumes are period references, never interpolated to days. */
 final class LichtBlickManualWater
 {
+    /** Main already includes garden. Only documented tariff differences adjust its cost. */
+    public static function mainAdjustments(array $report,array $references,array $tariffs,bool $total): array
+    {
+        $report['manualGardenPeriods']=$references;$report['unallocatedManualCostEuro']=0.;$report['unallocatedManualVolumeM3']=0.;
+        $report['manualVolumeAllocation']='Garden is included in main volume; references are never added twice or interpolated';
+        $garden=&$report['streams']['garden'];$garden['referenceOnlyVolume']=true;
+        $t=&$garden;if(!$total)$t=&$garden['totals'];$volumeKey=$total?'knownVolume':'knownM3';
+        $t[$volumeKey]=null;$t['knownCostEuro']=0.;if(!$total){$t['knownVariableCostEuro']=$t['knownFixedCostEuro']=0.;$t['completeCost']=true;}
+        foreach($report['points'] as &$b)$b['streams']['garden']=['knownM3'=>null,'knownVolume'=>null,'knownCostEuro'=>0.,'missingVolumeDays'=>0,'incompleteVolumeDays'=>0,'incompleteCostDays'=>0,'provisionalDays'=>0,'qualityFlags'=>0,'referenceOnlyVolume'=>true];unset($b);
+        $unknown=static function($r)use(&$report,&$t,$total){$a=max($r['start'],$report['from']);$b=min($r['end'],$report['to']);$n=count(LichtBlickWaterHistory::days($a,$b));$t['incompleteCostDays']+=$n;if(!$total)$t['completeCost']=false;foreach($report['points'] as &$bucket)if($bucket['start']<$b&&$bucket['end']>$a)$bucket['streams']['garden']['incompleteCostDays']+=count(LichtBlickWaterHistory::days(max($a,$bucket['start']),min($b,$bucket['end'])));unset($bucket);};
+        foreach($report['manualGardenPeriods'] as &$r){$r['mainCostCreditEuro']=null;if(!$r['wholePeriodSelected']){if($r['m3']>0)$unknown($r);continue;}
+            $t[$volumeKey]=($t[$volumeKey]??0)+$r['m3'];$unit=null;$valid=$r['mainMeterM3']!==null;$estimated=false;
+            foreach(LichtBlickWaterHistory::days($r['start'],$r['end']) as $day){$found=[];foreach($tariffs as $rate)if($rate['start']<=$day['start']&&$rate['end']>=$day['end'])$found[$rate['stream']]=$rate;
+                if(!isset($found['house'],$found['garden'])){$valid=false;break;}$h=$found['house'];$g=$found['garden'];
+                $difference=$h['drinkingNetEuroM3']*(1+$h['vatPercent']/100)+$h['sewageGrossEuroM3']-$g['drinkingNetEuroM3']*(1+$g['vatPercent']/100)-$g['sewageGrossEuroM3'];
+                if($unit!==null&&abs($difference-$unit)>1e-9){$valid=false;break;}$unit=$difference;$estimated=$estimated||($h['estimated']??false)||($g['estimated']??false);
+            }
+            if(!$valid||$unit===null){$unknown($r);continue;}
+            $credit=-$r['m3']*$unit;$r['mainCostCreditEuro']=$credit;$r['creditProvisional']=$estimated;$t['knownCostEuro']+=$credit;if(!$total)$t['knownVariableCostEuro']+=$credit;
+            $placed=false;foreach($report['points'] as &$bucket)if($bucket['start']<=$r['start']&&$bucket['end']>=$r['end']){$s=&$bucket['streams']['garden'];$s['knownCostEuro']+=$credit;if($estimated)$s['provisionalDays']+=$r['days'];$placed=true;unset($s);break;}unset($bucket);
+            if(!$placed)$report['unallocatedManualCostEuro']+=$credit;
+        }unset($r,$t,$garden);
+        if($total){$report['totals']['knownCostEuro']=array_sum(array_map(fn($s)=>$s['knownCostEuro']??0.,$report['streams']));$report['totals']['completeCost']=$report['totals']['completeCost']&&$report['streams']['garden']['incompleteCostDays']===0;
+            foreach($report['points'] as &$b)$b['knownTotalCostEuro']=array_sum(array_map(fn($s)=>$s['knownCostEuro']??0.,$b['streams']));unset($b);
+        }return $report;
+    }
     public static function periods(string $json): array
     {
         if(strlen($json)>65536)throw new InvalidArgumentException('Manual garden periods are too large');

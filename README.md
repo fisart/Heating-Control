@@ -76,6 +76,8 @@ Version **0.3.13**, build 23 adds independently calculated gas costs from dated 
 
 Version **0.3.14**, build 24 moves the gas/heat-pump threshold and associated recommendation, weather/power model, learning status and diagnostics into a separate **Heizung** tab. Strom retains electricity prices, consumption and costs. State refresh continues every 60 seconds and preserves the selected tab.
 
+Version **0.3.17**, build 27 connects verified water imports and subsequent electronic readings. Main water (including garden) leads the water tab with calculated dated costs; well water shows consumption without charges. Manual garden periods are included references and adjust documented charges once. The total chart counts main plus well once. See [water and combined totals](docs/consumption-and-costs.md).
+
 Version **0.3.15**, build 25 adds **Total consumption** with one selectable date range, quantities and costs for all five streams, and stacked charts for EUR, energy kWh or water m³. The water reader supports separate house/garden tariffs and zero-cost well water, subtracts nested garden volumes, and leaves missing meters/tariffs incomplete. See [water and combined totals](docs/consumption-and-costs.md).
 
 ## Installation and safe handover

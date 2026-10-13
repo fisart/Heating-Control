@@ -44,7 +44,7 @@ trait LichtBlickTotalHistoryAccess
     private function totalHistoryChart(string $from,string $through,string $resolution): array
     {
         if(!in_array($resolution,['auto','selected','daily','monthly','yearly'],true))throw new InvalidArgumentException('Select a valid total-consumption resolution');
-        [$a,$b]=LichtBlickPriceStore::dates($from,$through,2192);$end=min($b,time()+1);if($end<=$a)throw new InvalidArgumentException('Period must start before now');
+        [$a,$b]=LichtBlickPriceStore::dates($from,$through,4018);$end=min($b,time()+1);if($end<=$a)throw new InvalidArgumentException('Period must start before now');
         if($resolution==='auto')$resolution=$b-$a>100*86400?'monthly':'daily';
         $source=[];$errors=[];
         foreach(['electricity','gas'] as $key)try{
@@ -55,9 +55,9 @@ trait LichtBlickTotalHistoryAccess
             $h=$key==='electricity'?$this->consumptionChart($readFrom,$through,'daily'):$this->gasHistoryChart($readFrom,$through,'daily');
             foreach($h['points'] as $p)$source[$key][(new DateTimeImmutable('@'.$p['start']))->setTimezone(new DateTimeZone('Europe/Berlin'))->format('Y-m-d')]=$p;
         }catch(RuntimeException|InvalidArgumentException $e){$errors[$key]=$e->getMessage();}
-        $water=$this->waterHistoryChart($from,$through,'daily');
-        foreach(LichtBlickWaterHistory::KEYS as $key){if($water['streams'][$key]['error']!=='')$errors[$key]=$water['streams'][$key]['error'];
-            foreach($water['streams'][$key]['points'] as $p)$source[$key][(new DateTimeImmutable('@'.$p['start']))->setTimezone(new DateTimeZone('Europe/Berlin'))->format('Y-m-d')]=$p;
+        $water=$this->waterHistoryChart($from,$through,'daily');$primary=$water['electronic']??$water;$nestedManual=isset($water['electronic']);
+        foreach(LichtBlickWaterHistory::KEYS as $key){if($primary['streams'][$key]['error']!=='')$errors[$key]=$primary['streams'][$key]['error'];
+            foreach($primary['streams'][$key]['points'] as $p)$source[$key][(new DateTimeImmutable('@'.$p['start']))->setTimezone(new DateTimeZone('Europe/Berlin'))->format('Y-m-d')]=$p;
         }
         $rows=[];$z=new DateTimeZone('Europe/Berlin');
         foreach(LichtBlickWaterHistory::days($a,$end) as $day){$date=(new DateTimeImmutable('@'.$day['start']))->setTimezone($z)->format('Y-m-d');$row=$day+['streams'=>[]];
@@ -73,19 +73,21 @@ trait LichtBlickTotalHistoryAccess
                         $s['cost']=($p['missingTariffDays']??1)>0?null:$p['knownCalculatedCostEuro'];
                         $s['volumeComplete']=$coverage && !$p['missingObservationDays'] && !$p['missingTariffDays'] && !$p['incompleteCostDays'];$s['costComplete']=$coverage && !$p['incompleteCostDays'];
                     }else{
-                        $s['provisional']=$p['tariffEstimated']??false;
+                        $s['provisional']=($p['tariffEstimated']??false)||($p['qualityFlags']&128)!==0;
                         $s['volume']=$p['observedM3']??(($p['qualityFlags']&256)?null:($p['knownObservedM3']??null));$s['cost']=$p['knownCostEuro'];
-                        $s['volumeComplete']=$coverage && $p['observedM3']!==null && (($p['confirmedNoConsumption']??false) || !($p['qualityFlags']&(1|8|256|16384)));$s['costComplete']=$coverage && $p['costEuro']!==null;
+                        $s['volumeComplete']=$coverage && $p['observedM3']!==null && (($p['confirmedNoConsumption']??false) || !($p['qualityFlags']&(1|8|256|512|16384)));$s['costComplete']=$coverage && $p['costEuro']!==null;
                     }
                 }
                 if($key==='well'){$s['cost']=0.;$s['costComplete']=true;}
+                if($key==='garden'&&$nestedManual){$s['volume']=null;$s['cost']=0.;$s['volumeComplete']=$s['costComplete']=true;}
                 $row['streams'][$key]=$s;
             }$rows[]=$row;
         }
         $report=LichtBlickTotalHistory::report($rows,$a,$end,$resolution,$errors);
         $report['waterHouseIncludesGarden']=$water['houseIncludesGarden'];
-        $report=LichtBlickManualWater::merge($report,$water['manualGardenPeriods']??[],true);
-        $main=$water['streams']['house']['totals']['knownMainMeterM3']??null;
+        $report=$nestedManual?LichtBlickManualWater::mainAdjustments($report,$water['manualGardenPeriods']??[],$water['tariffs'],true):LichtBlickManualWater::merge($report,$water['manualGardenPeriods']??[],true);
+        if($nestedManual){$report['waterDisplayMode']='main-includes-garden';if(($primary['streams']['garden']['capture']??'')==='electronic')$report['streams']['garden']['knownVolume']=$primary['streams']['garden']['totals']['knownM3'];}
+        $main=$primary['streams']['house']['totals']['knownMainMeterM3']??null;
         $report['totals']['knownMainMeterM3']=$main;$report['totals']['knownSplitWaterM3']=$report['totals']['knownWaterM3'];
         if($water['houseIncludesGarden'] && $main!==null)$report['totals']['knownWaterM3']=$main+($report['streams']['well']['knownVolume']??0.);
         return $report;

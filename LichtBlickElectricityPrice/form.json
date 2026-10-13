@@ -30,7 +30,7 @@
     {
       "type": "NumberSpinner",
       "name": "SafetyMarginPercent",
-      "caption": "Safety margin (%) — default 25; editable",
+      "caption": "Safety margin (%) \u2014 default 25; editable",
       "minimum": 0,
       "maximum": 95,
       "digits": 1
@@ -91,7 +91,7 @@
           "columns": [
             {
               "name": "outsideC",
-              "caption": "Outside °C",
+              "caption": "Outside \u00b0C",
               "width": "150px",
               "add": 0,
               "edit": {
@@ -142,7 +142,7 @@
         {
           "type": "NumberSpinner",
           "name": "WeatherReferenceTemperatureC",
-          "caption": "Temperature of reference threshold (°C)",
+          "caption": "Temperature of reference threshold (\u00b0C)",
           "minimum": -30,
           "maximum": 30,
           "digits": 1
@@ -174,7 +174,7 @@
         {
           "type": "NumberSpinner",
           "name": "WeatherTemperatureHysteresisC",
-          "caption": "Outside temperature deadband (°C)",
+          "caption": "Outside temperature deadband (\u00b0C)",
           "minimum": 0,
           "maximum": 2,
           "digits": 2
@@ -189,7 +189,7 @@
         },
         {
           "type": "Label",
-          "caption": "Threshold(T) = reference threshold × current/reference gas price × fan-adjusted COP(T)/fan-adjusted COP(reference). The margin is applied once afterward. Fan-adjusted COP = COP × HP kW/(HP kW + fan kW). This is an approximate empirical-reference model, not measured COP."
+          "caption": "Threshold(T) = reference threshold \u00d7 current/reference gas price \u00d7 fan-adjusted COP(T)/fan-adjusted COP(reference). The margin is applied once afterward. Fan-adjusted COP = COP \u00d7 HP kW/(HP kW + fan kW). This is an approximate empirical-reference model, not measured COP."
         }
       ]
     },
@@ -254,7 +254,7 @@
         {
           "type": "NumberSpinner",
           "name": "GasKWhPerM3",
-          "caption": "Gas conversion (kWh/m³)",
+          "caption": "Gas conversion (kWh/m\u00b3)",
           "minimum": 1,
           "maximum": 20,
           "digits": 6
@@ -292,7 +292,7 @@
         {
           "type": "NumberSpinner",
           "name": "GasCounterScale",
-          "caption": "Gas counter multiplier to m³",
+          "caption": "Gas counter multiplier to m\u00b3",
           "minimum": 1e-06,
           "maximum": 100,
           "digits": 6
@@ -397,7 +397,7 @@
         },
         {
           "type": "Label",
-          "caption": "All selected inputs must be archived. Existing IDs are Berlin defaults; verify them. Counter scales default to gas m³ and electric pulses at 0.001 kWh/pulse. Shared humidifier load must be comparable between reference days."
+          "caption": "All selected inputs must be archived. Existing IDs are Berlin defaults; verify them. Counter scales default to gas m\u00b3 and electric pulses at 0.001 kWh/pulse. Shared humidifier load must be comparable between reference days."
         }
       ]
     },
@@ -582,7 +582,7 @@
           "columns": [
             {
               "name": "from",
-              "caption": "From · YYYY-MM-DD",
+              "caption": "From \u00b7 YYYY-MM-DD",
               "width": "auto",
               "add": "",
               "edit": {
@@ -591,7 +591,7 @@
             },
             {
               "name": "through",
-              "caption": "Through · YYYY-MM-DD",
+              "caption": "Through \u00b7 YYYY-MM-DD",
               "width": "auto",
               "add": "",
               "edit": {
@@ -600,7 +600,7 @@
             },
             {
               "name": "m3",
-              "caption": "Garden consumption m³",
+              "caption": "Garden consumption m\u00b3",
               "width": "auto",
               "add": 0,
               "edit": {
@@ -620,6 +620,11 @@
               }
             }
           ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "WaterHistoryReviewedMetadataID",
+          "caption": "Verified water import metadata (0 = original raw counters)"
         },
         {
           "type": "ValidationTextBox",

@@ -55,9 +55,9 @@ check($manualWater['points'][0]['streams']['garden']['knownM3']==.5 && $manualWa
 $partial=json_decode($m->GetWaterHistory('2024-10-27','2024-10-28','daily'),true,64,JSON_THROW_ON_ERROR);
 check($partial['streams']['garden']['totals']['knownM3']===null && !$partial['manualGardenPeriods'][0]['wholePeriodSelected'],'Partial manual selections stay unknown, never prorated');
 $manualTotal=json_decode($m->GetTotalConsumption('2024-10-26','2024-10-28','selected'),true,64,JSON_THROW_ON_ERROR);
-check(abs($manualTotal['streams']['house']['knownVolume']-2.5)<1e-9 && abs($manualTotal['streams']['garden']['knownVolume']-.5)<1e-9 && abs($manualTotal['points'][0]['streams']['house']['knownVolume']-2.5)<1e-9,'Combined selected-period stack includes independent manual water period totals');
+check(abs($manualTotal['streams']['house']['knownVolume']-3.)<1e-9 && abs($manualTotal['streams']['garden']['knownVolume']-.5)<1e-9 && abs($manualTotal['points'][0]['streams']['house']['knownVolume']-3.)<1e-9,'Combined selected-period stack shows main once and manual garden as an included reference');
 $dailyManual=json_decode($m->GetTotalConsumption('2024-10-26','2024-10-28','daily'),true,64,JSON_THROW_ON_ERROR);
-check(abs($dailyManual['unallocatedManualVolumeM3']-3.)<1e-9 && abs($dailyManual['unallocatedManualCostEuro']-13.92)<1e-9,'Manual multi-day contributions remain unallocated in finer chart buckets');
+check(abs($dailyManual['unallocatedManualVolumeM3'])<1e-9 && abs($dailyManual['unallocatedManualCostEuro']+1.5)<1e-9,'Only the manual tariff-difference credit remains unallocated in finer chart buckets; main volume stays visible');
 $change=$g;$change['from']='2024-10-28';$change['through']='2024-10-28';$change['drinkingNetEuroM3']=4.;$old=$g;$old['through']='2024-10-27';
 check(LichtBlickManualWater::variableCost(.5,LichtBlickWaterHistory::days($a,$end),LichtBlickWaterHistory::tariffs(json_encode([$old,$change])),'garden')===null,'Tariff change inside a manual period does not invent a volume split or average rate');
 $bad=$manual[0];$bad['from']='2024-10-27';throws(fn()=>LichtBlickManualWater::periods(json_encode([$manual[0],$bad])),'Overlapping manual periods rejected');
