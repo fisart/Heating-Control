@@ -81,6 +81,23 @@ trait LichtBlickDailyReportAccess
         return LichtBlickDailyReport::html(LichtBlickDailyReport::model($date,$data));
     }
 
+    /** Explicit form action; works while the daily schedule is disabled and does not consume its send marker. */
+    public function SendDailyConsumptionReportTest(): string
+    {
+        $lock='LBEP.ConsumptionReport.'.$this->InstanceID;
+        if (!IPS_SemaphoreEnter($lock,100)) return 'Test not sent: another report is being generated. Try again shortly.';
+        try {
+            $smtp=$this->consumptionReportSMTP();
+            [$date]=LichtBlickEconomics::previousDay($this->consumptionReportNow());
+            $html=$this->GetDailyConsumptionReport($date);
+            $this->SetValue('ConsumptionReportHTML',$html);
+            if (!SMTP_SendMail($smtp,'[TEST] Verbrauch & Kosten · '.$date.' · Daily consumption',$html))
+                throw new RuntimeException('SMTP did not confirm sending; check the selected SMTP instance');
+            return 'Test report for '.$date.' accepted by SMTP. Check the recipient configured in the selected SMTP instance. Daily schedule unchanged.';
+        } catch (Throwable $e) {return 'Test report failed: '.$e->getMessage();}
+        finally {IPS_SemaphoreLeave($lock);}
+    }
+
     private function consumptionReportSMTP(): int
     {
         $id=$this->ReadPropertyInteger('ConsumptionReportSMTPID');

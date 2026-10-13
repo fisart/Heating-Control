@@ -316,6 +316,14 @@ the SMTP call, so it contains exactly the email body and remains available if
 sending fails. A preview download leaves it unchanged; a failed data read retains
 the last successfully generated report, whose day is shown in its header.
 
+**Send yesterday’s report as test email** sends the same HTML through the selected
+SMTP instance with a `[TEST]` subject and stores it in `ConsumptionReportHTML`.
+Select the SMTP instance and apply the form settings first. This explicit button
+works with daily sending disabled, reports SMTP success/failure in the form and
+does not change the midnight timer or its attempt/sent markers. It can be used
+to check the delivered appearance in Gmail on desktop and Android. A successful
+SMTP call alone does not confirm the message arrived or how Gmail rendered it.
+
 `ConsumptionReportStatus` shows scheduling, SMTP acceptance or failure. The
 module records one attempt per report day before calling SMTP and serializes
 callbacks with a semaphore. It will not automatically resend that day after

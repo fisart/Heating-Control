@@ -684,6 +684,11 @@
     },
     {
       "type": "Button",
+      "caption": "Send yesterday\u2019s report as test email",
+      "onClick": "echo LBEP_SendDailyConsumptionReportTest($id);"
+    },
+    {
+      "type": "Button",
       "caption": "Fetch prices now",
       "onClick": "LBEP_RefreshPrices($id);"
     },

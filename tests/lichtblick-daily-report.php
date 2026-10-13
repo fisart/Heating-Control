@@ -90,5 +90,18 @@ check(str_contains($realPreview,'Known subtotal') && $before===serialize([$real-
 $form=json_decode(file_get_contents(__DIR__.'/../LichtBlickElectricityPrice/form.json'),true,32,JSON_THROW_ON_ERROR);$selector=null;
 foreach($form['elements'] as $element)foreach($element['items']??[] as $field)if(($field['name']??'')==='ConsumptionReportSMTPID')$selector=$field;
 check($selector['type']==='SelectInstance' && $selector['validModules']===[LichtBlickDailyReport::SMTP_MODULE],'Native selector filters object tree to SMTP');
+$test=new FixtureReport();$test->now=$stamp('2026-10-13 12:00:00');$test->Create();$test->reportData=reportFixture();$test->properties['ConsumptionReportSMTPID']=8001;$test->ApplyChanges();
+$GLOBALS['smtpSuccess']=true;$GLOBALS['smtpThrow']=false;$count=count($GLOBALS['sentEmails']);
+$before=serialize([$test->attributes,$test->properties,$test->updates,$test->values['ConsumptionReportStatus']]);
+check(str_contains($test->SendDailyConsumptionReportTest(),'accepted by SMTP') && count($GLOBALS['sentEmails'])===$count+1,'Explicit test button can send while daily reports are disabled');
+check(str_starts_with($GLOBALS['sentEmails'][$count][1],'[TEST]') && $GLOBALS['sentEmails'][$count][0]===8001 && $test->values['ConsumptionReportHTML']===$GLOBALS['sentEmails'][$count][2],'Test uses selected SMTP, a marked subject and stored identical HTML');
+check($before===serialize([$test->attributes,$test->properties,$test->updates,$test->values['ConsumptionReportStatus']]),'Test cannot enable, reschedule or consume daily send markers');
+$test->properties['ConsumptionReportEnabled']=true;$test->ApplyChanges();$before=serialize([$test->attributes,$test->updates,$test->values['ConsumptionReportStatus']]);$test->SendDailyConsumptionReportTest();
+check($before===serialize([$test->attributes,$test->updates,$test->values['ConsumptionReportStatus']]),'Test also preserves an enabled midnight schedule');
+$GLOBALS['smtpSuccess']=false;check(str_contains($test->SendDailyConsumptionReportTest(),'Test report failed'),'SMTP test rejection is reported in the form result');
+$GLOBALS['smtpThrow']=true;check(str_contains($test->SendDailyConsumptionReportTest(),'Fixture SMTP outage'),'SMTP test exceptions are caught');
+$count=count($GLOBALS['sentEmails']);$test->properties['ConsumptionReportSMTPID']=0;
+check(str_contains($test->SendDailyConsumptionReportTest(),'Select an SMTP') && count($GLOBALS['sentEmails'])===$count,'Unselected SMTP cannot send a test');
+check(count(array_filter($form['actions'],fn($a)=>($a['onClick']??'')==='echo LBEP_SendDailyConsumptionReportTest($id);'))===1,'Form exposes the explicit test-email action');
 if(($argv[1]??'')==='--sample')file_put_contents($argv[2],LichtBlickDailyReport::html(LichtBlickDailyReport::model('2026-10-12',reportFixture(),true)));
 echo "Daily report: preview isolation, Berlin midnight/DST, SMTP selection, restart and duplicate handling, failures, free well, garden exclusion, incomplete/provisional costs and cent rounding passed.\n";
