@@ -646,9 +646,42 @@
           "caption": "Verified water invoice references: main/sewage/deducted garden m3, supply/billed costs and sources (JSON)"
         }
       ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Daily consumption email \u00b7 midnight",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "ConsumptionReportEnabled",
+          "caption": "Enable daily email at 00:00 Europe/Berlin (after approving the preview)"
+        },
+        {
+          "type": "SelectInstance",
+          "name": "ConsumptionReportSMTPID",
+          "caption": "SMTP instance from object tree",
+          "validModules": [
+            "{375EAF21-35EF-4BC4-83B3-C780FD8BD88A}"
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "Uses the recipient configured in the selected SMTP instance. Reports the previous complete Berlin day: electricity, gas, house/main water and well water. No separate garden row; the main meter includes garden use. Costs follow the reviewed dashboard and flag incomplete/provisional values."
+        },
+        {
+          "type": "Label",
+          "caption": "Newly enabled reports start at the next midnight. After a server interruption only yesterday is sent. One recorded send attempt per day avoids duplicate emails; inspect Daily consumption email status for failures."
+        }
+      ]
     }
   ],
   "actions": [
+    {
+      "type": "Button",
+      "caption": "Download yesterday\u2019s email preview (no sending)",
+      "download": "Daily-consumption-preview.html",
+      "onClick": "try { echo 'data:text/html;base64,' . base64_encode(LBEP_GetDailyConsumptionReport($id)); } catch (Throwable $e) { echo $e->getMessage(); }"
+    },
     {
       "type": "Button",
       "caption": "Fetch prices now",

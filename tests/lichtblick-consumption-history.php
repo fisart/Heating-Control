@@ -26,6 +26,10 @@ check(abs($report['totals']['knownCleanedKWh']-30)<1e-9 && abs($report['totals']
 $partial=LichtBlickConsumptionHistory::report(array_slice($rows,0,1),$data,$a,$a+86400,'daily');check($partial['totals']['fullPeriodReconciliationEuro']===0.0 && !$partial['references'][0]['wholeReferenceSelected'],'Partial period does not receive arbitrary bill residual');
 $GLOBALS['history'][101][0]['Value']+=1.;throws(fn()=>$adapter->prepared($data,$a,$b),'Modified archive rejected');$GLOBALS['history'][101][0]['Value']-=1.;
 $quote=['start'=>$r,'end'=>$r+900,'source'=>'lichtblick-quote','verified'=>true,'price'=>20.];$reprice=$adapter->prepared($data,$r,$r+900,[$quote]);check(abs($reprice[0]['tariffCostEuro']-.22)<1e-9 && !($reprice[0]['qualityFlags']&512),'Confirmed quote supersedes app estimate without changing archive');
+$estimatedRows=$adapter->prepared($data,$r,$r+900);
+$estimatedReport=LichtBlickConsumptionHistory::report($estimatedRows,$data,$r,$r+900,'daily');
+check($estimatedReport['points'][0]['unconfirmedPriceIntervals']===1,'Daily buckets retain unconfirmed-price provenance for total reports');
+check((LichtBlickConsumptionHistory::report($reprice,$data,$r,$r+900,'daily')['points'][0]['unconfirmedPriceIntervals']??0)===0,'Verified replacement quote clears daily provisional-price flag');
 // Dense live fixture exercises adaptive 10,000-record limit and reset rejection.
 $live=$r+900;$GLOBALS['history'][104]=[];
 for($t=$live-180;$t<=$live+3600+180;$t+=60)$GLOBALS['history'][104][]=['TimeStamp'=>$t,'Value'=>100+($t-$live)/900];
@@ -49,3 +53,4 @@ file_put_contents($dir.'/strom-aufbereitung-geprueft.json',$payload.' ');throws(
 $backup=json_decode($module->ExportConfig(),true);foreach(array_keys($backup['configuration']) as $k)if(str_starts_with($k,'Prepared')||str_starts_with($k,'Consumption'))unset($backup['configuration'][$k]);check(str_starts_with($module->ImportConfig(json_encode($backup)),'Imported'),'Old configuration backup remains compatible');check(!$module->properties['PreparedHistoryEnabled'],'Old backup does not silently enable prepared history');
 foreach(glob($dir.'/*')?:[] as $p)unlink($p);rmdir($dir);rmdir($kernel.'/media');rmdir($kernel);
 echo "Prepared consumption archives, invoice totals/residuals, DST, quote priority, raw live gaps/resets, limits, identities, read-only API and legacy config checks passed.\n";
+

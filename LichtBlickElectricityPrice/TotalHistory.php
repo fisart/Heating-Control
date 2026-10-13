@@ -64,6 +64,7 @@ trait LichtBlickTotalHistoryAccess
             foreach(LichtBlickTotalHistory::STREAMS as $key=>$label){$p=$source[$key][$date]??null;$s=['volume'=>null,'cost'=>null,'volumeComplete'=>false,'costComplete'=>false];
                 if($p){$coverage=$p['start']<=$day['start'] && $p['end']>=$day['end'];
                     if($key==='electricity'){
+                        $s['provisional']=($p['unconfirmedPriceIntervals']??0)>0;
                         $s['volume']=$p['knownReferenceKWh']??$p['referenceKWh'];
                         $s['cost']=($p['knownPriceIntervals']??0)>0?$p['knownTariffCostEuro']:($p['tariffCostEuro']??null);
                         $s['volumeComplete']=$coverage && !$p['missingEnergyIntervals'];$s['costComplete']=$s['volumeComplete'] && !$p['missingPriceIntervals'];

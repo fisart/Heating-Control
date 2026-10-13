@@ -14,6 +14,7 @@ require_once __DIR__ . '/WaterHistory.php';
 require_once __DIR__ . '/ReviewedWater.php';
 require_once __DIR__ . '/ManualWater.php';
 require_once __DIR__ . '/TotalHistory.php';
+require_once __DIR__ . '/DailyReport.php';
 
 class LichtBlickElectricityPrice extends IPSModule
 {
@@ -23,8 +24,10 @@ class LichtBlickElectricityPrice extends IPSModule
     use LichtBlickGasHistoryAccess;
     use LichtBlickWaterHistoryAccess;
     use LichtBlickTotalHistoryAccess;
+    use LichtBlickDailyReportAccess;
 
     private const DEFAULTS = [
+        'ConsumptionReportEnabled'=>false, 'ConsumptionReportSMTPID'=>0,
         'WaterHistoryInvoicePeriods'=>'[]','WaterHistoryGardenPeriods'=>'[]','WaterHistoryEnabled'=>false,'WaterHistorySources'=>'{}','WaterHistoryTariffs'=>'[]','WaterHistoryHouseIncludesGarden'=>false,'WaterHistoryReviewedMetadataID'=>0,
         'WebEnabled' => false, 'VaultInstanceID' => 0,
         'Enabled' => false, 'PostalCode' => '', 'TariffVerified' => false,
@@ -65,6 +68,10 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->RegisterAttributeString($name, '');
         }
         $this->RegisterAttributeString('WeatherHeldTemperature', '');
+        foreach (['ConsumptionReportNextDue','ConsumptionReportLastAttemptDay','ConsumptionReportLastSentDay'] as $name) $this->RegisterAttributeString($name, '');
+        $this->RegisterTimer('ConsumptionReport', 0, 'LBEP_ConsumptionReportTick($_IPS["TARGET"]);');
+        $this->RegisterVariableString('ConsumptionReportStatus', 'Daily consumption email status', '~TextBox', 310);
+        $this->RegisterVariableString('ConsumptionReportHTML', 'Daily consumption email', '~HTMLBox', 320);
         $this->RegisterTimer('Tick', 0, 'LBEP_Tick($_IPS["TARGET"]);');
         $this->RegisterTimer('HookSetup', 0, 'LBEP_SetupHook($_IPS["TARGET"]);');
         $this->RegisterMessage(0, IPS_KERNELMESSAGE);
@@ -227,6 +234,7 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->recommend(0, false, 'Configuration error: ' . $e->getMessage());
             $this->SetValue('PriceValid', false);
         }
+        $this->configureConsumptionReport();
     }
 
     public function MessageSink($timeStamp, $senderID, $message, $data)
@@ -488,6 +496,7 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->validate($c); // Atomic validation before any writes.
             $c['HistoricalFetchEnabled'] = false; $c['HistoricalTariffs'] = '[]'; // Retired keys accepted for schema-1 compatibility only.
             $c['WebEnabled'] = false; $c['Enabled'] = false; $c['DailyLearningEnabled'] = false; $c['TariffVerified'] = false;
+            $c['ConsumptionReportEnabled'] = false;
             IPS_SetConfiguration($this->InstanceID, json_encode($c, JSON_THROW_ON_ERROR));
             $this->WriteAttributeString('PriceCache', ''); $this->WriteAttributeString('ReferenceDays', '');
             $this->WriteAttributeString('LastAttemptDay', ''); $this->WriteAttributeString('LastAppliedDay', '');
@@ -496,7 +505,7 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->SetValue('RecommendedSource', 0); $this->SetValue('ThresholdCalculatedAt', 0);
             IPS_ApplyChanges($this->InstanceID);
             $this->ReloadForm();
-            return 'Imported. Web page, recommendation and learning disabled; reconfirm tariff before enabling.';
+            return 'Imported. Web page, daily email, recommendation and learning disabled; reconfirm tariff before enabling.';
         } catch (Throwable $e) { return 'Import failed: ' . $e->getMessage(); }
     }
 

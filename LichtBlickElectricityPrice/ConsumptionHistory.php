@@ -176,7 +176,7 @@ final class LichtBlickConsumptionHistory
             if($r['unitPriceCt']===null && !($r['confirmedNoConsumption']??false)){$p['missingPriceIntervals']++;$missingPrice++;}
             if($r['tariffCostEuro']!==null){$p['tariffCostEuro']+=$r['tariffCostEuro'];$knownCost+=$r['tariffCostEuro'];$p['knownTariffCostEuro']+=$r['tariffCostEuro'];$p['knownPriceIntervals']++;}
             if($r['qualityFlags']&2)$estimated++;if($r['qualityFlags']&256)$unreferenced++;
-            if(!$r['priceVerified'])$unconfirmedPrices++;$resetEstimate+=$r['estimatedResetKWh'];unset($p);
+            if(!$r['priceVerified']){$unconfirmedPrices++;$p['unconfirmedPriceIntervals']=($p['unconfirmedPriceIntervals']??0)+1;}$resetEstimate+=$r['estimatedResetKWh'];unset($p);
         }
         foreach($buckets as &$p){if($p['missingEnergyIntervals'])$p['cleanedKWh']=$p['referenceKWh']=null;if($p['missingEnergyIntervals']||$p['missingPriceIntervals'])$p['tariffCostEuro']=null;}unset($p);
         $references=[];$adjustment=0.0;

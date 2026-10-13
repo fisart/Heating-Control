@@ -76,6 +76,8 @@ Version **0.3.13**, build 23 adds independently calculated gas costs from dated 
 
 Version **0.3.14**, build 24 moves the gas/heat-pump threshold and associated recommendation, weather/power model, learning status and diagnostics into a separate **Heizung** tab. Strom retains electricity prices, consumption and costs. State refresh continues every 60 seconds and preserves the selected tab.
 
+Version **0.3.20**, build 30 adds a disabled-by-default daily consumption email at Berlin midnight. Select an SMTP instance from the object tree, download yesterday’s preview, and enable after review. The report lists electricity, gas, main water and free well water with known costs and a total; garden is not a separate row. See [daily reports](docs/consumption-and-costs.md#daily-consumption-email--0320).
+
 Version **0.3.19**, build 29 adds immediate cursor tooltips and selectable datasets to all utility charts. Each dataset can be inspected on its own; chart scales follow the selection, while full period totals stay unchanged.
 
 Version **0.3.17**, build 27 connects verified water imports and subsequent electronic readings. Main water (including garden) leads the water tab with calculated dated costs; well water shows consumption without charges. Manual garden periods are included references and adjust documented charges once. The total chart counts main plus well once. See [water and combined totals](docs/consumption-and-costs.md).

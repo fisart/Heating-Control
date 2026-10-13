@@ -269,3 +269,60 @@ in a volume chart. Garden manual volumes are shown only when a complete recorded
 period fits a chart bucket; finer buckets stay unrecorded. Select Whole-period
 total for an eligible multi-day manual reference. Dated tariff adjustments remain
 signed cost datasets. These controls and tooltips never write any archive data.
+
+## Daily consumption email — 0.3.20
+
+In the instance form, expand **Daily consumption email · midnight** and select
+an existing SMTP instance from the object tree. The selector permits only the
+built-in SMTP module. Mail goes to the recipient configured in that instance;
+this module does not copy credentials or choose another recipient. Symcon 8.0
+(the library minimum) supports HTML through `SMTP_SendMail`.
+
+Use **Download yesterday’s email preview (no sending)** to inspect the same
+HTML that the schedule generates. `LBEP_GetDailyConsumptionReport(instanceID,
+"YYYY-MM-DD")` returns the HTML for a completed Berlin day without sending,
+scheduling, changing settings, or writing archive records. Leave
+`ConsumptionReportEnabled` off until the preview is approved. It defaults to
+false and configuration imports disable it.
+
+When enabled, the independent timer starts at the next **00:00 Europe/Berlin**
+and reports the previous complete calendar day. Each following midnight is
+calculated from the local calendar, including 23/25-hour clock-change days. The
+saved due time survives restarts; an overdue timer reports yesterday once,
+without sending a multi-day backlog. Recommendation and price-refresh timers
+do not need to be enabled for the email timer to run.
+
+The four rows are electricity, gas (converted kWh), house/main water and well
+water. The report uses the same reviewed consumption and dated supply-cost
+calculation as Total consumption. Main water physically includes garden use:
+there is no separate garden row, no additional garden charge and no invented
+daily subtraction. A documented garden tariff credit applicable to a whole
+day is folded into main cost once. Unallocatable manual credits mark that cost
+incomplete. Well water has no water charge; pump energy remains in the
+electricity meter.
+
+Known documented basic/rainwater charges are included once. Later electricity
+periods currently contain energy charges only: undocumented standing charges
+are not invented. Invoice reconciliation and aid remain outside dated supply
+costs. Unconfirmed electricity tariffs, gas conversion and estimated water
+rates remain provisional. Missing or partial values are labelled; incomplete
+costs produce a **Known subtotal**, not a complete total. Each row is rounded
+to cents before summing so that the displayed total matches its rows. Quantities
+retain their units and are not added across kWh and m³.
+
+`ConsumptionReportHTML` is a string variable with the HTMLBox profile directly
+below the instance. Each generated scheduled report replaces its value before
+the SMTP call, so it contains exactly the email body and remains available if
+sending fails. A preview download leaves it unchanged; a failed data read retains
+the last successfully generated report, whose day is shown in its header.
+
+`ConsumptionReportStatus` shows scheduling, SMTP acceptance or failure. The
+module records one attempt per report day before calling SMTP and serializes
+callbacks with a semaphore. It will not automatically resend that day after
+a failure or an uncertain response, including a restart during sending. SMTP
+acceptance is not a guarantee of delivery to the recipient’s inbox. No mail
+is sent when disabled or merely downloading a preview.
+
+Run `php tests/lichtblick-daily-report.php` for clock changes, date rollover,
+preview isolation, SMTP selection, restart/duplicate handling, failures,
+rounding, free well water and incomplete/provisional reporting.
