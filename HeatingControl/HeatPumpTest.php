@@ -137,14 +137,22 @@ trait HeatingControlHeatPumpTest
     {
         $v=[$s['ids']['HeatPumpOnID']=>false,$s['ids']['HeatPumpPowerID']=>0,$s['ids']['GasPumpID']=>false,
             $s['ids']['GasMixerID']=>$s['mixerClosed']];
+        $this->testOwnedCommands($v);
+    }
+    private function testOwnedCommands(array $v): bool
+    {
+        $ok=true;
         foreach($v as $id=>$value) {
             try {
                 if(!IPS_VariableExists($id))throw new RuntimeException('Stop output missing: '.$id);
-                $m=IPS_GetVariable($id);if(GetValue($id)===$value)continue;
+                $m=IPS_GetVariable($id);if(!in_array($m['VariableType'],[0,1,2],true))throw new RuntimeException('Invalid test-owned output: '.$id);
+                $value=$m['VariableType']===0?(bool)$value:($m['VariableType']===1?(int)$value:(float)$value);
+                if(GetValue($id)===$value)continue;
                 if(($m['VariableCustomAction']??0)||($m['VariableAction']??0))RequestAction($id,$value);
-                elseif($m['VariableType']===0)SetValueBoolean($id,(bool)$value);else SetValueInteger($id,(int)$value);
-            } catch(Throwable $e){$this->debug('TEST STOP '.$e->getMessage());}
+                elseif($m['VariableType']===0)SetValueBoolean($id,$value);elseif($m['VariableType']===1)SetValueInteger($id,$value);else SetValueFloat($id,$value);
+            } catch(Throwable $e){$ok=false;$this->debug('TEST STOP '.$e->getMessage());}
         }
+        return $ok;
     }
     private function finishTestTick(array &$s): void
     {
@@ -156,8 +164,8 @@ trait HeatingControlHeatPumpTest
         }
         $q=[$s['ids']['FanOnID']=>false,$s['ids']['FanSpeedID']=>0];$log=[];
         foreach($s['originalFlaps'] as $id=>$value)if(IPS_VariableExists((int)$id))$q[(int)$id]=$value;
-        // dispatch observes DryRun; test-owned heat has already been stopped above.
-        $this->dispatch($q,$log);
+        // A new DryRun setting cannot leave previously test-owned airflow running.
+        if(!$this->testOwnedCommands($q))throw new RuntimeException('Could not restore test-owned fan/flap outputs');
         // The test never edits source mode or manual desired settings; preserve any
         // explicit external shutdown rather than overwriting it with an old mode.
         $relationships=HeatPumpPerformance::relationships($s['points']);
@@ -208,6 +216,9 @@ trait HeatingControlHeatPumpTest
         $s=$this->testState();if(!$s)return false;
         $now=$this->sourceClock();
         if($s['phase']==='stopping'){$this->finishTestTick($s);return true;}
+        if(!$this->ReadPropertyBoolean('Enabled')||$this->ReadPropertyBoolean('DryRun')) {
+            $this->beginTestFinish($s,'Controller disabled or dry run enabled',false);$this->finishTestTick($s);return true;
+        }
         if($now-$s['lastTick']<8)return true;
         try {
             if(!$this->ReadPropertyBoolean('Enabled')||$this->ReadPropertyBoolean('DryRun')||$this->boolValue('MasterDisableID')||!$this->boolValue('WinterID'))throw new RuntimeException('Controller disabled, dry run or heating bypass');
@@ -248,7 +259,7 @@ trait HeatingControlHeatPumpTest
                         $expected=$r['flapID']===$s['settings']['HeatPumpTestExcludedFlapID']?$r['closed']:$r['open'];
                         if(GetValue($r['flapID'])!==$expected)throw new RuntimeException('Test flap command not confirmed: '.$r['name']);
                     }
-                    if($now-$s['phaseSince']>180) {
+                    if($s['index']>0 || $now-$s['phaseSince']>180) {
                         foreach($row['sensorUpdated'] as $key=>$updated)if($updated<=0||$now-$updated>900)throw new RuntimeException('Test sensor stale: '.$key);
                         foreach(['HeatPumpTestPowerMeterID','HeatPumpTestFanMeterID'] as $key)if($now-(IPS_GetVariable($s['settings'][$key])['VariableUpdated']??0)>180)throw new RuntimeException('Power meter stale: '.$key);
                     }

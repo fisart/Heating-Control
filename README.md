@@ -376,3 +376,8 @@ flap commands, recovery switch transitions, normal fan control, unchanged dry-ru
 publishing, shutdown/bypass behavior and invalid input.
 It does not replace a visual check of the native popup in the Symcon console.
 
+
+
+## Controlled heat-pump test — 0.3.23
+
+Start/cancel an eight-step 30–100% capacity test from the form or protected heating page; default 15 minutes per step. Master-bedroom flap stays closed. Raw readings, stable-point relationships and estimated COP persist. Occupied exchanger minimum is 40°C; holiday requirements follow configured room targets with an adjustable lower floor. See [test setup and local model limits](docs/heatpump-capacity-test.md).

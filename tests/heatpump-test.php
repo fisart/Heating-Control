@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__.'/webhook-fixture.php';
+require_once __DIR__.'/../LichtBlickElectricityPrice/WeatherModel.php';
 $root=sys_get_temp_dir().'/hc-test-'.bin2hex(random_bytes(6));mkdir($root);
 function IPS_GetKernelDir(){return $GLOBALS['root'];}
 function AC_SetLoggingStatus($archive,$id,$active){$GLOBALS['archiveLogging'][$archive][$id]=$active;return true;}
@@ -59,6 +60,11 @@ $m=fixture();$m->StartHeatPumpTest(3);tick($m);$m->CancelHeatPumpTest();
 check(!$m->values['HeatPumpTestActive']&&!json_decode($m->values['HeatPumpTestResults'],true)['complete'],'Cancellation stores partial run without learning');
 $m=fixture();$m->StartHeatPumpTest(3);$m->properties['Enabled']=false;$m->ProcessHeating();
 check(!$m->values['HeatPumpTestActive']&&!GetValue(35931),'Disabling module still stops test-owned heat');
+$m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][35931]['value']=true;$GLOBALS['variables'][46921]['value']=true;$m->properties['DryRun']=true;$m->ProcessHeating();
+check(!$m->values['HeatPumpTestActive']&&!GetValue(35931)&&!GetValue(46921),'New dry-run permission cannot leave test-owned heat/fan running');
+$m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][35931]['value']=true;$GLOBALS['variables'][35931]['VariableAction']=1;$m->CancelHeatPumpTest();
+check($m->values['HeatPumpTestActive'],'Unacknowledged heat stop retains exclusive ownership');
+$GLOBALS['variables'][35931]['value']=false;tick($m);check(!$m->values['HeatPumpTestActive'],'Acknowledged stop releases ownership');
 $m=fixture();$m->StartHeatPumpTest(3);$m->ApplyChanges();
 check(!$m->values['HeatPumpTestActive'],'Apply/restart never resumes an experiment');
 $m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][57694]['value']=28.0;tick($m);
@@ -79,4 +85,14 @@ $m=fixture();$req=webInvoke($m,'heatPumpRequirement',webInvoke($m,'rooms'));
 check($req['coilMinimum']===40.0,'Occupied exchanger minimum is 40C');
 $GLOBALS['variables'][46970]['value']=true;foreach([12594,40975,30481,37341] as $id)$GLOBALS['variables'][$id]['value']=10.0;
 check(webInvoke($m,'heatPumpRequirement',webInvoke($m,'rooms'))['coilMinimum']===20.0,'Holiday 10C targets permit 20C exchanger');
+$m=fixture();$m->properties['ElectricityPriceInstanceID']=20;
+$point=$p;$point['powerPercent']=80;$point['outside']=15;$point['incoming']=23;$point['airRise']=10;$point['coilLift']=22;
+$model=['schema'=>1,'createdAt'=>$m->clock,'fanSpeed'=>90,'roomSignature'=>hash('sha256',json_encode(webInvoke($m,'rooms'))),'points'=>[$point]];
+$m->attributes['HeatPumpPerformanceModel']=json_encode($model);
+$GLOBALS['instanceProperties'][20]=['WeatherCurve'=>LichtBlickWeatherModel::DEFAULT_CURVE,'WeatherReferenceTemperatureC'=>2.0,'WeatherPowerStepPercent'=>5,'WeatherFanKW'=>0.6,'GasPriceCt'=>10.48,'WeatherReferenceGasPriceCt'=>10.48,'SafetyMarginPercent'=>25.0,'HysteresisCt'=>2.0];
+foreach(['PriceValid'=>true,'CurrentPriceCt'=>10.0,'EffectiveThresholdCt'=>22.5,'ReferenceThresholdCt'=>30.0] as $ident=>$v){$id=83000+count($GLOBALS['instanceIdents'][20]??[]);$GLOBALS['instanceIdents'][20][$ident]=$id;$GLOBALS['variables'][$id]=['value'=>$v,'VariableType'=>is_bool($v)?0:2];}
+$reason='Test';$method=new ReflectionMethod(HeatingControl::class,'measuredPowerChoice');
+check($method->invokeArgs($m,[35,&$reason])===80,'Qualified model can raise power after conservative price recheck');
+$GLOBALS['variables'][$GLOBALS['instanceIdents'][20]['CurrentPriceCt']]['value']=40.0;$reason='Test';
+check($method->invokeArgs($m,[35,&$reason])===0,'Expensive higher-power point uses gas instead of old cheap threshold');
 echo "PASS: $checks heat-pump test/model checks\n";
