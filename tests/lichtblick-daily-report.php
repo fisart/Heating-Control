@@ -103,5 +103,28 @@ $GLOBALS['smtpThrow']=true;check(str_contains($test->SendDailyConsumptionReportT
 $count=count($GLOBALS['sentEmails']);$test->properties['ConsumptionReportSMTPID']=0;
 check(str_contains($test->SendDailyConsumptionReportTest(),'Select an SMTP') && count($GLOBALS['sentEmails'])===$count,'Unselected SMTP cannot send a test');
 check(count(array_filter($form['actions'],fn($a)=>($a['onClick']??'')==='echo LBEP_SendDailyConsumptionReportTest($id);'))===1,'Form exposes the explicit test-email action');
+// Symcon's generated wrapper requires every declared parameter, including PHP method defaults.
+function LBEP_GetDailyConsumptionReport(int $instanceID,string $date): string {
+    $m=$GLOBALS['reportWrapperInstance'];check($instanceID===$m->InstanceID,'Preview addresses the correct instance');
+    $GLOBALS['reportWrapperDate']=$date;return $m->GetDailyConsumptionReport($date);
+}
+$previewAction=$form['actions'][0];$GLOBALS['reportWrapperInstance']=$test;$id=$test->InstanceID;
+$before=serialize([$test->properties,$test->attributes,$test->values,$test->updates,$GLOBALS['history']??[]]);$count=count($GLOBALS['sentEmails']);
+ob_start();eval($previewAction['onClick']);$download=ob_get_clean();
+check(str_starts_with($download,'data:text/html;base64,') && $GLOBALS['reportWrapperDate']==='','Actual preview form action supplies the mandatory wrapper date argument');
+$downloadedHTML=base64_decode(substr($download,strlen('data:text/html;base64,')),true);
+check($downloadedHTML===$test->GetDailyConsumptionReport('') && str_contains($downloadedHTML,'12.10.2026'),'Form download decodes to the complete yesterday report');
+check($before===serialize([$test->properties,$test->attributes,$test->values,$test->updates,$GLOBALS['history']??[]]) && count($GLOBALS['sentEmails'])===$count,'Wrapper preview still performs no sending, scheduling or archive writes');
+$inspectCalls=function(array $node)use(&$inspectCalls):void {
+    foreach($node as $value) {
+        if(is_array($value)) {$inspectCalls($value);continue;}
+        if(!is_string($value))continue;
+        preg_match_all('/\bLBEP_(\w+)\(([^()]*)\)/',$value,$calls,PREG_SET_ORDER);
+        foreach($calls as $call) {
+            $method=new ReflectionMethod(LichtBlickElectricityPrice::class,$call[1]);
+            check(count(explode(',',$call[2]))===$method->getNumberOfParameters()+1,'Form call supplies all Symcon wrapper arguments for '.$call[1]);
+        }
+    }
+};$inspectCalls($form);
 if(($argv[1]??'')==='--sample')file_put_contents($argv[2],LichtBlickDailyReport::html(LichtBlickDailyReport::model('2026-10-12',reportFixture(),true)));
 echo "Daily report: preview isolation, Berlin midnight/DST, SMTP selection, restart and duplicate handling, failures, free well, garden exclusion, incomplete/provisional costs and cent rounding passed.\n";

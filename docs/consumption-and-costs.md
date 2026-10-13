@@ -281,7 +281,10 @@ this module does not copy credentials or choose another recipient. Symcon 8.0
 Use **Download yesterday’s email preview (no sending)** to inspect the same
 HTML that the schedule generates. `LBEP_GetDailyConsumptionReport(instanceID,
 "YYYY-MM-DD")` returns the HTML for a completed Berlin day without sending,
-scheduling, changing settings, or writing archive records. Leave
+scheduling, changing settings, or writing archive records. Pass an explicit
+empty string (`LBEP_GetDailyConsumptionReport(instanceID, "")`) for yesterday:
+Symcon's generated wrapper requires the date argument even though the PHP
+method has a default. The form supplies it explicitly as of 0.3.22. Leave
 `ConsumptionReportEnabled` off until the preview is approved. It defaults to
 false and configuration imports disable it.
 

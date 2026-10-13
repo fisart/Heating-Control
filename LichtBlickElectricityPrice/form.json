@@ -680,7 +680,7 @@
       "type": "Button",
       "caption": "Download yesterday\u2019s email preview (no sending)",
       "download": "Daily-consumption-preview.html",
-      "onClick": "try { echo 'data:text/html;base64,' . base64_encode(LBEP_GetDailyConsumptionReport($id)); } catch (Throwable $e) { echo $e->getMessage(); }"
+      "onClick": "try { echo 'data:text/html;base64,' . base64_encode(LBEP_GetDailyConsumptionReport($id, '')); } catch (Throwable $e) { echo $e->getMessage(); }"
     },
     {
       "type": "Button",

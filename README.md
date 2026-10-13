@@ -76,6 +76,8 @@ Version **0.3.13**, build 23 adds independently calculated gas costs from dated 
 
 Version **0.3.14**, build 24 moves the gas/heat-pump threshold and associated recommendation, weather/power model, learning status and diagnostics into a separate **Heizung** tab. Strom retains electricity prices, consumption and costs. State refresh continues every 60 seconds and preserves the selected tab.
 
+Version **0.3.22**, build 32 fixes the email-preview download by supplying the explicit date argument required by Symcon’s generated function wrapper. The actual form action is covered by a strict-wrapper regression check.
+
 Version **0.3.21**, build 31 adds **Send yesterday’s report as test email** in the instance form. It uses the selected SMTP instance, stores the identical HTML under the instance, and leaves daily scheduling unchanged.
 
 Version **0.3.20**, build 30 adds a disabled-by-default daily consumption email at Berlin midnight. Select an SMTP instance from the object tree, download yesterday’s preview, and enable after review. The report lists electricity, gas, main water and free well water with known costs and a total; garden is not a separate row. See [daily reports](docs/consumption-and-costs.md#daily-consumption-email--0320).
