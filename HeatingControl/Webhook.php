@@ -201,6 +201,8 @@ trait HeatingControlWebhook
             $controls['OperatingModeID']['available'] = false;
             $controls['HeatPumpDesiredPowerID']['available'] = false;
         }
+        if($this->ReadAttributeString('HeatPumpTestState')!=='')foreach($controls as &$control)$control['available']=false;
+        unset($control);
         return $controls;
     }
 
@@ -248,6 +250,7 @@ trait HeatingControlWebhook
             'sourceSelection'=>['automatic'=>(bool)$this->GetValue('AutomaticSourceSelection'), 'effective'=>(int)$this->GetValue('EffectiveSource'),
                 'power'=>(int)$this->GetValue('SelectedHeatPumpPower'), 'status'=>(string)$this->GetValue('SourceSelectionStatus'),
                 'transfer'=>(string)$this->GetValue('SourceTransferStatus'), 'provider'=>$this->webSourceProvider()],
+            'heatPumpTest'=>$this->heatPumpTestView(),
             'rooms'=>$roomData, 'environment'=>$environment, 'equipment'=>$equipment, 'controls'=>$controls];
     }
 
@@ -300,6 +303,18 @@ trait HeatingControlWebhook
         }
         if (!is_string($payload['control'] ?? null)) throw new InvalidArgumentException('Select a supported control.');
         if (IPS_GetKernelRunlevel() !== KR_READY) throw new RuntimeException('Symcon is not ready.');
+        if (in_array($payload['control'],['HeatPumpTestStart','HeatPumpTestCancel','HeatPumpTestMinutes'],true)) {
+            $control=$payload['control'];$value=$payload['value'];
+            if($control==='HeatPumpTestMinutes') {
+                if(!is_int($value))throw new InvalidArgumentException('Test duration requires whole minutes');
+                $this->SetHeatPumpTestMinutes($value);
+            } else {
+                if($value!==true)throw new InvalidArgumentException('Test start/cancel requires true');
+                if($control==='HeatPumpTestStart')$this->StartHeatPumpTest();else $this->CancelHeatPumpTest();
+            }
+            return ['ok'=>true,'confirmed'=>true,'state'=>$this->webState()];
+        }
+        if($this->testState())throw new InvalidArgumentException('A test owns the heating controls. Cancel it before changing operating settings.');
         if (!$this->ReadPropertyBoolean('Enabled') || $this->ReadPropertyBoolean('DryRun')) {
             throw new InvalidArgumentException('Controller disabled or in dry run: page is read-only.');
         }
@@ -395,6 +410,19 @@ trait HeatingControlWebhook
             if (($query['view'] ?? '') === 'state') return $reply(200,array_merge($this->webState(),[
                 'csrf'=>$this->webCSRF($vault,(int)floor(time()/3600))]));
             if (($query['view'] ?? '') === 'history') return $reply(200,$this->webHistory($query));
+            if (($query['view'] ?? '') === 'heatpump-test-results') {
+                $report=$this->ReadAttributeString('HeatPumpTestLastReport');
+                if($report==='')return $reply(404,['error'=>'No heat-pump test has finished yet.']);
+                return $reply(200,$report,['Content-Disposition'=>'attachment; filename="heatpump-test-results.json"']);
+            }
+            if (($query['view'] ?? '') === 'heatpump-test-readings') {
+                $report=json_decode($this->ReadAttributeString('HeatPumpTestLastReport')?:'null',true);
+                if(!is_array($report))return $reply(404,['error'=>'No completed test readings available.']);
+                $file=$this->testFile($report,'.jsonl');
+                if(!is_file($file)||filesize($file)>16777216)return $reply(404,['error'=>'Test readings unavailable or too large.']);
+                $data=file_get_contents($file);if($data===false)throw new RuntimeException('Cannot read test file');
+                return $reply(200,$data,['Content-Type'=>'application/x-ndjson; charset=utf-8','Content-Disposition'=>'attachment; filename="heatpump-test-readings.jsonl"']);
+            }
             if (isset($query['view'])) return $reply(404,['error'=>'Unknown view.']);
             $nonce = base64_encode(random_bytes(24));
             $escape = static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
@@ -411,4 +439,5 @@ trait HeatingControlWebhook
         }
     }
 }
+
 

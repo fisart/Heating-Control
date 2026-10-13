@@ -17,6 +17,134 @@
     },
     {
       "type": "ExpansionPanel",
+      "caption": "Heat-pump capacity test",
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestStepMinutes",
+          "caption": "Time per power step (minutes; default 15)",
+          "minimum": 3,
+          "maximum": 60,
+          "digits": 0
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestFanSpeed",
+          "caption": "Fixed test fan speed (%)",
+          "minimum": 20,
+          "maximum": 100,
+          "digits": 0
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestExcludedFlapID",
+          "caption": "Master-bedroom flap: keep CLOSED during test"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestPowerMeterID",
+          "caption": "Heat-pump circuit power (W)"
+        },
+        {
+          "type": "SelectInstance",
+          "name": "HeatPumpTestArchiveID",
+          "caption": "Archive Control: enable missing test-variable logging",
+          "validModules": [
+            "{43192F0B-135B-4CE7-A0A7-1475603F3060}"
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestFanMeterID",
+          "caption": "Fan / heating circuit power (W)"
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestAirflowM3h",
+          "caption": "Estimated test airflow (m³/h; nameplate default 2000)",
+          "minimum": 100,
+          "maximum": 10000,
+          "digits": 0
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestMaximumRoomC",
+          "caption": "Stop test at room temperature (°C)",
+          "minimum": 15,
+          "maximum": 35,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestMaximumCoilC",
+          "caption": "Stop test at exchanger temperature (°C; software cutoff, verify for equipment)",
+          "minimum": 45,
+          "maximum": 65,
+          "digits": 1
+        },
+        {
+          "type": "Label",
+          "caption": "30 → 40 → 50 → 60 → 70 → 80 → 90 → 100%. All other room flaps open; fan speed fixed. Final third of each step, up to five minutes, is averaged. Only stable readings enter the local model. 15 min × 8 = 2 hours plus transfer and baseline. Raw readings and summaries persist under media/heatpump-tests. Start only after reviewing the configured sensors and temperature limits."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Heat-pump comfort and holiday requirements",
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpOccupiedMinimumCoilC",
+          "caption": "Occupied: minimum heat-pump exchanger temperature (°C)",
+          "minimum": 30,
+          "maximum": 55,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpHolidayMinimumCoilC",
+          "caption": "Holiday: minimum exchanger floor (°C)",
+          "minimum": 10,
+          "maximum": 40,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpHolidayCoilAboveTargetC",
+          "caption": "Holiday: exchanger above highest room target (°C)",
+          "minimum": 1,
+          "maximum": 25,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpSupplyAboveTargetC",
+          "caption": "Model: outgoing air above highest room target (°C)",
+          "minimum": 1,
+          "maximum": 20,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpMinimumAirRiseC",
+          "caption": "Model: minimum outgoing minus incoming air (°C)",
+          "minimum": 1,
+          "maximum": 20,
+          "digits": 1
+        },
+        {
+          "type": "CheckBox",
+          "name": "HeatPumpUseTestModel",
+          "caption": "Use stable local test points for automatic power selection (within 3°C of measured weather and intake)"
+        },
+        {
+          "type": "Label",
+          "caption": "Occupied minimum defaults to 40°C. Holiday minimum = max(floor 20°C, highest room target + 10°C): with targets 10°C, 20°C is permitted. No weather extrapolation. A higher measured power command requires a conservative price recheck; an unverified/missing comparison falls back to gas. Actual fan/flap airflow can differ from the test, so COP remains estimated."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
       "caption": "Automatic air-heating source selection",
       "items": [
         {
@@ -91,7 +219,7 @@
     {
       "type": "NumberSpinner",
       "name": "ResidualMinOutgoingTemp",
-      "caption": "Minimum outgoing air for residual heat (\u00b0C)",
+      "caption": "Minimum outgoing air for residual heat (°C)",
       "digits": 1,
       "minimum": 0,
       "maximum": 50
@@ -572,6 +700,21 @@
     }
   ],
   "actions": [
+    {
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Start heat-pump test",
+          "onClick": "HC_StartHeatPumpTest($id, $HeatPumpTestStepMinutes);"
+        },
+        {
+          "type": "Button",
+          "caption": "Cancel heat-pump test",
+          "onClick": "HC_CancelHeatPumpTest($id);"
+        }
+      ]
+    },
     {
       "type": "RowLayout",
       "items": [

@@ -7,7 +7,7 @@ function IPS_GetInstance($id) { return ['ModuleInfo'=>['ModuleID'=>$GLOBALS['ins
 function IPS_GetInstanceListByModuleID($module) { return array_keys(array_filter($GLOBALS['instanceModules'],fn($v)=>$v===$module)); }
 function IPS_GetObjectIDByIdent($ident,$instance) { return $GLOBALS['instanceIdents'][$instance][$ident] ?? 0; }
 function IPS_GetProperty($id,$name) { return $GLOBALS['instanceProperties'][$id][$name] ?? ''; }
-function IPS_SetProperty($id,$name,$value) { $GLOBALS['instanceProperties'][$id][$name]=$value; }
+function IPS_SetProperty($id,$name,$value) { if(isset($GLOBALS['instance'])&&$id===$GLOBALS['instance']->InstanceID)$GLOBALS['instance']->properties[$name]=$value;else $GLOBALS['instanceProperties'][$id][$name]=$value; }
 function IPS_HasChanges($id) { return $GLOBALS['pendingChanges'] ?? false; }
 function IPS_VariableProfileExists($name) { return isset($GLOBALS['profiles'][$name]); }
 function IPS_GetVariableProfile($name) { return $GLOBALS['profiles'][$name]; }
@@ -56,3 +56,4 @@ function response($m,$method='GET',$query=[],$payload=null,$overrides=[]): array
     $server=array_replace(['REQUEST_METHOD'=>$method,'HTTP_HOST'=>'heating.example:46900','HTTP_ORIGIN'=>'https://heating.example:46900','HTTP_SEC_FETCH_SITE'=>'same-origin','CONTENT_TYPE'=>'application/json','HTTP_X_HEATING_CSRF'=>webInvoke($m,'webCSRF',7,(int)floor(time()/3600))],$overrides);
     return webInvoke($m,'webResponse',$server,$query,is_string($payload)?$payload:($payload===null?'':json_encode($payload)));
 }
+

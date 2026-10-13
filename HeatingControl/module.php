@@ -8,12 +8,14 @@ declare(strict_types=1);
 require_once __DIR__ . "/Webhook.php";
 require_once __DIR__ . "/Archive.php";
 require_once __DIR__ . "/SourceSelection.php";
+require_once __DIR__ . "/HeatPumpTest.php";
 
 class HeatingControl extends IPSModule
 {
     use HeatingControlWebhook;
     use HeatingControlArchive;
     use HeatingControlSourceSelection;
+    use HeatingControlHeatPumpTest;
 
     private const DEFAULT_IDS = [
         'MasterDisableID' => 11098,
@@ -61,6 +63,7 @@ class HeatingControl extends IPSModule
     {
         parent::Create();
         $this->createSourceSelection();
+        $this->createHeatPumpTest();
         $this->RegisterPropertyBoolean('Enabled', false);
         $this->RegisterPropertyBoolean('DryRun', true);
         $this->RegisterPropertyBoolean('DebugEnabled', false);
@@ -121,6 +124,11 @@ class HeatingControl extends IPSModule
     public function ApplyChanges()
     {
         parent::ApplyChanges();
+        // Never resume a hardware experiment across configuration changes/restart.
+        if ($this->ReadAttributeString('HeatPumpTestState') !== '') {
+            try { $s=$this->testState();$this->beginTestFinish($s,'Configuration changed or Symcon restarted',false);$this->finishTestTick($s); }
+            catch (Throwable $e) { $this->SetValue('HeatPumpTestStatus','Test recovery requires attention: '.$e->getMessage());$this->SetTimerInterval('HeatPumpTestTimer',10000); }
+        }
         // An ApplyChanges/restart cannot establish how long external equipment stayed off.
         $this->WriteAttributeString('HeatPumpStoppedAt', '0');
         if ($this->GetValue('AutomaticSourceSelection') || $this->ReadAttributeString('AutomaticWasActive') === '1'
@@ -149,10 +157,11 @@ class HeatingControl extends IPSModule
 
     public function ProcessHeating(): void
     {
-        if (!$this->ReadPropertyBoolean('Enabled') || IPS_GetKernelRunlevel() !== KR_READY) return;
+        if ((!$this->ReadPropertyBoolean('Enabled') && $this->ReadAttributeString('HeatPumpTestState')==='') || IPS_GetKernelRunlevel() !== KR_READY) return;
         $lock = 'HeatingControl.' . $this->InstanceID;
         if (!IPS_SemaphoreEnter($lock, 1000)) return;
         try {
+            if ($this->processHeatPumpTest()) return;
             $this->debug('Evaluation started');
             $this->evaluate();
         } catch (\Throwable $e) {
@@ -323,7 +332,10 @@ class HeatingControl extends IPSModule
         $incoming = $this->floatValue('IncomingAirTempID');
         $this->debug(sprintf('FAN source=%.2f incoming=%.2f threshold=%.2f',
             $source, $incoming, $this->floatValue('ResidualDeltaID')));
-        if ($source - $incoming >= $this->floatValue('ResidualDeltaID')) $this->queueFanOn($q);
+        $hp=$mode === $this->ReadPropertyInteger('HeatPumpModeValue');
+        $minimum=$hp ? $this->heatPumpRequirement($this->rooms())['coilMinimum'] : -40;
+        $minimum-=$this->boolValue('FanOnID') ? max(0,$this->floatValue('HysteresisID')) : 0;
+        if ($source >= $minimum && $source - $incoming >= $this->floatValue('ResidualDeltaID')) $this->queueFanOn($q);
         else $this->queueFanOff($q);
     }
 
@@ -710,11 +722,15 @@ class HeatingControl extends IPSModule
         if (!is_array($backup) || ($backup['schema'] ?? '') !== 'HeatingControl.Config.v1' || !is_array($backup['config'] ?? null)) {
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
-        $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS),
+        $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS), array_keys(self::TEST_DEFAULTS),
             ['Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
+        foreach (self::TEST_DEFAULTS as $name=>$default) if(array_key_exists($name,$incoming)) {
+            $value=$incoming[$name];
+            if(is_bool($default)?!is_bool($value):(is_int($default)?!is_int($value):(!is_numeric($value)||!is_finite((float)$value))))throw new InvalidArgumentException('Invalid test/model property: '.$name);
+        }
         foreach (['DryRun', 'DebugEnabled', 'WebEnabled'] as $name) {
             if (isset($incoming[$name]) && !is_bool($incoming[$name])) {
                 throw new \InvalidArgumentException('Expected Boolean ' . $name);
@@ -748,4 +764,5 @@ class HeatingControl extends IPSModule
         return 'Configuration imported. Controller is disabled; verify IDs before enabling.';
     }
 }
+
 

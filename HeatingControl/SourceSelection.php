@@ -88,6 +88,10 @@ trait HeatingControlSourceSelection
                 }
                 $reason = 'Automatic: ' . ($r['source'] === 1 ? 'heat pump at ' . $power . '%' : 'gas')
                     . '; ' . substr((string)($r['reason'] ?? ''), 0, 500);
+                if ($r['source']===1) {
+                    $power=$this->measuredPowerChoice($power,$reason);
+                    if($power===0)$mode=$this->ReadPropertyInteger('GasModeValue');
+                }
             } catch (Throwable $e) { $reason = 'Automatic gas fallback: ' . $e->getMessage(); }
             // Mirror the selected mode, including fallback and transfer/no-demand periods.
             // Dispatch respects DryRun and does not invoke a legacy mode action script.
@@ -177,3 +181,4 @@ trait HeatingControlSourceSelection
         $this->SetValue('SourceSelectionStatus', $reason);
     }
 }
+

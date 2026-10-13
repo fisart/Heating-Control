@@ -10,6 +10,8 @@ jobs:
       - name: PHP syntax
         run: |
           php -l HeatingControl/module.php
+          php -l HeatingControl/HeatPumpTest.php
+          php -l HeatingControl/HeatPumpPerformance.php
           php -l HeatingControl/SourceSelection.php
           php -l HeatingControl/Webhook.php
           php -l HeatingControl/Archive.php
@@ -42,6 +44,7 @@ jobs:
           php -d memory_limit=64M tests/lichtblick-water-dense.php
           php tests/lichtblick-webhook.php
           php tests/lichtblick-webhook.php --no-auth-api
+          php tests/heatpump-test.php
           php tests/source-selection.php
           php tests/room-editor.php
           php tests/recovery-hysteresis.php
@@ -63,4 +66,5 @@ jobs:
         run: |
           node tests/page-dom.cjs
           node tests/lichtblick-page-dom.cjs
+
 
