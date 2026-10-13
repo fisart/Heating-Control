@@ -69,6 +69,11 @@ $m=fixture();$m->StartHeatPumpTest(3);$m->ApplyChanges();
 check(!$m->values['HeatPumpTestActive'],'Apply/restart never resumes an experiment');
 $m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][57694]['value']=28.0;tick($m);
 check(!$m->values['HeatPumpTestActive']&&str_contains($m->values['HeatPumpTestStatus'],'Room temperature limit'),'Room limit cancels test');
+$m=fixture();$m->StartHeatPumpTest(3);
+for($i=0;$i<150;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(count($s['points']??[])>=2)break;}
+$GLOBALS['variables'][57694]['value']=28.0;tick($m);
+$cutoff=json_decode($m->values['HeatPumpTestResults'],true);
+check(!$cutoff['complete']&&$cutoff['modelQualified']&&count($cutoff['points'])>=2,'Temperature-limited run retains qualified completed steps without claiming all eight');
 $m=fixture();$m->StartHeatPumpTest(3);tick($m,100);
 check(!$m->values['HeatPumpTestActive'],'Timer interruption rejects unattended experiment');
 $m=fixture();$GLOBALS['authenticated']=false;

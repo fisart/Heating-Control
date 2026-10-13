@@ -65,8 +65,10 @@ Final-window halves must agree within **0.5°C air rise**, **1°C exchanger** an
 **10% HP-circuit power**, with adequate coverage, gaps and plausible input/COP.
 Unsettled points are saved/displayed but excluded from the operative model.
 Adjacent usable points calculate changes per ten percentage points in input,
-air rise, exchanger lift and estimated COP. Only completed tests with at least two
-usable points replace the model; failed/cancelled runs preserve the preceding model.
+air rise, exchanger lift and estimated COP. At least two usable points are required to replace the model. A completed run
+or a normal configured temperature-limit stop can supply its completed stable
+steps; the interrupted step is excluded. Faulted/cancelled runs preserve the
+preceding model, and an early finish never claims that all eight steps completed.
 
 Files persist under `<kernel>/media/heatpump-tests/<instanceID>/`: per-run raw
 `.jsonl` and `.summary.json`, plus the latest qualified `model.json`. Include the

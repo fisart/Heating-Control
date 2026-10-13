@@ -52,6 +52,11 @@ trait HeatingControlHeatPumpTest
         $line=json_encode($row,JSON_THROW_ON_ERROR)."\n";
         if(file_put_contents($this->testFile($s,'.jsonl'),$line,FILE_APPEND|LOCK_EX)!==strlen($line))throw new RuntimeException('Cannot save heat-pump test readings');
     }
+    private function testSaveJSON(string $file,string $json): void
+    {
+        $temporary=$file.'.tmp';
+        if(file_put_contents($temporary,$json,LOCK_EX)!==strlen($json)||!rename($temporary,$file))throw new RuntimeException('Cannot persist test JSON atomically');
+    }
     private function testValue(int $id,bool $temperature=false): float
     {
         if(!IPS_VariableExists($id) || !in_array(IPS_GetVariable($id)['VariableType'],[1,2],true))throw new RuntimeException('Numeric test sensor missing: '.$id);
@@ -166,23 +171,31 @@ trait HeatingControlHeatPumpTest
         foreach($s['originalFlaps'] as $id=>$value)if(IPS_VariableExists((int)$id))$q[(int)$id]=$value;
         // A new DryRun setting cannot leave previously test-owned airflow running.
         if(!$this->testOwnedCommands($q))throw new RuntimeException('Could not restore test-owned fan/flap outputs');
+        foreach($q as $id=>$value)if(GetValue($id)!==$value) {
+            $this->SetValue('HeatPumpTestStatus','Waiting for fan/flap restoration confirmation: '.$s['finishReason']);
+            $this->saveTestState($s);$this->SetTimerInterval('HeatPumpTestTimer',10000);return;
+        }
         // The test never edits source mode or manual desired settings; preserve any
         // explicit external shutdown rather than overwriting it with an old mode.
         $relationships=HeatPumpPerformance::relationships($s['points']);
+        // A normal configured temperature cutoff may end a run before 100%.
+        // Its previously completed stable steps are still valid measurements.
+        $temperatureStop=str_starts_with($s['finishReason'],'Room temperature limit:')||$s['finishReason']==='Heat-pump exchanger temperature limit';
+        $qualified=($s['complete']||$temperatureStop)&&$relationships['usablePointCount']>=2;
         $report=['schema'=>1,'runID'=>$s['runID'],'startedAt'=>$s['startedAt'],'finishedAt'=>$this->sourceClock(),
             'complete'=>$s['complete'],'reason'=>$s['finishReason'],'stepMinutes'=>$s['settings']['HeatPumpTestStepMinutes'],
             'airflowM3h'=>$s['settings']['HeatPumpTestAirflowM3h'],'airflowIsMeasured'=>false,'fanSpeed'=>$s['settings']['HeatPumpTestFanSpeed'],
             'excludedFlapID'=>$s['settings']['HeatPumpTestExcludedFlapID'],'rooms'=>$s['rooms'],'baseline'=>$s['baseline'],
-            'points'=>$s['points'],'relationships'=>$relationships];
+            'points'=>$s['points'],'relationships'=>$relationships,'modelQualified'=>$qualified];
         $json=json_encode($report,JSON_THROW_ON_ERROR|JSON_PRETTY_PRINT);
-        if(file_put_contents($this->testFile($s,'.summary.json'),$json,LOCK_EX)!==strlen($json))throw new RuntimeException('Cannot save test summary; test remains in stopping state');
+        $this->testSaveJSON($this->testFile($s,'.summary.json'),$json);
         $this->testWrite($s,['kind'=>'footer','report'=>$report]);
         $this->WriteAttributeString('HeatPumpTestLastReport',$json);$this->SetValue('HeatPumpTestResults',$json);
-        if($s['complete']&&$relationships['usablePointCount']>=2) {
+        if($qualified) {
             $model=['schema'=>1,'runID'=>$s['runID'],'createdAt'=>$this->sourceClock(),'fanSpeed'=>$report['fanSpeed'],
                 'airflowM3h'=>$report['airflowM3h'],'airflowIsMeasured'=>false,'roomSignature'=>hash('sha256',json_encode($s['rooms'])),'points'=>$s['points'],'relationships'=>$relationships];
             $m=json_encode($model,JSON_THROW_ON_ERROR);
-            if(file_put_contents($this->testDirectory().'/model.json',$m,LOCK_EX)!==strlen($m))throw new RuntimeException('Cannot persist measured model');
+            $this->testSaveJSON($this->testDirectory().'/model.json',$m);
             $this->WriteAttributeString('HeatPumpPerformanceModel',$m);$this->SetValue('HeatPumpModelJSON',$m);
         }
         $this->WriteAttributeString('HeatPumpTestState','');$this->SetValue('HeatPumpTestActive',false);$this->SetTimerInterval('HeatPumpTestTimer',0);
