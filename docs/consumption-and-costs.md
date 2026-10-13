@@ -1,4 +1,4 @@
-# Verbrauch & Kosten — 0.3.17, build 27
+# Verbrauch & Kosten — 0.3.18, build 28
 
 The protected page has five tabs: **Strom**, **Gas**, **Wasser**, **Total consumption**, **Heizung**.
 Strom shows electricity prices, consumption and invoice reconciliation. Heizung
@@ -121,6 +121,10 @@ If `WaterHistoryHouseIncludesGarden` is enabled, the displayed main volume inclu
 garden. Missing manual garden readings do not hide electronic main quantities or
 calculated charges. A house-only main-minus-garden split remains available as a
 period reference when supported by complete readings. Well water costs zero.
+The Water tab opens with **Days** and **Water · m³**, showing daily main/well
+consumption even though the well has no price. Costs and coarser groups remain
+selectable; **Whole-period total** combines the entire selection into one bar.
+The summary always totals the selected dates independently of chart grouping.
 The `electronic` response contains the primary main/well report; legacy `streams`
 retain the separate house-only view for API compatibility.
 Confirmed `ConsumptionZeroPeriods` also apply to water; basic fees remain.
