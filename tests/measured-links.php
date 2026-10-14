@@ -27,5 +27,11 @@ $GLOBALS['instanceProperties'][10]['VaultInstanceID']=1;check(view($m)['path']==
 $GLOBALS['instanceProperties'][10]['VaultInstanceID']=8;check(view($m)['path']==='','Different authentication vault has no cross-page link');$GLOBALS['instanceProperties'][10]['VaultInstanceID']=7;
 $GLOBALS['instanceModules'][11]='{8B333AC9-EE67-4D24-8CE7-433BBB391E6C}';$GLOBALS['instanceProperties'][11]=['ElectricityPriceInstanceID'=>1];check(!view($m)['connected'],'Ambiguous multiple controllers never select an arbitrary source');unset($GLOBALS['instanceModules'][11]);
 foreach([['updatedAt'=>$now-181],['validUntil'=>$now],['gasPriceCt'=>99],['safetyMarginPercent'=>0],['currentPriceCt'=>100],['powerPercent'=>101]] as $bad){snapshot(array_replace($snapshot,$bad));check(view($m)['economics']===null,'Invalid/expired/mismatched measured comparison rejected');}
+$fallback=['schema'=>1,'valid'=>false,'updatedAt'=>$now,'source'=>2,'reason'=>'No qualified point: outside air 16°C',
+    'outside'=>16.0,'incoming'=>23.0,'target'=>23.0,'fanSpeed'=>90,'airflowM3h'=>2000,'temperatureToleranceC'=>3,'gasEfficiencyPercent'=>100];
+snapshot($fallback);$v=view($m);
+check($v['economics']===null&&$v['conditions']['outside']===16.0&&$v['conditions']['fanSpeed']===90.0,'Fresh fallback conditions survive without making a valid price recommendation');
+snapshot(array_replace($fallback,['updatedAt'=>$now-181]));check(view($m)['conditions']===null,'Expired environmental readings are hidden');
+snapshot(array_replace($fallback,['incoming'=>'broken','outside'=>null]));check(!isset(view($m)['conditions']['outside'])&&!isset(view($m)['conditions']['incoming']),'Malformed environmental values are omitted');
 snapshot($snapshot);$GLOBALS['instanceModules'][10]='{WRONG}';check(!view($m)['connected'],'Unrelated module cannot provide the displayed decision');
 echo "PASS: measured controller discovery, quote consistency, read-only status and cross-page link ownership/authentication checks\n";

@@ -7,7 +7,7 @@ trait LichtBlickMeasuredHeating
     private function measuredHeatingView(): array
     {
         $view=['connected'=>false,'instanceID'=>0,'path'=>'','automatic'=>false,'effectiveSource'=>0,'selectedPower'=>0,
-            'economics'=>null,'points'=>[],'reason'=>'No Heating Control instance is connected to this price provider.'];
+            'economics'=>null,'conditions'=>null,'points'=>[],'reason'=>'No Heating Control instance is connected to this price provider.'];
         if(!function_exists('IPS_GetInstanceListByModuleID')||!function_exists('IPS_GetObjectIDByIdent'))return $view;
         try {
             $ids=[];
@@ -31,6 +31,14 @@ trait LichtBlickMeasuredHeating
                 &&abs($e['safetyMarginPercent']-$this->ReadPropertyFloat('SafetyMarginPercent'))<0.0001
                 &&abs($e['hysteresisCt']-$this->ReadPropertyFloat('HysteresisCt'))<0.0001
                 &&$this->GetValue('PriceValid')===true;
+            // Fresh environmental readings remain useful even when no economic point qualifies.
+            $fresh=is_array($e)&&($e['schema']??0)===1&&is_int($e['updatedAt']??null)
+                &&$e['updatedAt']<=$now+30&&$now-$e['updatedAt']<=180;
+            if($fresh){$conditions=['updatedAt'=>$e['updatedAt']];
+                foreach(['outside','incoming','target','targetMinusIncoming','fanSpeed','airflowM3h','temperatureToleranceC','requiredSupplyC','minimumAirRiseC','gasEfficiencyPercent'] as $key)
+                    if(is_numeric($e[$key]??null)&&is_finite((float)$e[$key]))$conditions[$key]=(float)$e[$key];
+                $view['conditions']=$conditions;
+            }
             $view['economics']=$valid?$e:null;
             $view['reason']=$valid?(string)($e['reason']??'Measured heating comparison'):(string)($e['reason']??'Enable automatic source selection in Heating Control to evaluate the current measured comparison.');
             if(!$valid&&($e['valid']??false))$view['reason']='Measured comparison expired or price/settings changed; waiting for Heating Control evaluation.';

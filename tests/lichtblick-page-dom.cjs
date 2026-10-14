@@ -76,6 +76,18 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(d.querySelector('#source').textContent,'Gas');assert.ok(d.querySelector('#power').textContent.includes('50%')); // Economic candidate retained while gas is preferred.
  assert.ok(d.querySelector('#weather').textContent.includes('50%'),'Candidate shown even when gas chosen');
  assert.equal(d.querySelectorAll('img').length,0,'No injected markup');assert.equal(d.querySelectorAll('#debug script').length,0);
+ payload.heating.economics=null;payload.heating.reason='Automatic gas fallback: No qualified point: Outside air 16.0°C has no tested point within ±3.0°C';
+ payload.heating.conditions={updatedAt:now,outside:16,incoming:21.5,target:23,targetMinusIncoming:1.5,fanSpeed:90,airflowM3h:2000,temperatureToleranceC:3,requiredSupplyC:28,gasEfficiencyPercent:100};
+ d.querySelector('#refresh').click();await settle();
+ assert.equal(d.querySelector('#source').textContent,'Comparison unavailable');
+ assert.ok(d.querySelector('#reason').textContent.includes('Why comparison is unavailable:'));
+ assert.ok(d.querySelector('#reason').textContent.includes('Outside air 16.0°C'));
+ assert.ok(d.querySelector('#weather').textContent.includes('16.0 °C'),'Fallback keeps fresh outside reading visible');
+ assert.ok(d.querySelector('#weather').textContent.includes('21.5 °C'),'Fallback keeps fresh intake reading visible');
+ assert.ok(d.querySelector('#weather').textContent.includes('90%'),'Fan context is reviewable');
+ assert.equal(d.querySelector('#ceiling').textContent,'Unavailable','No unsupported threshold fabricated');
+ payload.heating.conditions.updatedAt=now-181;d.querySelector('#refresh').click();await settle();
+ assert.ok(!d.querySelector('#weather').textContent.includes('21.5 °C'),'Expired conditions hidden');
  payload.values.WeatherModelValid=false;payload.values.PriceValid=false;payload.values.PriceAvailable=false;payload.recommendation.valid=false;payload.heating.economics=null;
  d.querySelector('#refresh').click();await settle();
  assert.equal(d.querySelector('#source').textContent,'Comparison unavailable');assert.equal(d.querySelector('#ceiling').textContent,'Unavailable');assert.equal(d.querySelector('#price').textContent,'Unavailable');

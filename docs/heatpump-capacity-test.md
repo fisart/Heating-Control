@@ -180,3 +180,15 @@ APIs remain `HC_StartHeatPumpTest`, `HC_CancelHeatPumpTest`,
 
 Validation: `tests/heatpump-economics.php`, `tests/heatpump-test.php`, existing
 source/room/recovery/archive/price/web security and DOM tests.
+
+### Unavailable comparison diagnostics (0.3.28)
+
+When no measured point qualifies, the protected pages state which requirement
+failed and include the current and tested values: fan speed, assumed airflow,
+outside temperature, intake temperature, excluded flap, or useful supply air.
+Temperature failures state the configured matching tolerance. Stable test points
+remain available in the matrix, but usability alone does not mean they match
+current conditions. Fresh environmental readings remain visible on LichtBlick
+without publishing a threshold or COP for unsupported conditions. Expired
+readings are hidden. The controller retains its gas fallback; no room demand
+still leaves the heat sources off.

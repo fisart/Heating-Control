@@ -78,7 +78,7 @@ const stamp=v=>typeof v==='number'&&v>0?new Date(v*1000).toLocaleString('en-GB',
 function rows(id,entries){const root=el(id);root.replaceChildren();for(const [label,value] of entries){const a=document.createElement('dt'),b=document.createElement('dd');a.textContent=label;b.textContent=String(value);root.append(a,b);}}
 function table(id,entries,current=-1){const root=el(id);root.replaceChildren();entries.forEach((row,i)=>{const tr=document.createElement('tr');if(i===current)tr.className='current';row.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.append(td);});root.append(tr);});}
 function render(s){
- const v=s.values,c=s.settings,r=s.recommendation,h=s.heating||{},e=h.economics?.validUntil>Date.now()/1000?h.economics:null;
+ const v=s.values,c=s.settings,r=s.recommendation,h=s.heating||{},e=h.economics?.validUntil>Date.now()/1000?h.economics:null,conditions=h.conditions?.updatedAt>=Date.now()/1000-180?h.conditions:{},readings=e||conditions;
  renderGasSettings(c);
  el('consumption-panel').hidden=!c.consumptionHistoryEnabled;
  consumptionStart=c.consumptionHistoryFrom||'';consumptionThrough=c.consumptionHistoryThrough||'';waterStart=c.waterHistoryFrom||'';
@@ -95,16 +95,17 @@ function render(s){
  el('ceiling').textContent=e?num(e.exitCt)+' ct/kWh':'Unavailable';
  el('entry').textContent=e?'Heat-pump entry below '+num(e.entryCt)+' ct/kWh':'No current measured threshold';
  el('margin').textContent=num(c.safetyMarginPercent,1)+'% safety margin · '+num(c.hysteresisCt)+' ct/kWh hysteresis';
- el('reason').textContent=h.reason||r.reason;
+ el('reason').textContent=(e?'':'Why comparison is unavailable: ')+(h.reason||r.reason);
  rows('calculation',[
   ['Break-even electricity price',e?num(e.breakEvenCt)+' ct/kWh':'—'],['Heat-pump entry below',e?num(e.entryCt)+' ct/kWh':'—'],['Gas at or above',e?num(e.exitCt)+' ct/kWh':'—'],
-  ['Current gas price',num(c.gasPriceCt)+' ct/kWh'],['Gas heating efficiency',e?num(e.gasEfficiencyPercent,1)+'% (assumption)':'Configured in Heating Control'],
+  ['Current gas price',num(c.gasPriceCt)+' ct/kWh'],['Gas heating efficiency',typeof readings.gasEfficiencyPercent==='number'?num(readings.gasEfficiencyPercent,1)+'% (assumption)':'Configured in Heating Control'],
   ['Safety margin',num(c.safetyMarginPercent,1)+'%'],['Price hysteresis',num(c.hysteresisCt)+' ct/kWh']]);
  const p=e?.point||{};
- rows('weather',[['Outside air',num(e?.outside,1)+' °C'],['Intake air',num(e?.incoming,1)+' °C'],['Highest active room target',num(e?.target,1)+' °C'],
-  ['Target minus intake',num(e?.targetMinusIncoming,1)+' °C'],['Chosen power',num(e?.powerPercent,0)+'%'],['Estimated system COP',num(p.estimatedSystemCOP)],
-  ['House-meter input above baseline',num(p.systemInputKW)+' kW'],['Assumed airflow',num(p.airflowM3h,0)+' m³/h']]);
- table('measured-points',(h.points||[]).map(p=>[num(p.outside,1),num(p.incoming,1),num(p.powerPercent,0),num(p.systemInputKW),num(p.estimatedSystemCOP),p.usable?'eligible':'excluded / unsettled']));
+ rows('weather',[['Outside air',num(readings.outside,1)+' °C'],['Intake air',num(readings.incoming,1)+' °C'],['Highest active room target',num(readings.target,1)+' °C'],
+  ['Target minus intake',num(readings.targetMinusIncoming,1)+' °C'],['Chosen power',num(e?.powerPercent,0)+'%'],['Estimated system COP',num(p.estimatedSystemCOP)],
+  ['House-meter input above baseline',num(p.systemInputKW)+' kW'],['Requested fan speed',num(readings.fanSpeed,0)+'%'],['Assumed airflow',num(p.airflowM3h??readings.airflowM3h,0)+' m³/h'],
+  ['Temperature matching tolerance',num(readings.temperatureToleranceC,1)+' °C'],['Required supply air',num(readings.requiredSupplyC,1)+' °C']]);
+ table('measured-points',(h.points||[]).map(p=>[num(p.outside,1),num(p.incoming,1),num(p.powerPercent,0),num(p.systemInputKW),num(p.estimatedSystemCOP),p.usable&&p.stable!==false?'usable test point (current match required)':'excluded / unsettled']));
  rows('retrieval',[['Last successful fetch',stamp(v.LastSuccessfulFetch)],['Postcode',c.postalCode]]);el('fetch-status').textContent=v.FetchStatus;
  table('schedule',s.slots.map(p=>[stamp(p.start),stamp(p.end),num(p.price,3)]),s.slots.findIndex(p=>p.start<=s.updatedAt&&s.updatedAt<p.end));
  el('coverage').textContent=s.slots.length?s.slots.length+' actual current/upcoming intervals. Gaps and missing future prices are not filled.':'No current or upcoming intervals available.';

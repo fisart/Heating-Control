@@ -45,6 +45,32 @@ final class HeatPumpMatrix
         usort($candidates,static fn($a,$b)=>($b['estimatedSystemCOP']<=>$a['estimatedSystemCOP'])?:($a['powerPercent']<=>$b['powerPercent']));
         return $candidates[0]??null;
     }
+    /** Explain a failed match without relaxing any selection criterion. */
+    public static function unavailableReason(array $rows,float $outside,float $incoming,float $target,float $margin,float $minRise,int $fan,float $airflow,float $tolerance,int $excludedFlap=0): string
+    {
+        if($outside < -20||$outside>24)return sprintf('Outside air %.1f°C is outside the supported operating range (−20 to 24°C)',$outside);
+        $rows=array_values(array_filter(self::validate($rows),static fn($r)=>$r['usable']&&$r['stable']));
+        if(!$rows)return 'No stable, usable house-meter calibration points are available';
+        $steps=[
+            [static fn($r)=>$r['fanSpeed']===$fan,static fn($r)=>sprintf('Requested fan speed %d%% does not match the tested fan speed(s): %s%%',$fan,implode('%, ',array_unique(array_column($r,'fanSpeed'))))],
+            [static fn($r)=>abs($r['airflowM3h']-$airflow)<=1,static fn($r)=>sprintf('Configured airflow %.0f m³/h does not match the tested airflow(s): %s m³/h',$airflow,implode(', ',array_unique(array_column($r,'airflowM3h'))))],
+            [static fn($r)=>abs($r['outside']-$outside)<=$tolerance,static fn($r)=>sprintf('Outside air %.1f°C has no tested point within ±%.1f°C; tested outside temperatures %.1f–%.1f°C',$outside,$tolerance,min(array_column($r,'outside')),max(array_column($r,'outside')))],
+            [static fn($r)=>abs($r['incoming']-$incoming)<=$tolerance,static fn($r)=>sprintf('Intake air %.1f°C has no matching tested point within ±%.1f°C at this outside temperature; tested intake temperatures %.1f–%.1f°C',$incoming,$tolerance,min(array_column($r,'incoming')),max(array_column($r,'incoming')))],
+            [static fn($r)=>!($excludedFlap>0&&isset($r['excludedFlapID'])&&$r['excludedFlapID']!==$excludedFlap),static fn($r)=>'The excluded room flap differs from the tested calibration configuration'],
+        ];
+        foreach($steps as [$accept,$explain]) {
+            $matched=array_values(array_filter($rows,$accept));
+            if(!$matched)return $explain($rows);
+            $rows=$matched;
+        }
+        // Mirror the nearest-point-per-power rule used by choose().
+        $nearest=[];
+        foreach($rows as $r){$r['distance']=abs($r['outside']-$outside)+abs($r['incoming']-$incoming);$key=$r['powerPercent'];
+            if(!isset($nearest[$key])||$r['distance']<$nearest[$key]['distance']
+                ||($r['distance']===$nearest[$key]['distance']&&($r['measuredAt']??0)>($nearest[$key]['measuredAt']??0)))$nearest[$key]=$r;}
+        $rise=max(array_column(array_values($nearest),'airRise'));
+        return sprintf('Matched test points cannot meet the air-supply requirement: required supply ≥%.1f°C (room target %.1f°C + %.1f°C margin) and air rise ≥%.1f°C; highest predicted supply %.1f°C, largest measured rise %.1f°C',$target+$margin,$target,$margin,$minRise,$incoming+$rise,$rise);
+    }
     public static function economics(array $point,float $gasCt,float $gasEfficiency,float $safety,float $band,float $price,int $previous): array
     {
         foreach([$gasCt,$gasEfficiency,$safety,$band,$price] as $v)if(!is_finite($v))throw new InvalidArgumentException('Nonfinite economic input');

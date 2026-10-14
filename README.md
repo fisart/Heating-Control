@@ -1,8 +1,10 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.27, build 37** displays all heating comparison prices consistently
-in **ct/kWh** on both protected pages and in the measured decision text.
-Existing EUR/kWh variables and calculation values retain their units.
+Version **0.3.28, build 38** explains why no measured operating point qualifies,
+including the current value, tested conditions and matching tolerance. Fresh
+outside/intake readings, room target, fan setting and airflow remain visible
+when price thresholds are unavailable. Switching criteria and calculation units
+are unchanged; both pages continue to display energy prices in **ct/kWh**.
 
 The measured outside/intake/power matrix is seeded with the reviewed
 14 October house-meter test. Automatic Heating Control computes

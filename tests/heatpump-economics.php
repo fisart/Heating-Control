@@ -22,6 +22,12 @@ check(HeatPumpMatrix::choose($seed,12,10,10,5,5,90,2000,3)===null,'Warm-house ca
 check(HeatPumpMatrix::choose($seed,12,23,23,5,5,70,2000,3)===null,'Fan context must match');
 check(HeatPumpMatrix::choose($seed,12,23,23,5,5,90,1500,3)===null,'Changed airflow cannot silently reuse old COP');
 check(HeatPumpMatrix::choose($seed,-21,23,23,5,5,90,2000,3)===null,'Manufacturer lower boundary enforced');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,16,23,23,5,5,90,2000,3),'Outside air 16.0°C has no tested point within ±3.0°C'),'Outside mismatch states current temperature and tolerance');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,10,10,5,5,90,2000,3),'Intake air 10.0°C'),'Intake mismatch states the current intake');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,23,5,5,70,2000,3),'Requested fan speed 70%'),'Fan mismatch states requested and tested settings');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,23,5,5,90,1500,3),'Configured airflow 1500'),'Airflow mismatch explains the rejected calibration');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,50,5,5,90,2000,3),'required supply ≥55.0°C'),'Supply mismatch states the target-based requirement');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,-21,23,23,5,5,90,2000,3),'supported operating range'),'Operating boundary is distinguished from missing tests');
 $other=$seed[2];$other['pointID']='cold';$other['outside']=2;
 check(count(HeatPumpMatrix::merge($seed,[$other]))===9,'New temperature point preserves existing measurements');
 $legacy=$seed;$legacy[0]['electricalMethod']='old-hp-circuit';
@@ -51,6 +57,10 @@ $q['priceCt']=20;$q['validUntil']=$m->clock;$GLOBALS['variables'][82001]['value'
 check($choice===[2,0]&&$m->values['HeatPumpBreakEvenEuro']===0.0,'Expired quote clears thresholds and falls back to gas');
 $m=fixture();$GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=2.0;$queue=[];$choice=$method->invokeArgs($m,[1,&$queue]);
 check($choice===[2,0]&&str_contains($m->values['HeatPumpEconomicsJSON'],'No qualified point'),'Untested weather selects gas with test-needed explanation');
+$fallback=json_decode($m->values['HeatPumpEconomicsJSON'],true);
+check($fallback['outside']===2&&$fallback['incoming']===23&&$fallback['fanSpeed']===90,'Unsupported weather retains current environmental inputs');
+check(str_contains($fallback['reason'],'Outside air 2.0°C')&&str_contains($fallback['reason'],'±3.0°C'),'Fallback snapshot names the failed matching criterion');
+check(!isset($fallback['point'])&&!isset($fallback['breakEvenCt']),'Unsupported conditions never expose a made-up threshold or COP');
 $m=fixture();$m->attributes['HeatPumpPerformanceModel']=json_encode(['schema'=>1,'points'=>[['powerPercent'=>100,'estimatedSystemCOP'=>9]]]);
 check(count(webInvoke($m,'measuredMatrix'))===8,'Existing wrong-circuit model does not overwrite house-meter calibration');
 $m=fixture();$m->GetConfigurationForm();$m->ExportConfig();check(count(webInvoke($m,'measuredMatrix'))===8,'Form and backup retain populated matrix');

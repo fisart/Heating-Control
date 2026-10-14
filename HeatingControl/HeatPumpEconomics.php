@@ -26,6 +26,7 @@ trait HeatingControlHeatPumpEconomics
     private function measuredEconomicChoice(string &$reason): int
     {
         foreach(['HeatPumpBreakEvenEuro','HeatPumpEntryEuro','HeatPumpExitEuro'] as $id)$this->SetValue($id,0.0);
+        $conditions=[];
         try {
             $instance=$this->ReadPropertyInteger('ElectricityPriceInstanceID');
             if(!$this->priceQuoteID())throw new RuntimeException('Select an updated LichtBlick instance');
@@ -41,10 +42,14 @@ trait HeatingControlHeatPumpEconomics
             $tolerance=$this->ReadPropertyFloat('HeatPumpMatrixTemperatureToleranceC');
             if($tolerance<0||$tolerance>3)throw new RuntimeException('Matrix temperature tolerance must be 0–3°C');
             foreach(['HeatPumpSupplyAboveTargetC','HeatPumpMinimumAirRiseC'] as $key){$value=$this->ReadPropertyFloat($key);if(!is_finite($value)||$value<1||$value>20)throw new RuntimeException('Air supply requirements must be 1–20°C');}
-            $point=HeatPumpMatrix::choose($this->measuredMatrix(),$outside,$incoming,$req['target'],
-                $this->ReadPropertyFloat('HeatPumpSupplyAboveTargetC'),$this->ReadPropertyFloat('HeatPumpMinimumAirRiseC'),
-                $this->intValue('FanDesiredSpeedID'),$this->ReadPropertyFloat('HeatPumpTestAirflowM3h'),$tolerance,$this->ReadPropertyInteger('HeatPumpTestExcludedFlapID'));
-            if(!$point)throw new RuntimeException('No qualified point at current outside/intake temperature, fan and supply requirement; run a test at these conditions');
+            $fan=$this->intValue('FanDesiredSpeedID');$airflow=$this->ReadPropertyFloat('HeatPumpTestAirflowM3h');
+            $margin=$this->ReadPropertyFloat('HeatPumpSupplyAboveTargetC');$minRise=$this->ReadPropertyFloat('HeatPumpMinimumAirRiseC');
+            $flap=$this->ReadPropertyInteger('HeatPumpTestExcludedFlapID');$matrix=$this->measuredMatrix();
+            $conditions=['outside'=>$outside,'incoming'=>$incoming,'target'=>$req['target'],'targetMinusIncoming'=>$req['target']-$incoming,
+                'fanSpeed'=>$fan,'airflowM3h'=>$airflow,'temperatureToleranceC'=>$tolerance,'requiredSupplyC'=>$req['target']+$margin,
+                'minimumAirRiseC'=>$minRise,'gasEfficiencyPercent'=>$this->ReadPropertyFloat('HeatPumpGasEfficiencyPercent')];
+            $point=HeatPumpMatrix::choose($matrix,$outside,$incoming,$req['target'],$margin,$minRise,$fan,$airflow,$tolerance,$flap);
+            if(!$point)throw new RuntimeException('No qualified point: '.HeatPumpMatrix::unavailableReason($matrix,$outside,$incoming,$req['target'],$margin,$minRise,$fan,$airflow,$tolerance,$flap).'. Repeat calibration at these conditions; heat-pump prices cannot be extrapolated from an unsupported test point.');
             $e=HeatPumpMatrix::economics($point,(float)$q['gasPriceCt'],$this->ReadPropertyFloat('HeatPumpGasEfficiencyPercent'),
                 (float)$q['safetyMarginPercent'],(float)$q['hysteresisCt'],(float)$q['priceCt'],(int)$this->ReadAttributeString('HeatPumpEconomicSource'));
             $this->WriteAttributeString('HeatPumpEconomicSource',(string)$e['source']);
@@ -52,14 +57,14 @@ trait HeatingControlHeatPumpEconomics
             $reason=sprintf('Measured %d%%, estimated COP %.2f at %.1f°C outside / %.1f°C intake; break-even %.2f ct/kWh, entry < %.2f ct/kWh, exit ≥ %.2f ct/kWh; current %.2f ct/kWh; %s',
                 $point['powerPercent'],$point['estimatedSystemCOP'],$outside,$incoming,$e['breakEvenCt'],$e['entryCt'],$e['exitCt'],$q['priceCt'],$e['source']===1?'heat pump':'gas');
             $snapshot=['schema'=>1,'updatedAt'=>$now,'validUntil'=>$q['validUntil'],'valid'=>true,'powerPercent'=>$point['powerPercent'],
-                'outside'=>$outside,'incoming'=>$incoming,'target'=>$req['target'],'targetMinusIncoming'=>$req['target']-$incoming,'point'=>$point,'reason'=>$reason]+$e;
+                'outside'=>$outside,'incoming'=>$incoming,'target'=>$req['target'],'targetMinusIncoming'=>$req['target']-$incoming,'point'=>$point,'reason'=>$reason]+$e+$conditions;
             $this->SetValue('HeatPumpEconomicsJSON',json_encode($snapshot,JSON_THROW_ON_ERROR));
             $this->SetValue('HeatPumpPerformanceStatus',$reason.'; estimated airflow; room demand still controls heating');
             return $e['source']===1?(int)$point['powerPercent']:0;
         } catch(Throwable $error) {
             $this->WriteAttributeString('HeatPumpEconomicSource','2');
             $reason='Automatic gas fallback: '.$error->getMessage();
-            $this->SetValue('HeatPumpEconomicsJSON',json_encode(['schema'=>1,'updatedAt'=>$this->sourceClock(),'valid'=>false,'source'=>2,'reason'=>$reason],JSON_THROW_ON_ERROR));
+            $this->SetValue('HeatPumpEconomicsJSON',json_encode(['schema'=>1,'updatedAt'=>$this->sourceClock(),'valid'=>false,'source'=>2,'reason'=>$reason]+$conditions,JSON_THROW_ON_ERROR));
             $this->SetValue('HeatPumpPerformanceStatus',$reason);return 0;
         }
     }
