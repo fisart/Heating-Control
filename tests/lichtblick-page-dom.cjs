@@ -17,7 +17,7 @@ water.electronic=JSON.parse(JSON.stringify(water));water.waterDisplayMode=water.
 water.electronic.from=now-2*86400;water.electronic.points=[{start:now-2*86400,end:now-86400,streams:{house:{knownM3:1,knownCostEuro:4,missingVolumeDays:0,incompleteCostDays:0},garden:{knownM3:null,knownCostEuro:-1,missingVolumeDays:0,incompleteCostDays:0},well:{knownM3:1,knownCostEuro:0,missingVolumeDays:0,incompleteCostDays:0}}},{start:now-86400,end:now,streams:{house:{knownM3:2,knownCostEuro:7,missingVolumeDays:0,incompleteCostDays:0},garden:{knownM3:null,knownCostEuro:0,missingVolumeDays:0,incompleteCostDays:0},well:{knownM3:2,knownCostEuro:0,missingVolumeDays:0,incompleteCostDays:0}}}];
 const total={from:now-86400,to:now,resolution:'daily',streams:{},points:[{start:now-86400,end:now,streams:{}}],totals:{knownCostEuro:12,knownEnergyKWh:20,knownWaterM3:6,completeCost:false}};
 for(const key of ['electricity','gas','house','garden','well']){const volume=key==='electricity'?10:key==='gas'?10:key==='house'?2:key==='garden'?1:3,cost=key==='electricity'?-2:key==='gas'?4:key==='house'?8:key==='garden'?2:0;total.streams[key]={knownVolume:volume,knownCostEuro:cost,unit:key==='electricity'||key==='gas'?'kWh':'m³',incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0,error:''};total.points[0].streams[key]={knownVolume:volume,knownCostEuro:cost,incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0};}
-state.heating={connected:true,instanceID:11543,path:'/hook/heating_11543',automatic:true,points:[{outside:12,incoming:23,powerPercent:50,systemInputKW:3.06,estimatedSystemCOP:3.61,usable:true}],reason:'Measured comparison',economics:{valid:true,source:1,powerPercent:50,validUntil:now+600,breakEvenEuro:.3786,entryEuro:.2639,exitEuro:.2839,gasEfficiencyPercent:100,outside:12,incoming:23,target:23,targetMinusIncoming:0,point:{estimatedSystemCOP:3.61,systemInputKW:3.06,airflowM3h:2000}}};
+state.heating={connected:true,instanceID:11543,path:'/hook/heating_11543',automatic:true,points:[{outside:12,incoming:23,powerPercent:50,systemInputKW:3.06,estimatedSystemCOP:3.61,usable:true}],reason:'Measured comparison',economics:{valid:true,source:1,powerPercent:50,validUntil:now+600,breakEvenEuro:.3786,entryEuro:.2639,exitEuro:.2839,breakEvenCt:37.86,entryCt:26.39,exitCt:28.39,gasEfficiencyPercent:100,outside:12,incoming:23,target:23,targetMinusIncoming:0,point:{estimatedSystemCOP:3.61,systemInputKW:3.06,airflowM3h:2000}}};
 let code=200,fail=false,invalidUtilityBody=false,payload=state,calls=[];
 let html=fs.readFileSync(__dirname+'/../LichtBlickElectricityPrice/page.html','utf8').replaceAll('{{NONCE}}','fixture').replaceAll('{{PATH}}','/hook/lichtblick_123').replaceAll('{{INSTANCE}}','123').replaceAll('{{PORTAL}}','/hook/alarm_portal_42').replaceAll('{{LOGIN}}','/hook/secrets_7?portal=1');
 const dom=new JSDOM(html,{url:'https://prices.example/hook/lichtblick_123',runScripts:'dangerously',beforeParse(w){
@@ -37,8 +37,8 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(d.querySelector('#price').textContent,'19.25 ct/kWh');
  assert.equal(d.querySelector('#source').textContent,'Heat pump');
  assert.ok(d.querySelector('#power').textContent.includes('50%'));
- assert.equal(d.querySelector('#ceiling').textContent,'€0.2839/kWh');
- assert.ok(d.querySelector('#entry').textContent.includes('0.2639'));
+ assert.equal(d.querySelector('#ceiling').textContent,'28.39 ct/kWh');
+ assert.ok(d.querySelector('#entry').textContent.includes('26.39 ct/kWh'));
  assert.equal(d.querySelectorAll('#measured-points tr').length,1);
  assert.equal(d.querySelector('#curve'),null,'Retired provisional matrix removed');
  assert.equal(d.querySelector('#heating-control-link').getAttribute('href'),'/hook/heating_11543');
@@ -121,10 +121,10 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(d.querySelector('#panel-heizung').hidden,false);assert.equal(d.querySelector('#panel-strom').hidden,true);
  assert.equal(d.querySelector('#tab-heizung').getAttribute('aria-selected'),'true');
  assert.equal(d.querySelector('#heating-price').textContent,d.querySelector('#price').textContent,'Live price is available beside the threshold');
- const priorCeiling=payload.values.EffectiveThresholdCt;payload.values.EffectiveThresholdCt=28.15;payload.heating.economics.exitEuro=.2815;
+ const priorCeiling=payload.values.EffectiveThresholdCt;payload.values.EffectiveThresholdCt=28.15;payload.heating.economics.exitEuro=.2815;payload.heating.economics.exitCt=28.15;
  const priorHistoryCalls=calls.filter(c=>/view=(price|consumption|gas)-history/.test(c.url)).length;
  d.querySelector('#refresh').click();await settle();
- assert.equal(d.querySelector('#panel-heizung').hidden,false,'Refresh keeps heating tab selected');assert.equal(d.querySelector('#ceiling').textContent,'€0.2815/kWh','Heating threshold updates on state refresh');
+ assert.equal(d.querySelector('#panel-heizung').hidden,false,'Refresh keeps heating tab selected');assert.equal(d.querySelector('#ceiling').textContent,'28.15 ct/kWh','Heating threshold updates on state refresh');
  assert.equal(calls.filter(c=>/view=(price|consumption|gas)-history/.test(c.url)).length,priorHistoryCalls,'Heating refresh does not request unrelated consumption histories');
  payload.values.EffectiveThresholdCt=priorCeiling;
  d.querySelector('#tab-heizung').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Home',bubbles:true}));await settle();

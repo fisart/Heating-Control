@@ -108,9 +108,9 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  const room=d.querySelector('#rooms article');assert.equal(room.querySelector('.temperature button'),null);
  assert.equal(room.querySelectorAll('.sensor-values button').length,1);
  assert.equal(room.querySelectorAll('img').length,0);
- state.heatPumpTest.economics={valid:true,source:1,powerPercent:50,breakEvenEuro:.378576,entryEuro:.263932,exitEuro:.283932,exitCt:28.3932,entryCt:26.3932,validUntil:Date.now()/1000+600,gasEfficiencyPercent:100,reason:'Measured house-meter result'};
+ state.heatPumpTest.economics={valid:true,source:1,powerPercent:50,breakEvenEuro:.378576,entryEuro:.263932,exitEuro:.283932,breakEvenCt:37.8576,exitCt:28.3932,entryCt:26.3932,validUntil:Date.now()/1000+600,gasEfficiencyPercent:100,reason:'Measured house-meter result'};
  d.querySelector('#refresh').click();await settle();
- assert.ok(d.querySelector('#matrix-economic').textContent.includes('50%'),'Measured power and EUR/kWh thresholds rendered');
+ assert.ok(d.querySelector('#matrix-economic').textContent.includes('Break-even 37.86 ct/kWh · Enter below 26.39 ct/kWh · Exit at 28.39 ct/kWh · 50%'),'Measured power and cent/kWh thresholds rendered');
  assert.ok(d.querySelector('#price-provider-reason').textContent.includes('Measured house-meter result'),'Measured decision takes precedence over legacy page recommendation');
  // Delayed replies must not reopen or repopulate a closed chart.
  resolveHistory={};d.querySelector('#environment .sensor-value').click();await settle();d.querySelector('#chart-close').click();

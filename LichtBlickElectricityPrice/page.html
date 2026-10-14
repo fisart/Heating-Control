@@ -92,12 +92,12 @@ function render(s){
  el('source').textContent=e?(e.source===1?'Heat pump':'Gas'):'Comparison unavailable';
  el('power').textContent=e?'Measured candidate: '+num(e.powerPercent,0)+'%':'No eligible current measured point';
  el('valid-until').textContent=e?'Comparison valid until '+stamp(e.validUntil):'Use Heating Control for automatic selection and calibration.';
- el('ceiling').textContent=e?'€'+num(e.exitEuro,4)+'/kWh':'Unavailable';
- el('entry').textContent=e?'Heat-pump entry below €'+num(e.entryEuro,4)+'/kWh':'No current measured threshold';
- el('margin').textContent=num(c.safetyMarginPercent,1)+'% safety margin · '+num(c.hysteresisCt)+' ct hysteresis';
+ el('ceiling').textContent=e?num(e.exitCt)+' ct/kWh':'Unavailable';
+ el('entry').textContent=e?'Heat-pump entry below '+num(e.entryCt)+' ct/kWh':'No current measured threshold';
+ el('margin').textContent=num(c.safetyMarginPercent,1)+'% safety margin · '+num(c.hysteresisCt)+' ct/kWh hysteresis';
  el('reason').textContent=h.reason||r.reason;
  rows('calculation',[
-  ['Break-even electricity price',e?'€'+num(e.breakEvenEuro,4)+'/kWh':'—'],['Heat-pump entry below',e?'€'+num(e.entryEuro,4)+'/kWh':'—'],['Gas at or above',e?'€'+num(e.exitEuro,4)+'/kWh':'—'],
+  ['Break-even electricity price',e?num(e.breakEvenCt)+' ct/kWh':'—'],['Heat-pump entry below',e?num(e.entryCt)+' ct/kWh':'—'],['Gas at or above',e?num(e.exitCt)+' ct/kWh':'—'],
   ['Current gas price',num(c.gasPriceCt)+' ct/kWh'],['Gas heating efficiency',e?num(e.gasEfficiencyPercent,1)+'% (assumption)':'Configured in Heating Control'],
   ['Safety margin',num(c.safetyMarginPercent,1)+'%'],['Price hysteresis',num(c.hysteresisCt)+' ct/kWh']]);
  const p=e?.point||{};

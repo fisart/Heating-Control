@@ -1,7 +1,11 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.26, build 36** adds a measured outside/intake/power matrix seeded
-with the reviewed 14 October house-meter test. Automatic Heating Control computes
+Version **0.3.27, build 37** displays all heating comparison prices consistently
+in **ct/kWh** on both protected pages and in the measured decision text.
+Existing EUR/kWh variables and calculation values retain their units.
+
+The measured outside/intake/power matrix is seeded with the reviewed
+14 October house-meter test. Automatic Heating Control computes
 EUR/kWh break-even/entry/exit thresholds from the selected point's estimated
 system COP, live gas tariff and adjustable gas efficiency. Verified LichtBlick
 price snapshots replace the provisional curve as the price input. The provisional weather/reference model and daily threshold

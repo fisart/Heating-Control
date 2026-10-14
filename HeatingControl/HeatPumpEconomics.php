@@ -49,8 +49,8 @@ trait HeatingControlHeatPumpEconomics
                 (float)$q['safetyMarginPercent'],(float)$q['hysteresisCt'],(float)$q['priceCt'],(int)$this->ReadAttributeString('HeatPumpEconomicSource'));
             $this->WriteAttributeString('HeatPumpEconomicSource',(string)$e['source']);
             foreach(['HeatPumpBreakEvenEuro'=>'breakEvenEuro','HeatPumpEntryEuro'=>'entryEuro','HeatPumpExitEuro'=>'exitEuro'] as $ident=>$key)$this->SetValue($ident,(float)$e[$key]);
-            $reason=sprintf('Measured %d%%, estimated COP %.2f at %.1f°C outside / %.1f°C intake; break-even %.4f EUR/kWh, entry < %.4f, exit ≥ %.4f; current %.4f; %s',
-                $point['powerPercent'],$point['estimatedSystemCOP'],$outside,$incoming,$e['breakEvenEuro'],$e['entryEuro'],$e['exitEuro'],$q['priceCt']/100,$e['source']===1?'heat pump':'gas');
+            $reason=sprintf('Measured %d%%, estimated COP %.2f at %.1f°C outside / %.1f°C intake; break-even %.2f ct/kWh, entry < %.2f ct/kWh, exit ≥ %.2f ct/kWh; current %.2f ct/kWh; %s',
+                $point['powerPercent'],$point['estimatedSystemCOP'],$outside,$incoming,$e['breakEvenCt'],$e['entryCt'],$e['exitCt'],$q['priceCt'],$e['source']===1?'heat pump':'gas');
             $snapshot=['schema'=>1,'updatedAt'=>$now,'validUntil'=>$q['validUntil'],'valid'=>true,'powerPercent'=>$point['powerPercent'],
                 'outside'=>$outside,'incoming'=>$incoming,'target'=>$req['target'],'targetMinusIncoming'=>$req['target']-$incoming,'point'=>$point,'reason'=>$reason]+$e;
             $this->SetValue('HeatPumpEconomicsJSON',json_encode($snapshot,JSON_THROW_ON_ERROR));
