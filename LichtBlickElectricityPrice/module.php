@@ -4,6 +4,7 @@ require_once __DIR__ . '/Economics.php';
 require_once __DIR__ . '/History.php';
 require_once __DIR__ . '/WeatherModel.php';
 require_once __DIR__ . '/Webhook.php';
+require_once __DIR__ . '/MeasuredHeating.php';
 require_once __DIR__ . '/PriceStore.php';
 require_once __DIR__ . '/PriceHistory.php';
 require_once __DIR__ . '/ConsumptionHistory.php';
@@ -19,12 +20,16 @@ require_once __DIR__ . '/DailyReport.php';
 class LichtBlickElectricityPrice extends IPSModule
 {
     use LichtBlickElectricityPriceWebhook;
+    use LichtBlickMeasuredHeating;
     use LichtBlickPriceHistory;
     use LichtBlickConsumptionHistoryAccess;
     use LichtBlickGasHistoryAccess;
     use LichtBlickWaterHistoryAccess;
     use LichtBlickTotalHistoryAccess;
     use LichtBlickDailyReportAccess;
+
+    // Retained only to accept old backups; none of these configure active control.
+    private const RETIRED_PROPERTIES = ['WeatherModelEnabled', 'OutsideTemperatureID', 'WeatherCurve', 'WeatherReferenceTemperatureC', 'WeatherReferenceGasPriceCt', 'WeatherFanKW', 'WeatherPowerStepPercent', 'WeatherTemperatureHysteresisC', 'OutsideTemperatureMaxAgeSeconds', 'DailyLearningEnabled', 'GasKWhPerM3', 'MinimumReferenceDays', 'ElectricalBackgroundKW', 'GasCounterID', 'HeatPumpCounterID', 'AuxCounterID', 'GasCounterScale', 'HeatPumpCounterScale', 'AuxCounterScale', 'SourceModeID', 'HolidayID', 'HeatPumpOnID', 'HeatPumpHeatModeID', 'HeatPumpCapacityID', 'GasAirPumpID', 'RadiatorPumpID', 'HotWaterPumpID', 'StorageTemperatureID', 'LearningRooms', 'ThresholdCt', 'ReferenceCapacityPercent'];
 
     private const DEFAULTS = [
         'ConsumptionReportEnabled'=>false, 'ConsumptionReportSMTPID'=>0,
@@ -109,6 +114,7 @@ class LichtBlickElectricityPrice extends IPSModule
         $this->RegisterVariableString('WeatherModelStatus', 'Weather model status', '~TextBox', 270);
         $this->RegisterVariableFloat('ReferenceThresholdCt', 'Configured / learned reference threshold (ct/kWh)', 'LBEP.Price', 280);
         $this->RegisterVariableString('PriceHistoryStatus', 'Price history storage status', '~TextBox', 300);
+        if(function_exists('IPS_SetHidden'))foreach(['DailyCandidateCt','ThresholdCalculatedAt','DailyStatus','WeatherHeatPumpPowerPercent','WeatherOutsideTemperatureC','WeatherCOP','WeatherSystemCOP','WeatherHeatPumpKW','WeatherModelValid','WeatherModelStatus','ReferenceThresholdCt'] as $ident){$id=IPS_GetObjectIDByIdent($ident,$this->InstanceID);if($id)IPS_SetHidden($id,true);}
         // Old retrieval-status children are preserved but hidden on existing installations.
         if (function_exists('IPS_SetHidden')) foreach (['HistoricalFetchStatus', 'LastHistoricalFetch'] as $ident) {
             $id = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
@@ -146,6 +152,7 @@ class LichtBlickElectricityPrice extends IPSModule
     private function validate(array $c): void
     {
         foreach (self::DEFAULTS as $name => $default) {
+            if(in_array($name,self::RETIRED_PROPERTIES,true))continue;
             if (!array_key_exists($name, $c)) throw new InvalidArgumentException('Missing setting ' . $name);
             $v = $c[$name];
             $ok = is_float($default) ? (is_int($v) || is_float($v)) && is_finite((float)$v)
@@ -153,16 +160,10 @@ class LichtBlickElectricityPrice extends IPSModule
             if (!$ok) throw new InvalidArgumentException('Wrong type for ' . $name);
         }
         if ($c['PostalCode'] !== '' && !preg_match('/^\d{5}$/D', $c['PostalCode'])) throw new InvalidArgumentException('Postcode must have five digits');
-        foreach (['SafetyMarginPercent' => [0, 95], 'ThresholdCt' => [0, 1000], 'HysteresisCt' => [0, 100],
-            'FetchIntervalMinutes' => [5, 1440], 'MaxCacheAgeHours' => [1, 48], 'PriceCorrectionCt' => [-100, 100],
-            'GasPriceCt' => [0.001, 100], 'GasKWhPerM3' => [1, 20], 'GasCounterScale' => [0.000001, 100],
-            'HeatPumpCounterScale' => [0.000001, 100], 'AuxCounterScale' => [0.000001, 100],
-            'ConsumptionCounterScale' => [0.000001, 100], 'GasHistoryLaterCounterScale'=>[0.000001,100],
-            'ElectricalBackgroundKW' => [0, 10], 'ReferenceCapacityPercent' => [1, 100], 'MinimumReferenceDays' => [1, 14],
-            'WeatherReferenceTemperatureC'=>[-30,30], 'WeatherReferenceGasPriceCt'=>[0.001,100],
-            'WeatherFanKW'=>[0,3], 'WeatherPowerStepPercent'=>[1,10],
-            'WeatherTemperatureHysteresisC'=>[0,2], 'OutsideTemperatureMaxAgeSeconds'=>[60,7200]] as $key => $bounds) {
-            if ($c[$key] < $bounds[0] || $c[$key] > $bounds[1]) throw new InvalidArgumentException('Out of range: ' . $key);
+        foreach (['SafetyMarginPercent'=>[0,95],'HysteresisCt'=>[0,100],'GasPriceCt'=>[0.001,100],
+            'FetchIntervalMinutes'=>[5,1440],'MaxCacheAgeHours'=>[1,48],'PriceCorrectionCt'=>[-100,100],
+            'ConsumptionCounterScale'=>[0.000001,100],'GasHistoryLaterCounterScale'=>[0.000001,100]] as $key=>$bounds) {
+            if($c[$key]<$bounds[0]||$c[$key]>$bounds[1])throw new InvalidArgumentException('Out of range: '.$key);
         }
         LichtBlickGasCosts::tariffs($c['GasHistoryTariffs']);
         LichtBlickWaterHistory::sources($c['WaterHistorySources']);
@@ -172,22 +173,8 @@ class LichtBlickElectricityPrice extends IPSModule
         $waterSources=LichtBlickWaterHistory::sources($c['WaterHistorySources']);
         if($manual && ($waterSources['garden']['counterID']??0)>0)throw new InvalidArgumentException('Choose manual garden periods or an electronic garden meter, not both');
         LichtBlickNoConsumption::periods($c['ConsumptionZeroPeriods']);
-        $curve=LichtBlickWeatherModel::curve($c['WeatherCurve']);
-        LichtBlickPriceStore::dates($c['PriceHistoryStartDate'], $c['PriceHistoryStartDate']);
-        if ($c['WeatherReferenceTemperatureC'] < $curve[0]['outsideC']
-            || $c['WeatherReferenceTemperatureC'] > $curve[count($curve)-1]['outsideC']) {
-            throw new InvalidArgumentException('Weather reference temperature must lie inside the curve');
-        }
-        foreach ($c as $key => $value) {
-            if (str_ends_with($key, 'ID') && $value < 0) throw new InvalidArgumentException('Negative variable/instance ID');
-        }
-        $rooms = json_decode($c['LearningRooms'], true, 16, JSON_THROW_ON_ERROR);
-        if (!is_array($rooms) || !array_is_list($rooms) || count($rooms) > 20) throw new InvalidArgumentException('Invalid learning rooms');
-        foreach ($rooms as $room) {
-            foreach (['temperatureID', 'targetID'] as $key) {
-                if (!isset($room[$key]) || !is_int($room[$key]) || $room[$key] <= 0) throw new InvalidArgumentException('Invalid room variable');
-            }
-        }
+        LichtBlickPriceStore::dates($c['PriceHistoryStartDate'],$c['PriceHistoryStartDate']);
+        foreach($c as $key=>$value)if(!in_array($key,self::RETIRED_PROPERTIES,true)&&str_ends_with($key,'ID')&&$value<0)throw new InvalidArgumentException('Negative variable/instance ID');
     }
 
     public function ApplyChanges()
@@ -213,19 +200,6 @@ class LichtBlickElectricityPrice extends IPSModule
                     return;
                 }
             }
-            $model = $c;
-            foreach (['Enabled','PostalCode','TariffVerified','FetchIntervalMinutes','PriceCorrectionCt','MaxCacheAgeHours',
-                'ThresholdCt','SafetyMarginPercent','HysteresisCt','DebugEnabled','DailyLearningEnabled','WebEnabled','VaultInstanceID',
-                'PriceHistoryEnabled','HistoricalFetchEnabled','HistoricalTariffs','PriceHistoryStartDate'] as $key) unset($model[$key]);
-            foreach (array_keys($model) as $key) if (str_starts_with($key,'Prepared') || str_starts_with($key,'Consumption') || str_starts_with($key,'GasHistory') || str_starts_with($key,'WaterHistory')) unset($model[$key]);
-            $identity = hash('sha256', json_encode($model));
-            if ($identity !== $this->ReadAttributeString('LearningIdentity')) {
-                $this->WriteAttributeString('LearningIdentity', $identity);
-                $this->WriteAttributeString('ReferenceDays', '');
-                $this->WriteAttributeString('LastAttemptDay', '');
-                $this->SetValue('DailyCandidateCt', 0.0);
-                $this->WriteAttributeString('WeatherHeldTemperature', '');
-            }
             $this->SetStatus(102);
             $this->SetTimerInterval('Tick', $c['Enabled'] || ($c['PriceHistoryEnabled'] && $c['PostalCode'] !== '') ? 60000 : 0);
             $this->EvaluatePrices();
@@ -234,6 +208,7 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->resetWeather('Configuration error: ' . $e->getMessage());
             $this->recommend(0, false, 'Configuration error: ' . $e->getMessage());
             $this->SetValue('PriceValid', false);
+            $this->SetValue('PriceQuoteJSON',json_encode(['schema'=>1,'valid'=>false,'updatedAt'=>time()],JSON_THROW_ON_ERROR));
         }
         $this->configureConsumptionReport();
     }
@@ -251,10 +226,6 @@ class LichtBlickElectricityPrice extends IPSModule
         if (time() - (int)$this->GetBuffer('LastFetchAttempt') >= $this->ReadPropertyInteger('FetchIntervalMinutes') * 60
             || ($last === 0 && $this->GetBuffer('LastFetchAttempt') === '')) $this->RefreshPrices();
         $this->EvaluatePrices();
-        $local = (new DateTimeImmutable('now', new DateTimeZone('Europe/Berlin')));
-        [$date] = LichtBlickEconomics::previousDay(time());
-        if ($local->format('H:i') >= '00:10' && $this->ReadPropertyBoolean('DailyLearningEnabled')
-            && $this->ReadPropertyBoolean('Enabled') && $this->ReadAttributeString('LastAttemptDay') !== $date) $this->CalculateYesterday();
     }
 
     /** Fixed public website endpoint; no account credentials or arbitrary URL. */
@@ -312,44 +283,11 @@ class LichtBlickElectricityPrice extends IPSModule
         $this->SetValue('WeatherModelStatus', $status);
     }
 
-    private function weatherSelection(array $c): array
-    {
-        if (!$c['WeatherModelEnabled']) {
-            $this->resetWeather('Disabled: using fixed threshold and reference capacity');
-            return [$c['ThresholdCt'], (int)round($c['ReferenceCapacityPercent']), PHP_INT_MAX, 'Fixed setting'];
-        }
-        $id=$c['OutsideTemperatureID'];
-        if ($id <= 1 || !IPS_VariableExists($id)) throw new RuntimeException('Outside temperature variable missing');
-        $meta=IPS_GetVariable($id); $temperature=GetValue($id); $updated=$meta['VariableUpdated'] ?? 0;
-        if (!in_array($meta['VariableType'],[1,2],true) || (!is_int($temperature) && !is_float($temperature))
-            || !is_finite((float)$temperature) || $temperature < -50 || $temperature > 60
-            || !is_int($updated) || $updated <= 0 || $updated > time()+30
-            || time()-$updated >= $c['OutsideTemperatureMaxAgeSeconds']) throw new RuntimeException('Outside temperature invalid or stale');
-        $rows=LichtBlickWeatherModel::curve($c['WeatherCurve']);
-        // Raw temperature always enforces the cold boundary, even inside the deadband.
-        if ($temperature < $rows[0]['outsideC']) throw new RuntimeException('Outside temperature below weather curve; use gas');
-        $held=$this->ReadAttributeString('WeatherHeldTemperature');
-        if ($held === '' || !is_numeric($held) || !is_finite((float)$held)
-            || abs($temperature-(float)$held) >= $c['WeatherTemperatureHysteresisC']) $held=(string)$temperature;
-        $this->WriteAttributeString('WeatherHeldTemperature',$held);
-        $m=LichtBlickWeatherModel::estimate($c,(float)$held);
-        $this->SetValue('WeatherHeatPumpPowerPercent',$m['powerPercent']);
-        $this->SetValue('WeatherOutsideTemperatureC',(float)$held);
-        $this->SetValue('WeatherCOP',(float)$m['cop']);
-        $this->SetValue('WeatherSystemCOP',(float)$m['systemCOP']);
-        $this->SetValue('WeatherHeatPumpKW',(float)$m['heatPumpKW']);
-        $this->SetValue('WeatherModelValid',true);
-        $status=sprintf('Provisional curve: outside %.2f°C, model %.2f°C; %d%%; COP %.2f; estimated HP %.2f kW + fan %.2f kW; reference %.3f ct at %.1f°C',
-            $temperature,(float)$held,$m['powerPercent'],$m['cop'],$m['heatPumpKW'],$c['WeatherFanKW'],$c['ThresholdCt'],$c['WeatherReferenceTemperatureC']);
-        $this->SetValue('WeatherModelStatus',$status);
-        return [$m['thresholdCt'],$m['powerPercent'],$updated+$c['OutsideTemperatureMaxAgeSeconds'],$status];
-    }
-
     public function EvaluatePrices(): void
     {
         try {
             $c = $this->configuration(); $this->validate($c);
-            $this->SetValue('ReferenceThresholdCt', $c['ThresholdCt']);
+            $this->SetValue('ReferenceThresholdCt', 0.0);
             $slots = json_decode($this->ReadAttributeString('PriceCache') ?: '[]', true, 32, JSON_THROW_ON_ERROR);
             $slot = LichtBlickEconomics::slotAt($slots, time());
             $fresh = time() - (int)$this->GetValue('LastSuccessfulFetch') < $c['MaxCacheAgeHours'] * 3600;
@@ -366,25 +304,14 @@ class LichtBlickElectricityPrice extends IPSModule
                 'updatedAt'=>time(),'validUntil'=>$valid?min($slot['end'],(int)$this->GetValue('LastSuccessfulFetch')+$c['MaxCacheAgeHours']*3600):0],JSON_THROW_ON_ERROR));
             $this->SetValue('PriceStatus', !$slot ? 'No price for current interval' : (!$fresh ? 'Price cache expired'
                 : (!$c['TariffVerified'] ? 'Regional quote: tariff confirmation required' : 'Valid current tariff price')));
-            try { [$threshold,$power,$modelDeadline,$modelReason]=$this->weatherSelection($c); }
-            catch (Throwable $e) {
-                $this->resetWeather($e->getMessage());
-                foreach (['ThresholdCt','EffectiveThresholdCt','EntryThresholdCt'] as $key) $this->SetValue($key,0.0);
-                $this->recommend($c['Enabled'] ? 2 : 0,false,'Gas fallback: weather model unavailable: '.$e->getMessage());
-                return;
-            }
-            $ceiling=$threshold*(1-$c['SafetyMarginPercent']/100);
-            $this->SetValue('ThresholdCt',$threshold);
-            $this->SetValue('EffectiveThresholdCt',$ceiling);
-            $this->SetValue('EntryThresholdCt',$ceiling-$c['HysteresisCt']);
-            if (!$c['Enabled']) { $this->recommend(0, false, 'Recommendation disabled'); return; }
-            if (!$c['TariffVerified'] || $threshold <= 0 || $c['PostalCode'] === '') {
-                $this->recommend(0, false, 'Configure postcode, positive reference threshold and confirm tariff'); return;
-            }
-            if (!$valid) { $this->recommend(2, false, 'Gas fallback: current electricity price unavailable or expired'); return; }
-            $source=LichtBlickEconomics::source($slot['price'],$threshold,$c['SafetyMarginPercent'],$c['HysteresisCt'],(int)$this->GetValue('RecommendedSource'));
-            $this->recommend($source,true,sprintf('%s: %.3f ct/kWh; entry below %.3f; exit at %.3f; %s',
-                $source===1 ? 'Heat pump' : 'Gas',$slot['price'],$ceiling-$c['HysteresisCt'],$ceiling,$modelReason),$power,$modelDeadline);
+            $this->resetWeather('Retired: measured Heating Control matrix is authoritative');
+            $this->SetValue('ReferenceThresholdCt',0.0);$this->SetValue('DailyCandidateCt',0.0);
+            $this->SetValue('DailyStatus','Retired: automatic decisions use the measured matrix');
+            $h=$this->measuredHeatingView();$e=$h['economics'];
+            foreach(['ThresholdCt'=>'breakEvenCt','EffectiveThresholdCt'=>'exitCt','EntryThresholdCt'=>'entryCt'] as $ident=>$key)$this->SetValue($ident,$e?(float)$e[$key]:0.0);
+            $canRecommend=$c['Enabled']&&$valid&&$e!==null;
+            $this->recommend($canRecommend?(int)$e['source']:($c['Enabled']?2:0),$canRecommend,
+                $h['reason'],$canRecommend?(int)$e['powerPercent']:0,$canRecommend?$e['validUntil']:0);
         } catch (Throwable $e) {
             $this->resetWeather('Invalid settings/cache: '.$e->getMessage());
             foreach (['ThresholdCt','EffectiveThresholdCt','EntryThresholdCt'] as $key) $this->SetValue($key,0.0);
@@ -408,79 +335,14 @@ class LichtBlickElectricityPrice extends IPSModule
         if ($old !== $source) $this->debug($reason);
     }
 
+    // Compatibility entry points cannot revive the retired learner or alter thresholds.
     public function CalculateYesterday(): void
     {
-        [$date, $start, $end] = LichtBlickEconomics::previousDay(time());
-        $this->calculateDay($date, $start, $end, true);
+        $this->SetValue('DailyStatus','Retired: use Heating Control calibration tests and measured matrix');
     }
-
-    /** Seed a specific completed historical day, without changing the configured threshold. */
     public function AddReferenceDay(string $date): string
     {
-        try {
-            $start = DateTimeImmutable::createFromFormat('!Y-m-d', $date, new DateTimeZone('Europe/Berlin'));
-            if (!$start || $start->format('Y-m-d') !== $date || $start->modify('+1 day')->getTimestamp() > time()) {
-                throw new InvalidArgumentException('Use a completed Berlin calendar day (YYYY-MM-DD)');
-            }
-            $this->calculateDay($date, $start->getTimestamp(), $start->modify('+1 day')->getTimestamp(), false);
-        } catch (Throwable $e) { $this->SetValue('DailyStatus', $e->getMessage()); }
-        return (string)$this->GetValue('DailyStatus');
-    }
-
-    private function calculateDay(string $date, int $start, int $end, bool $update): void
-    {
-        if (!IPS_SemaphoreEnter('LBEP.Learn.' . $this->InstanceID, 100)) return;
-        $newThreshold = null;
-        try {
-            $c = $this->configuration(); $this->validate($c);
-            if ($update) $this->WriteAttributeString('LastAttemptDay', $date);
-            if ($update && !$c['DailyLearningEnabled']) throw new RuntimeException('Daily learning disabled');
-            if ($update && $this->ReadAttributeString('LastAppliedDay') === $date) throw new RuntimeException('Threshold already updated from this day');
-            if ($update && $c['ThresholdCt'] <= 0) throw new RuntimeException('Enter a positive initial threshold');
-            $day = (new LichtBlickHistory($c['ArchiveID'], $start, $end))->day($c);
-            $day['date'] = $date;
-            $days = json_decode($this->ReadAttributeString('ReferenceDays') ?: '{}', true, 32, JSON_THROW_ON_ERROR);
-            $days[$date] = $day; ksort($days);
-            // Keep at most 60 quality-checked reference days (even when seeded out of chronological order).
-            $days = array_slice($days, -60, null, true);
-            $this->WriteAttributeString('ReferenceDays', json_encode($days, JSON_THROW_ON_ERROR));
-            if (!$update) { $this->SetValue('DailyStatus', 'Stored reference day ' . $date . '; no threshold change'); return; }
-            $candidates = [];
-            foreach ($days as $otherDate => $other) {
-                if ($otherDate >= $date || $start - (new DateTimeImmutable($otherDate, new DateTimeZone('Europe/Berlin')))->getTimestamp() > 60 * 86400
-                    || $other['source'] === $day['source']) continue;
-                $hp = $day['source'] === 1 ? $day : $other;
-                $gas = $day['source'] === 2 ? $day : $other;
-                $candidate = LichtBlickEconomics::candidate($hp, $gas, $c['GasPriceCt'], $c['GasKWhPerM3'], $c['ElectricalBackgroundKW']);
-                if ($candidate !== null && $c['WeatherModelEnabled']) {
-                    $factor=$hp['weatherFactor'] ?? null;
-                    if (!is_numeric($factor) || !is_finite((float)$factor) || $factor <= 0) continue;
-                    $candidate /= $factor; // Convert this HP day's observed crossover to the configured reference temperature/gas price.
-                    if ($candidate < 5 || $candidate > 100) continue;
-                }
-                if ($candidate !== null) $candidates[] = $candidate;
-            }
-            if (count($candidates) < $c['MinimumReferenceDays']) throw new RuntimeException('Retained threshold: ' . count($candidates) . ' suitable opposite-source days; need ' . $c['MinimumReferenceDays']);
-            sort($candidates, SORT_NUMERIC); $n = count($candidates);
-            $candidate = ($candidates[(int)floor(($n - 1) / 2)] + $candidates[(int)floor($n / 2)]) / 2;
-            $this->SetValue('DailyCandidateCt', $candidate);
-            $newThreshold = LichtBlickEconomics::smooth($c['ThresholdCt'], $candidate);
-            if (IPS_SetProperty($this->InstanceID, 'ThresholdCt', $newThreshold) === false) {
-                throw new RuntimeException('Unable to save calculated threshold');
-            }
-            if (IPS_ApplyChanges($this->InstanceID) === false) {
-                IPS_SetProperty($this->InstanceID, 'ThresholdCt', $c['ThresholdCt']);
-                IPS_ApplyChanges($this->InstanceID);
-                throw new RuntimeException('Unable to apply calculated threshold; restored previous value');
-            }
-            $this->UpdateFormField('ThresholdCt', 'value', $newThreshold);
-            $this->WriteAttributeString('LastAppliedDay', $date);
-            $this->SetValue('ThresholdCalculatedAt', time());
-            $this->SetValue('DailyStatus', sprintf('%s: %s candidate %.3f, applied reference %.3f ct/kWh from %d matches; margin stays %.1f%%',
-                $date, $c['WeatherModelEnabled'] ? 'weather-normalized' : 'raw', $candidate, $newThreshold, $n, $c['SafetyMarginPercent']));
-        } catch (Throwable $e) { $this->SetValue('DailyStatus', $date . ': ' . $e->getMessage()); }
-        finally { IPS_SemaphoreLeave('LBEP.Learn.' . $this->InstanceID); }
-        $this->debug((string)$this->GetValue('DailyStatus'));
+        $this->CalculateYesterday();return (string)$this->GetValue('DailyStatus');
     }
 
     public function ExportConfig(): string
@@ -513,7 +375,7 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->SetValue('RecommendedSource', 0); $this->SetValue('ThresholdCalculatedAt', 0);
             IPS_ApplyChanges($this->InstanceID);
             $this->ReloadForm();
-            return 'Imported. Web page, daily email, recommendation and learning disabled; reconfirm tariff before enabling.';
+            return 'Imported. Web page, daily email and price supply disabled; reconfirm tariff before enabling.';
         } catch (Throwable $e) { return 'Import failed: ' . $e->getMessage(); }
     }
 

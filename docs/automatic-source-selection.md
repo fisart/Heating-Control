@@ -1,72 +1,46 @@
-# Automatic air-heating source selection — 0.3.6
+# Automatic gas / heat-pump switchover — 0.3.26
 
-The child **AutomaticSourceSelection** Boolean (with action) is an external switch
-below HeatingControl and appears on its protected HTML page. It defaults to off.
-It can also be changed with `RequestAction(switchID, true/false)` or
-`HC_SetAutomaticSourceSelection(heatingInstanceID, true/false)`.
+Heating Control is the sole source/power decision maker. LichtBlick supplies a
+verified `PriceQuoteJSON` containing electricity price, gas price, safety margin,
+price hysteresis, enable state and expiry. Provisional weather/reference-price
+calculations and daily threshold learning are retired.
 
-Select the updated **LichtBlickElectricityPrice** instance in HeatingControl's form.
-Confirm that its current quote matches the customer tariff, then enable tariff
-confirmation and configure the threshold, safety margin and operating capacity.
-Enabling automatic source selection does not enable a disabled/DryRun controller.
-Configuration restore disables the controller, web access and automatic switch.
+## Setup and controls
 
-## Source and capacity
+1. In LichtBlick, open **Electricity tariff and price retrieval**; configure
+   postcode/correction, confirm the actual tariff and enable price supply.
+2. In **Gas / heat-pump switching settings**, configure gas price in ct/kWh,
+   safety margin (%) and price hysteresis (ct/kWh). Default margin is 25%.
+3. In Heating Control, open **Automatic gas / heat-pump switchover** and select
+   the LichtBlick instance. Its current ON/OFF state is shown in the form.
+4. Enable/disable automatic operation through the form’s buttons, the child
+   `AutomaticSourceSelection` Boolean, or the protected page’s switch.
+5. Review the measured matrix, gas efficiency and supply margins in Heating
+   Control. Hardware mappings, operating permissions and transfer timers remain
+   separate and keep their existing saved values.
 
-LichtBlick publishes **RecommendedHeatPumpPowerPercent** and a final coherent
-**RecommendationJSON** snapshot. The percentage comes from the editable
-**ReferenceCapacityPercent** property when the weather model is off (default 50%).
-With **WeatherModelEnabled** on, it comes from the editable outside-temperature
-curve, initially 65% at −7°C, 50% at +2°C and 35% at +7°C/+12°C, with interpolation
-and a default 5% command step. These are provisional settings, not a measured
-optimum. Gas/unavailable recommendations carry zero power. The snapshot includes
-an issue timestamp and the earliest price/cache/outside-sensor expiry.
-**WeatherHeatPumpPowerPercent** retains the valid weather candidate while gas is
-preferred. See [model and protected price dashboard](lichtblick-electricity-price.md).
+`HC_SetAutomaticSourceSelection(instanceID, true/false)` and
+`RequestAction(switchID, true/false)` remain valid. Automatic off retains the last
+selected source and uses manual desired power. Master/summer/night/cooling gates,
+room demand, recovery, dry run and controller enable still apply. Restore never
+enables hardware control or web access automatically.
 
-HeatingControl validates provider identity, snapshot schema, strict validity,
-issue age no greater than 180 seconds, expiry and integer HP capacity 1–100.
-Missing, unconfirmed, stale, malformed or expired recommendations select gas only
-when existing heating permissions and room demand allow heating. Cooling and
-applicable night shutdown remain authoritative; master/summer retain existing
-bypass semantics. No room demand stops the sources, with existing residual recovery.
+## Decision and validity
 
-Automatic selection updates **OperatingModeID** (default **41085**) to the
-configured heat-pump/gas mode values (defaults **1 / 2**), including gas fallback.
-This selector represents the intended source during transfer and no-demand
-periods; it is not physical running feedback. **HeatPumpDesiredPowerID** (default
-**59800**) retains the manual desired percentage. Turning automatic off keeps the
-last source selector value and uses that manual percentage through the protected
-handover. The previous manual source is not restored.
+The controller checks provider identity, schema, verification, expiry and issue
+age (maximum 180 seconds). It chooses the highest estimated COP among stable
+local points meeting the current fan/airflow and active room-target requirements.
+Gas price × system COP / gas efficiency gives break-even electricity price.
+Safety margin is applied once; price hysteresis supplies entry/exit separation.
+Missing/unsupported measurements or invalid/expired prices use gas. There is no
+alternative provisional model to select. See [calibration and temperature tests](heatpump-capacity-test.md).
 
-The mode is written only when changed, after equipment-command dispatch, as a
-direct integer state update. Its custom/action script is not invoked, so legacy
-source actions cannot bypass the module's transfer logic. Disabled, DryRun,
-master/summer bypass, night shutdown and cooling do not write the selector.
-Cooling retains its existing veto, including when automatic selection is on.
-The page makes manual source/power read-only while automatic selection is on.
-Cooling can still veto heating through the external manual mode; to select it on
-the page, turn automatic selection off first.
-
-## Heating dashboard and setup — 0.3.6
-
-1. Update **Heating-Control** to **0.3.6, build 16**. Open the HeatingControl instance form and select the actual **LichtBlick electricity-price instance** under **Automatic air-heating source selection**, then apply. A missing provider remains a gas fallback, not a valid economic comparison.
-2. Check the provider tariff confirmation and current RecommendationJSON. Configure its weather curve or fixed power, threshold and margin in the LichtBlick form.
-3. Use the actionable **Automatic heating source selection (LichtBlick)** / **AutomaticSourceSelection** Boolean directly below HeatingControl, or the dedicated **Turn automatic on / off** button near the top of the protected heating dashboard. It defaults to off; changing it does not bypass Enabled/DryRun.
-
-The heating page's **Back to portal** link selects the single enabled, correctly
-registered AlarmPortal using the same SecretsManager vault. It opens
-`/hook/alarm_portal_<instanceID>`, not the SecretsManager login page. Missing,
-conflicting or ambiguous portal configuration shows a browser **Back** button.
-Login/expired-session redirects still use the SecretsManager authentication gate.
-
-The dedicated HTML section displays automatic/manual state, the configured price instance, the provider’s valid recommended source/power, current price and tariff availability, safe/entry thresholds, expiry and reason. It also shows the controller’s last selected source/power, current heat-pump enable/power and gas-air-pump command values, and source-transfer status. These are command variables, not independent physical feedback. If the provider web page is enabled, a local link opens its protected price/model dashboard.
-
-The display and controller share the same validation of the provider’s **RecommendationJSON**, identified from the selected instance. This final publication contains **RecommendedSource** and **RecommendedHeatPumpPowerPercent** together; separate display readings never control heating. Provider VM_UPDATE messages and the heating timer trigger evaluation.
-
-A new valid percentage while the selected heat pump is running updates its power command without initiating a gas/heat-pump transfer or restarting the heat pump. A source change follows the existing stop, mixer and off-time checks. Gas recommendations carry zero heat-pump power. Expired, missing or malformed snapshots cause automatic gas fallback, still subject to heating demand/permissions and transfer delays. The safety margin is already applied in LichtBlick; HeatingControl does not apply it again.
-
-Automatic off uses the current source selector and retained manual desired percentage, through the same protected handover when changing source. Manual source and desired-power fields are read-only on the page while automatic is on. No demand or shutdown can leave a valid provider HP recommendation alongside a controller selection of Off; this is intentional. Reading the dashboard never switches equipment or changes provider data.
+The Heating Control page separates actual selected source/power from price supply
+and measured thresholds. LichtBlick’s heating tab shows the same measured
+comparison, the current automatic/manual status and selected air source. Cross-page
+links appear only for a registered, enabled target using the same passkey vault.
+Multiple controllers referring to one provider are reported as ambiguous rather
+than choosing one silently. Reading either page does not operate hardware.
 
 ## Exact Berlin command mapping
 
@@ -76,7 +50,7 @@ the entire gas boiler or directly commands radiator/DHW services.
 
 | Operation | Commands, in order after transfer readiness |
 |---|---|
-| Activate heat pump | Gas-air pump **32875=false**; gas mixer **14348=100** (closed); heat/cool **51011=true** (heating); physical percentage **19207=provider percentage**; heat-pump enable **35931=true** |
+| Activate heat pump | Gas-air pump **32875=false**; gas mixer **14348=100** (closed); heat/cool **51011=true** (heating); physical percentage **19207=selected measured percentage**; heat-pump enable **35931=true** |
 | Activate gas-air heating | Heat-pump enable **35931=false**; percentage **19207=0**; mixer **14348=0** (open); gas-air pump **32875=true**; flow command **14533=value from 46820** |
 | Stop sources for transfer | **35931=false**, **19207=0**, **14348=100**, **32875=false**; fan **46921=false**, fan speed **29718=0** |
 

@@ -28,7 +28,7 @@ trait HeatingControlHeatPumpEconomics
         foreach(['HeatPumpBreakEvenEuro','HeatPumpEntryEuro','HeatPumpExitEuro'] as $id)$this->SetValue($id,0.0);
         try {
             $instance=$this->ReadPropertyInteger('ElectricityPriceInstanceID');
-            if(!$this->priceRecommendationID())throw new RuntimeException('Select an updated LichtBlick instance');
+            if(!$this->priceQuoteID())throw new RuntimeException('Select an updated LichtBlick instance');
             $id=IPS_GetObjectIDByIdent('PriceQuoteJSON',$instance);
             if(!IPS_VariableExists($id)||IPS_GetVariable($id)['VariableType']!==3)throw new RuntimeException('Update LichtBlick for verified price snapshots');
             $q=json_decode(GetValue($id),true,16,JSON_THROW_ON_ERROR);$now=$this->sourceClock();
@@ -40,6 +40,7 @@ trait HeatingControlHeatPumpEconomics
             $outside=$this->temperature($this->id('OutsideTempID'));$incoming=$this->temperature($this->id('IncomingAirTempID'));
             $tolerance=$this->ReadPropertyFloat('HeatPumpMatrixTemperatureToleranceC');
             if($tolerance<0||$tolerance>3)throw new RuntimeException('Matrix temperature tolerance must be 0–3°C');
+            foreach(['HeatPumpSupplyAboveTargetC','HeatPumpMinimumAirRiseC'] as $key){$value=$this->ReadPropertyFloat($key);if(!is_finite($value)||$value<1||$value>20)throw new RuntimeException('Air supply requirements must be 1–20°C');}
             $point=HeatPumpMatrix::choose($this->measuredMatrix(),$outside,$incoming,$req['target'],
                 $this->ReadPropertyFloat('HeatPumpSupplyAboveTargetC'),$this->ReadPropertyFloat('HeatPumpMinimumAirRiseC'),
                 $this->intValue('FanDesiredSpeedID'),$this->ReadPropertyFloat('HeatPumpTestAirflowM3h'),$tolerance,$this->ReadPropertyInteger('HeatPumpTestExcludedFlapID'));

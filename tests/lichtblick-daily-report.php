@@ -102,6 +102,7 @@ $GLOBALS['smtpSuccess']=false;check(str_contains($test->SendDailyConsumptionRepo
 $GLOBALS['smtpThrow']=true;check(str_contains($test->SendDailyConsumptionReportTest(),'Fixture SMTP outage'),'SMTP test exceptions are caught');
 $count=count($GLOBALS['sentEmails']);$test->properties['ConsumptionReportSMTPID']=0;
 check(str_contains($test->SendDailyConsumptionReportTest(),'Select an SMTP') && count($GLOBALS['sentEmails'])===$count,'Unselected SMTP cannot send a test');
+$flatActions=[];foreach($form['actions'] as $action){if(isset($action['onClick']))$flatActions[]=$action;foreach($action['items']??[] as $child)if(isset($child['onClick']))$flatActions[]=$child;}$form['actions']=$flatActions;
 check(count(array_filter($form['actions'],fn($a)=>($a['onClick']??'')==='echo LBEP_SendDailyConsumptionReportTest($id);'))===1,'Form exposes the explicit test-email action');
 // Symcon's generated wrapper requires every declared parameter, including PHP method defaults.
 function LBEP_GetDailyConsumptionReport(int $instanceID,string $date): string {

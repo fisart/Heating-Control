@@ -40,8 +40,8 @@ function fixture():EconomicHeating {
  $GLOBALS['variables'][$m->properties['FanDesiredSpeedID']]['value']=90;
  $m->values['AutomaticSourceSelection']=true;return $m;
 }
-$m=fixture();$reason='';$power=(new ReflectionMethod(HeatingControl::class,'measuredEconomicChoice'))->invokeArgs($m,[&$reason]);
-check($power===50,'Measured model can authorize heat pump despite invalid legacy weather recommendation');
+$m=fixture();$m->properties['HeatPumpUseTestModel']=false;$reason='';$power=(new ReflectionMethod(HeatingControl::class,'measuredEconomicChoice'))->invokeArgs($m,[&$reason]);
+check($power===50,'Retired legacy switch cannot bypass the measured model');
 // Exercise sourceChoice itself with gas and heat-pump source mappings and mirrored variables.
 $method=new ReflectionMethod(HeatingControl::class,'sourceChoice');$queue=[];$choice=$method->invokeArgs($m,[2,&$queue]);
 check($choice===[1,50]&&$queue[$m->properties['OperatingModeID']]===1,'Actual source path uses measured threshold and mirrors HP mode');

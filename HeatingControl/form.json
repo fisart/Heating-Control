@@ -11,90 +11,41 @@
       "caption": "Dry run: show commands without switching actuators"
     },
     {
-      "type": "CheckBox",
-      "name": "DebugEnabled",
-      "caption": "Write debug log under instance"
-    },
-    {
       "type": "ExpansionPanel",
-      "caption": "Heat-pump capacity test",
+      "caption": "Automatic gas / heat-pump switchover",
       "items": [
         {
-          "type": "NumberSpinner",
-          "name": "HeatPumpTestStepMinutes",
-          "caption": "Time per power step (minutes; default 15)",
-          "minimum": 3,
-          "maximum": 60,
-          "digits": 0
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpTestFanSpeed",
-          "caption": "Fixed test fan speed (%)",
-          "minimum": 20,
-          "maximum": 100,
-          "digits": 0
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpTestExcludedFlapID",
-          "caption": "Master-bedroom flap: keep CLOSED during test"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpTestHousePowerID",
-          "caption": "Main-house power (W; stability check only)"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpTestHouseCounterID",
-          "caption": "Main-house cumulative electricity counter"
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpTestHouseCounterScale",
-          "caption": "House-counter kWh per unit (default 0.001)",
-          "minimum": 1e-06,
-          "maximum": 1,
-          "digits": 6
-        },
-        {
           "type": "SelectInstance",
-          "name": "HeatPumpTestArchiveID",
-          "caption": "Archive Control: enable missing test-variable logging",
+          "name": "ElectricityPriceInstanceID",
+          "caption": "LichtBlick electricity-price instance",
           "validModules": [
-            "{43192F0B-135B-4CE7-A0A7-1475603F3060}"
+            "{5C0EEDE9-5C09-4F18-BCD1-CE65CFA7B1B7}"
           ]
         },
         {
-          "type": "NumberSpinner",
-          "name": "HeatPumpTestAirflowM3h",
-          "caption": "Estimated test airflow (m³/h; nameplate default 2000)",
-          "minimum": 100,
-          "maximum": 10000,
-          "digits": 0
+          "type": "Label",
+          "caption": "Enable or disable automatic switchover using Automatic heating source selection below this instance or on the protected page. Select the LichtBlick instance for verified price, gas tariff, safety margin and price hysteresis. The measured matrix determines the source and power; insufficient measurements or expired prices use gas."
         },
         {
           "type": "NumberSpinner",
-          "name": "HeatPumpTestMaximumRoomC",
-          "caption": "Stop test at room temperature (°C)",
-          "minimum": 15,
-          "maximum": 35,
-          "digits": 1
+          "name": "SourceTransferDelaySeconds",
+          "caption": "Pause after stop/mixer command states are acknowledged (seconds)",
+          "minimum": 30,
+          "maximum": 3600
         },
         {
           "type": "NumberSpinner",
-          "name": "HeatPumpTestMaximumCoilC",
-          "caption": "Stop test at exchanger temperature (°C; software cutoff, verify for equipment)",
-          "minimum": 45,
-          "maximum": 65,
-          "digits": 1
+          "name": "HeatPumpMinimumOffSeconds",
+          "caption": "Minimum observed heat-pump off time (seconds)",
+          "minimum": 60,
+          "maximum": 3600
         },
         {
           "type": "Label",
-          "caption": "30 → 100% in 10% steps; master bedroom closed; fixed fan. A clean 15-minute house-meter baseline precedes the test. Heat and baseline-adjusted electricity are calculated over each FULL step; final five-minute stability determines eligibility. Prior temperature runs are retained. 15 min × 8 = 2 hours plus baseline/transfer/archive wait."
+          "caption": "Defaults: transfer pause 120 s; heat-pump off time 300 s. Verify these against the equipment. Command state is not independent physical feedback."
         }
-      ]
+      ],
+      "expanded": true
     },
     {
       "type": "ExpansionPanel",
@@ -115,11 +66,6 @@
           "minimum": 1,
           "maximum": 20,
           "digits": 1
-        },
-        {
-          "type": "CheckBox",
-          "name": "HeatPumpUseTestModel",
-          "caption": "Use measured matrix and its break-even price for automatic source/power selection"
         },
         {
           "type": "NumberSpinner",
@@ -179,293 +125,23 @@
           "values": []
         },
         {
-          "type": "ScriptEditor",
-          "name": "HeatPumpMeasuredMatrix",
-          "caption": "Optional replacement measured matrix JSON (empty list uses reviewed 14 October calibration)",
-          "rowCount": 8
+          "type": "Label",
+          "caption": "Matrix axes: outside temperature, intake temperature and power, with fixed fan/airflow context. Useful supply must exceed the active room target by the configured margin. The same rule applies at holiday targets. Gas price, safety margin and price hysteresis are configured in LichtBlick. Airflow and gas efficiency remain estimates."
         },
         {
-          "type": "Label",
-          "caption": "Matrix axes: outside temperature, intake temperature and power, with fan/airflow context. Default includes 8 reviewed house-meter points near 12°C; 40% is unsettled. Supply must exceed room target by the configured margin and add useful air rise. The same rule applies at 10°C holiday targets. Break-even EUR/kWh = gas EUR/kWh × estimated system COP / gas efficiency. Gas price, safety margin and hysteresis come from LichtBlick; margin is applied once. No gas fan/pump electricity credit is assumed. Outside/intake conditions without nearby measurements use gas. Airflow and gas efficiency still need calibration. Old 40°C/holiday exchanger fields are retained internally but no longer used."
-        }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Automatic air-heating source selection",
-      "items": [
-        {
-          "type": "SelectInstance",
-          "name": "ElectricityPriceInstanceID",
-          "caption": "LichtBlick electricity-price instance",
-          "validModules": [
-            "{5C0EEDE9-5C09-4F18-BCD1-CE65CFA7B1B7}"
+          "type": "ExpansionPanel",
+          "caption": "Advanced: manually supplied calibration",
+          "items": [
+            {
+              "type": "ScriptEditor",
+              "name": "HeatPumpMeasuredMatrix",
+              "caption": "Optional replacement measured matrix JSON (empty list uses reviewed 14 October calibration)",
+              "rowCount": 8
+            }
           ]
-        },
-        {
-          "type": "Label",
-          "caption": "When measured matrix is enabled, LichtBlick supplies a verified PriceQuoteJSON (price, gas tariff, safety margin and hysteresis). Heating Control selects the most efficient eligible measured power and calculates its own EUR/kWh break-even/entry/exit thresholds. The provisional LichtBlick weather curve cannot veto that decision. If the matrix is disabled, legacy RecommendationJSON is used. Missing or expired price data use gas. The automatic switch remains below the instance and on the protected page."
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "SourceTransferDelaySeconds",
-          "caption": "Pause after stop/mixer command states are acknowledged (seconds)",
-          "minimum": 30,
-          "maximum": 3600
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpMinimumOffSeconds",
-          "caption": "Minimum observed heat-pump off time (seconds)",
-          "minimum": 60,
-          "maximum": 3600
-        },
-        {
-          "type": "Label",
-          "caption": "Defaults: transfer pause 120 s; heat-pump off time 300 s. Verify these against the equipment. Command state is not independent physical feedback."
         }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Heating web page",
-      "items": [
-        {
-          "type": "CheckBox",
-          "name": "WebEnabled",
-          "caption": "Enable passkey-protected heating web page"
-        },
-        {
-          "type": "SelectInstance",
-          "name": "VaultInstanceID",
-          "caption": "Authentication SecretsManager (none = automatic)",
-          "validModules": [
-            "{7C5A3841-3F7B-4D2A-9E1C-5B6D8F9A0E12}"
-          ]
-        },
-        {
-          "type": "Label",
-          "caption": "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only."
-        }
-      ]
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "IntervalSeconds",
-      "caption": "Fallback timer (seconds)",
-      "minimum": 5,
-      "maximum": 3600
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "MaxSensorAgeSeconds",
-      "caption": "Max temperature age (0 = disabled)",
-      "minimum": 0,
-      "maximum": 86400
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "ResidualMinOutgoingTemp",
-      "caption": "Minimum outgoing air for residual heat (°C)",
-      "digits": 1,
-      "minimum": 0,
-      "maximum": 50
-    },
-    {
-      "type": "SelectVariable",
-      "name": "RecoveryEnableID",
-      "caption": "Residual heat recovery enable (true = enabled)",
-      "validVariableTypes": [
-        0
-      ]
-    },
-    {
-      "type": "Label",
-      "caption": "Optional Boolean switch: false stops residual heat recovery. Normal heating and its fan control remain active. No variable selected = recovery enabled."
-    },
-    {
-      "type": "Label",
-      "label": "--- Conditions ---"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "MasterDisableID",
-      "caption": "Master disable (true = disabled)"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "WinterID",
-      "caption": "Winter state (true = winter)"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "NightDisableID",
-      "caption": "Night switch (true = heating off)"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HolidayID",
-      "caption": "Holiday state"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "AtHomeID",
-      "caption": "At home (reference only)"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "OperatingModeID",
-      "caption": "Operating mode"
-    },
-    {
-      "type": "Label",
-      "label": "--- Temperatures ---"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HysteresisID",
-      "caption": "Heating and residual recovery hysteresis setting"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "ResidualDeltaID",
-      "caption": "Residual heat delta setting"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "OutsideTempID",
-      "caption": "Outside temperature (reference only)"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "OutgoingAirTempID",
-      "caption": "Outgoing air temperature"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "IncomingAirTempID",
-      "caption": "Incoming air temperature"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HeatExchangerTempID",
-      "caption": "Heat exchanger temperature"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HeatPumpTempID",
-      "caption": "Heat pump temperature"
-    },
-    {
-      "type": "Label",
-      "label": "--- Fan ---"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "FanOnID",
-      "caption": "Fan on/off"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "FanSpeedID",
-      "caption": "Fan speed command"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "FanDesiredSpeedID",
-      "caption": "Desired fan speed"
-    },
-    {
-      "type": "Label",
-      "label": "--- Heat pump ---"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HeatPumpOnID",
-      "caption": "Heat pump on/off"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HeatPumpPowerID",
-      "caption": "Heat pump power command"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HeatPumpDesiredPowerID",
-      "caption": "Desired heat pump power"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "HeatPumpHeatModeID",
-      "caption": "Heat pump heat/cool mode"
-    },
-    {
-      "type": "Label",
-      "label": "--- Gas ---"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "GasMixerID",
-      "caption": "Gas mixer"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "GasPumpID",
-      "caption": "Gas exchanger pump"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "GasFlowTargetID",
-      "caption": "Gas flow temperature command"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "GasFlowHeatingID",
-      "caption": "Gas heating flow setpoint"
-    },
-    {
-      "type": "SelectVariable",
-      "name": "GasFlowIdleID",
-      "caption": "Gas idle flow setpoint"
-    },
-    {
-      "type": "Label",
-      "label": "--- Operating mode values and mixer ---"
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "CoolingModeValue",
-      "caption": "Cooling mode value",
-      "minimum": 0,
-      "maximum": 100
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "HeatPumpModeValue",
-      "caption": "Heat pump mode value",
-      "minimum": 0,
-      "maximum": 100
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "GasModeValue",
-      "caption": "Gas mode value",
-      "minimum": 0,
-      "maximum": 100
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "MixerOpen",
-      "caption": "Gas mixer open",
-      "minimum": 0,
-      "maximum": 100
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "MixerClosed",
-      "caption": "Gas mixer closed",
-      "minimum": 0,
-      "maximum": 100
+      ],
+      "expanded": true
     },
     {
       "type": "PopupButton",
@@ -697,6 +373,439 @@
           }
         ]
       }
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Heating temperature sensors",
+      "expanded": false,
+      "items": [
+        {
+          "type": "SelectVariable",
+          "name": "OutsideTempID",
+          "caption": "Outside air temperature — measured matrix and test",
+          "validVariableTypes": [
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "IncomingAirTempID",
+          "caption": "Incoming air temperature",
+          "validVariableTypes": [
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "OutgoingAirTempID",
+          "caption": "Outgoing air temperature",
+          "validVariableTypes": [
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatExchangerTempID",
+          "caption": "Gas exchanger temperature — fan start",
+          "validVariableTypes": [
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTempID",
+          "caption": "Heat-pump exchanger temperature — fan start and test",
+          "validVariableTypes": [
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "House state and heating demand",
+      "expanded": false,
+      "items": [
+        {
+          "type": "SelectVariable",
+          "name": "MasterDisableID",
+          "caption": "Master disable (true = disabled)",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "WinterID",
+          "caption": "Winter state (true = winter)",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "NightDisableID",
+          "caption": "Night switch (true = heating off)",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HolidayID",
+          "caption": "Holiday state",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "OperatingModeID",
+          "caption": "Operating mode",
+          "validVariableTypes": [
+            1
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HysteresisID",
+          "caption": "Heating and residual recovery hysteresis setting",
+          "validVariableTypes": [
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Fan control",
+      "expanded": false,
+      "items": [
+        {
+          "type": "SelectVariable",
+          "name": "FanOnID",
+          "caption": "Fan on/off",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "FanSpeedID",
+          "caption": "Fan speed command",
+          "validVariableTypes": [
+            1
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "FanDesiredSpeedID",
+          "caption": "Desired fan speed",
+          "validVariableTypes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Heat-pump control",
+      "expanded": false,
+      "items": [
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpOnID",
+          "caption": "Heat pump on/off",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpPowerID",
+          "caption": "Heat pump power command",
+          "validVariableTypes": [
+            1
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpDesiredPowerID",
+          "caption": "Desired heat pump power",
+          "validVariableTypes": [
+            1
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpHeatModeID",
+          "caption": "Heat pump heat/cool mode",
+          "validVariableTypes": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Gas-air heating control",
+      "expanded": false,
+      "items": [
+        {
+          "type": "SelectVariable",
+          "name": "GasMixerID",
+          "caption": "Gas mixer"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasPumpID",
+          "caption": "Gas exchanger pump",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasFlowTargetID",
+          "caption": "Gas flow temperature command",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasFlowHeatingID",
+          "caption": "Gas heating flow setpoint",
+          "validVariableTypes": [
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "GasFlowIdleID",
+          "caption": "Gas idle flow setpoint",
+          "validVariableTypes": [
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Residual heat recovery",
+      "expanded": false,
+      "items": [
+        {
+          "type": "SelectVariable",
+          "name": "RecoveryEnableID",
+          "caption": "Residual heat recovery enable (true = enabled)",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "ResidualDeltaID",
+          "caption": "Residual heat delta setting",
+          "validVariableTypes": [
+            2
+          ]
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "ResidualMinOutgoingTemp",
+          "caption": "Minimum outgoing air for residual heat (°C)",
+          "digits": 1,
+          "minimum": 0,
+          "maximum": 50
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Heat-pump capacity test",
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestStepMinutes",
+          "caption": "Time per power step (minutes; default 15)",
+          "minimum": 3,
+          "maximum": 60,
+          "digits": 0
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestFanSpeed",
+          "caption": "Fixed test fan speed (%)",
+          "minimum": 20,
+          "maximum": 100,
+          "digits": 0
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestExcludedFlapID",
+          "caption": "Master-bedroom flap: keep CLOSED during test",
+          "validVariableTypes": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestHousePowerID",
+          "caption": "Main-house power (W; stability check only)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestHouseCounterID",
+          "caption": "Main-house cumulative electricity counter",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestHouseCounterScale",
+          "caption": "House-counter kWh per unit (default 0.001)",
+          "minimum": 1e-06,
+          "maximum": 1,
+          "digits": 6
+        },
+        {
+          "type": "SelectInstance",
+          "name": "HeatPumpTestArchiveID",
+          "caption": "Archive Control: enable missing test-variable logging",
+          "validModules": [
+            "{43192F0B-135B-4CE7-A0A7-1475603F3060}"
+          ]
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestAirflowM3h",
+          "caption": "Estimated test airflow (m³/h; nameplate default 2000)",
+          "minimum": 100,
+          "maximum": 10000,
+          "digits": 0
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestMaximumRoomC",
+          "caption": "Stop test at room temperature (°C)",
+          "minimum": 15,
+          "maximum": 35,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestMaximumCoilC",
+          "caption": "Stop test at exchanger temperature (°C; software cutoff, verify for equipment)",
+          "minimum": 45,
+          "maximum": 65,
+          "digits": 1
+        },
+        {
+          "type": "Label",
+          "caption": "30 → 100% in 10% steps; master bedroom closed; fixed fan. A clean 15-minute house-meter baseline precedes the test. Heat and baseline-adjusted electricity are calculated over each FULL step; final five-minute stability determines eligibility. Prior temperature runs are retained. 15 min × 8 = 2 hours plus baseline/transfer/archive wait."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Heating web page",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "WebEnabled",
+          "caption": "Enable passkey-protected heating web page"
+        },
+        {
+          "type": "SelectInstance",
+          "name": "VaultInstanceID",
+          "caption": "Authentication SecretsManager (none = automatic)",
+          "validModules": [
+            "{7C5A3841-3F7B-4D2A-9E1C-5B6D8F9A0E12}"
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Advanced configuration and diagnostics",
+      "expanded": false,
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "CoolingModeValue",
+          "caption": "Cooling mode value",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpModeValue",
+          "caption": "Heat pump mode value",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "GasModeValue",
+          "caption": "Gas mode value",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "MixerOpen",
+          "caption": "Gas mixer open",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "MixerClosed",
+          "caption": "Gas mixer closed",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "IntervalSeconds",
+          "caption": "Fallback timer (seconds)",
+          "minimum": 5,
+          "maximum": 3600
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "MaxSensorAgeSeconds",
+          "caption": "Max temperature age (0 = disabled)",
+          "minimum": 0,
+          "maximum": 86400
+        },
+        {
+          "type": "SelectVariable",
+          "name": "AtHomeID",
+          "caption": "At-home status (diagnostic context only)",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "CheckBox",
+          "name": "DebugEnabled",
+          "caption": "Write debug log under instance"
+        }
+      ]
     },
     {
       "type": "ExpansionPanel",

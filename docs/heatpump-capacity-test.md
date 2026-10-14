@@ -1,8 +1,8 @@
-# Measured heat-pump economics — 0.3.25, build 35
+# Measured heat-pump economics — 0.3.26, build 36
 
 Update the Symcon library, apply the LichtBlick instance and Heating Control
 (instance 11543 in the owner's installation). Keep the existing LichtBlick
-instance selected. The measured model is enabled by default; applying the update
+instance selected. The measured matrix is the only automatic decision model; applying the update
 populates the matrix without rerunning the October test. The controller's
 existing automatic/manual switch still determines whether it chooses the source.
 No test starts automatically. The passkey-protected page shows the matrix,
@@ -44,10 +44,10 @@ main uncertainty in heat output/COP, so thresholds are explicitly estimates.
 
 LichtBlick publishes `PriceQuoteJSON`: verified current electricity price,
 current gas tariff, safety margin, hysteresis, enable state and expiry. This
-snapshot is independent of the old weather-curve recommendation. Measured mode
-uses it even when the provisional weather curve suggests gas; it never bypasses
-price verification or expiry. Disabling the measured model returns to the
-legacy `RecommendationJSON` source/power path.
+snapshot is independent of the retired provisional weather curve. The controller
+never bypasses price verification or expiry. The measured matrix is mandatory
+for automatic operation; missing support uses gas. The old model switch, weather
+curve and daily threshold learner have been retired.
 
 ```
 System COP = estimated useful air heat energy / (house electricity − baseline energy)
@@ -71,8 +71,9 @@ unsupported conditions reset it to gas. Existing break-before-make and minimum
 HP-off protections remain. These variables publish the actual measured decision:
 `HeatPumpEconomicsJSON`, `HeatPumpBreakEvenEuro`, `HeatPumpEntryEuro`,
 `HeatPumpExitEuro`, plus `SelectedHeatPumpPower` and source/status variables.
-The original LichtBlick threshold variables continue to describe its legacy
-model; the Heating Control page displays the measured thresholds when active.
+LichtBlick displays the connected controller’s measured comparison and mirrors
+its current thresholds for compatible status references. Its heating tab links
+to the registered Heating Control page using the same passkey vault.
 
 ## Reviewed 14 October calibration
 

@@ -1,13 +1,15 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.25, build 35** adds a measured outside/intake/power matrix seeded
+Version **0.3.26, build 36** adds a measured outside/intake/power matrix seeded
 with the reviewed 14 October house-meter test. Automatic Heating Control computes
 EUR/kWh break-even/entry/exit thresholds from the selected point's estimated
 system COP, live gas tariff and adjustable gas efficiency. Verified LichtBlick
-price snapshots replace the provisional curve as the price input in measured
-mode. Future tests use a 15-minute house-counter baseline, matched full-step heat
+price snapshots replace the provisional curve as the price input. The provisional weather/reference model and daily threshold
+learner are retired; the measured matrix is the sole automatic calculation. Future tests use a 15-minute house-counter baseline, matched full-step heat
 and electricity, and preserve prior weather measurements. The 40°C exchanger
-rule is retired in favour of active room targets and useful air rise. See
+rule is retired in favour of active room targets and useful air rise. Both forms
+and pages separate current price settings, automatic controls, calibration,
+consumption histories and diagnostics. See
 [calibration, setup and further temperature tests](docs/heatpump-capacity-test.md).
 
 

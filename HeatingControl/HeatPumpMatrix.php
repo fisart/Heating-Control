@@ -48,7 +48,7 @@ final class HeatPumpMatrix
     public static function economics(array $point,float $gasCt,float $gasEfficiency,float $safety,float $band,float $price,int $previous): array
     {
         foreach([$gasCt,$gasEfficiency,$safety,$band,$price] as $v)if(!is_finite($v))throw new InvalidArgumentException('Nonfinite economic input');
-        if($gasCt<=0||$gasEfficiency<50||$gasEfficiency>100||$safety<0||$safety>90||$band<0||$band>20)throw new InvalidArgumentException('Invalid economic configuration');
+        if($gasCt<=0||$gasEfficiency<50||$gasEfficiency>100||$safety<0||$safety>95||$band<0||$band>100)throw new InvalidArgumentException('Invalid economic configuration');
         $breakEven=$gasCt*$point['estimatedSystemCOP']/($gasEfficiency/100);
         $exit=$breakEven*(1-$safety/100);$entry=$exit-$band;
         return ['breakEvenCt'=>$breakEven,'exitCt'=>$exit,'entryCt'=>$entry,'breakEvenEuro'=>$breakEven/100,'exitEuro'=>$exit/100,'entryEuro'=>$entry/100,

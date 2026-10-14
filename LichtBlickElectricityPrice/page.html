@@ -53,19 +53,18 @@
 <div id="panel-wasser" role="tabpanel" aria-labelledby="tab-wasser" hidden><section class="panel"><h2>Wasserverbrauch &amp; Kosten</h2><p>Elektronisch erfasster Hauptzähler (Haus und Garten) mit datierten Preisen. Brunnenwasser zeigt nur Verbrauch und bleibt kostenfrei. Gartenwasser wird manuell erfasst und nicht doppelt summiert.</p><div class="history-controls"><label>Period<select id="water-range"><option value="year">This year</option><option value="month">This month</option><option value="7">Last 7 days</option><option value="all">Reviewed history</option><option value="custom">Custom dates</option></select></label><label>From<input id="water-from" type="date"></label><label>Through<input id="water-to" type="date"></label><label>Group<select id="water-resolution"><option value="daily">Days</option><option value="auto">Automatic</option><option value="monthly">Months</option><option value="yearly">Years</option><option value="selected">Whole-period total</option></select></label><label>Chart<select id="water-metric"><option value="water">Water · m³</option><option value="cost">Costs · EUR</option></select></label><button id="water-show">Show period</button></div><p id="water-status" role="status"></p><dl id="water-summary" class="gas-summary"></dl><div id="water-legend" class="legend"></div><svg id="water-chart" viewBox="0 0 1000 310" role="img" aria-label="Stacked consumption or costs by period" width="100%"></svg><p class="note">Der Hauptzähler enthält Haus- und Gartenwasser. Eine reine Hausmenge wird nur aus vollständigen manuellen Gartenperioden abgeleitet. Nicht erfasster Verbrauch während eines Zähler-Bypasses bleibt eine unzugeordnete Rechnungsreferenz. Trinkwasser, Schmutzwasser, Grundgebühren und Niederschlagswasser verwenden die datierten Parameter des ursprünglichen Verbrauchsskripts. Gemeinsame Grundgebühren gehören nur zum Hausanschluss. Brunnenwasser hat keine Kosten. Bei bestätigtem Stillstand bleiben die Grundgebühren erhalten.</p><div class="table-wrap"><table><thead><tr><th>Wasserart</th><th>Bekannte m³</th><th>Verbrauch EUR</th><th>Grundgebühren EUR</th><th>Bekannte Kosten EUR</th><th>Abdeckung</th></tr></thead><tbody id="water-table"></tbody></table></div><p id="water-manual-note" class="note"></p><details><summary>Manual garden periods / invoice references</summary><div class="table-wrap"><table><thead><tr><th>Period</th><th>Garden m³</th><th>House-only m³</th><th>Garden variable EUR</th><th>House variable EUR</th><th>Main tariff adjustment EUR</th><th>Selection / source</th></tr></thead><tbody id="water-manual"></tbody></table></div></details><details><summary>Stacked chart values</summary><div class="table-wrap"><table><thead><tr id="water-period-head"></tr></thead><tbody id="water-periods"></tbody></table></div></details><details><summary>Water invoice references</summary><p class="note">A billed garden deduction is not proof of the actual garden volume when no garden readings are listed. Invoice references stay separate from calculated costs and are included as complete periods only.</p><div class="table-wrap"><table><thead><tr><th>Period / invoice</th><th>Main m³</th><th>Recorded m³</th><th>Difference m³</th><th>Sewage m³</th><th>Garden deducted m³</th><th>Supply gross EUR</th><th>Billed gross EUR</th><th>Selection / source</th></tr></thead><tbody id="water-invoices"></tbody></table></div></details></section></div>
 <div id="panel-total" role="tabpanel" aria-labelledby="tab-total" lang="en" hidden><section class="panel"><h2>Total consumption</h2><p>Electricity, gas, house water, garden water and well water for the same selected dates.</p><div class="history-controls"><label>Period<select id="total-range"><option value="year">This year</option><option value="month">This month</option><option value="7">Last 7 days</option><option value="all">Reviewed history</option><option value="custom">Custom dates</option></select></label><label>From<input id="total-from" type="date"></label><label>Through<input id="total-to" type="date"></label><label>Group<select id="total-resolution"><option value="selected">Whole-period total</option><option value="auto">Automatic</option><option value="daily">Days</option><option value="monthly">Months</option><option value="yearly">Years</option></select></label><label>Chart<select id="total-metric"><option value="cost">Costs · EUR</option><option value="energy">Energy · kWh</option><option value="water">Water · m³</option></select></label><button id="total-show">Show period</button></div><p id="total-status" role="status"></p><dl id="total-summary" class="gas-summary"></dl><div id="total-legend" class="legend"></div><svg id="total-chart" viewBox="0 0 1000 310" role="img" aria-label="Stacked consumption or costs by period" width="100%"></svg><p class="note">Costs are dated supply costs before invoice adjustments or assistance. Electricity uses its reference consumption; gas kWh use billing conversion factors and can be provisional. Energy and water keep separate units. Unknown amounts remain blank and totals show known subtotals. Main water includes garden water. The manual garden quantity is shown as an included reference and is never added to the main volume again. Well water has zero cost. Stacks with incomplete coverage or provisional rates/conversion are faded. Manual garden readings contribute only their complete recorded periods; they are never spread across days.</p><div class="table-wrap"><table><thead><tr><th>Consumption</th><th>Known quantity</th><th>Known cost</th><th>Coverage</th></tr></thead><tbody id="total-table"></tbody></table></div><p id="total-manual-note" class="note"></p><details><summary>Manual garden periods / invoice references</summary><div class="table-wrap"><table><thead><tr><th>Period</th><th>Garden m³</th><th>House-only m³</th><th>Garden variable EUR</th><th>House variable EUR</th><th>Main tariff adjustment EUR</th><th>Selection / source</th></tr></thead><tbody id="total-manual"></tbody></table></div></details><details><summary>Stacked chart values</summary><div class="table-wrap"><table><thead><tr id="total-period-head"></tr></thead><tbody id="total-periods"></tbody></table></div></details></section></div>
 <div id="panel-heizung" role="tabpanel" aria-labelledby="tab-heizung" lang="en" hidden>
-<h2>Gas / heat pump comparison</h2>
+<h2>Measured gas / heat-pump comparison</h2>
+<p class="note" id="heating-mode"></p><a id="heating-control-link" class="button" hidden>Open heating controls and calibration test</a>
 <div class="grid">
 <article class="card"><label>Current electricity price</label><div class="value" id="heating-price">—</div><small id="heating-price-period"></small><small id="heating-price-valid"></small></article>
-<article class="card"><label>Air-heating recommendation</label><div class="value" id="source">—</div><small id="power"></small><small id="valid-until"></small></article>
+<article class="card"><label>Measured price comparison</label><div class="value" id="source">—</div><small id="power"></small><small id="valid-until"></small></article>
 <article class="card"><label>Safe electricity ceiling</label><div class="value" id="ceiling">—</div><small id="entry"></small><small id="margin"></small></article>
 </div>
 <p id="reason" class="note"></p>
-<div class="two">
-<section class="panel"><h2>Legacy threshold calculation</h2><p class="note">If Heating Control uses its measured operating matrix, its selected power and EUR/kWh thresholds determine the heating source. The reference/weather thresholds shown here apply to legacy selection.</p><dl id="calculation"></dl><p class="note">Enter heat pump below the entry boundary. Return to gas at the safe ceiling; keep the previous recommendation within the band.</p></section>
-<section class="panel"><h2>Outside temperature & power</h2><dl id="weather"></dl><p id="weather-status"></p><p class="note">The editable curve is provisional. Its COP and input estimates are starting assumptions, and its power setting is not a measured optimum.</p></section>
-</div>
-<section class="panel"><h2>Editable model · current configuration</h2><p>Change these values in the IP-Symcon instance form after your measurements.</p><div class="table-wrap"><table><thead><tr><th>Outside °C</th><th>Power %</th><th>COP</th><th>Heat-pump kW</th></tr></thead><tbody id="curve"></tbody></table></div></section>
-<section class="panel"><h2>Learning & price retrieval</h2><dl id="learning"></dl><p id="daily-status"></p><p id="fetch-status"></p></section>
+<div class="two"><section class="panel"><h2>Break-even and switching prices</h2><dl id="calculation"></dl><p class="note">Gas price, safety margin and price hysteresis are configured in LichtBlick. Gas efficiency, room supply margins and automatic switchover are configured in Heating Control.</p></section>
+<section class="panel"><h2>Measured operating conditions</h2><dl id="weather"></dl><p class="note">Estimated airflow affects COP and price thresholds. The same room-target rule applies at home and during holiday. Unsupported conditions use gas.</p></section></div>
+<details class="panel"><summary>Measured operating matrix</summary><div class="table-wrap"><table><thead><tr><th>Outside °C</th><th>Intake °C</th><th>Power %</th><th>Net system kW</th><th>Estimated COP</th><th>Eligibility</th></tr></thead><tbody id="measured-points"></tbody></table></div></details>
+<section class="panel"><h2>Price retrieval</h2><dl id="retrieval"></dl><p id="fetch-status"></p></section>
 <details class="panel"><summary>Diagnoseprotokoll</summary><pre id="debug"></pre></details>
 </div>
 </div>
@@ -79,7 +78,7 @@ const stamp=v=>typeof v==='number'&&v>0?new Date(v*1000).toLocaleString('en-GB',
 function rows(id,entries){const root=el(id);root.replaceChildren();for(const [label,value] of entries){const a=document.createElement('dt'),b=document.createElement('dd');a.textContent=label;b.textContent=String(value);root.append(a,b);}}
 function table(id,entries,current=-1){const root=el(id);root.replaceChildren();entries.forEach((row,i)=>{const tr=document.createElement('tr');if(i===current)tr.className='current';row.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.append(td);});root.append(tr);});}
 function render(s){
- const v=s.values,c=s.settings,r=s.recommendation,model=c.weatherEnabled&&v.WeatherModelValid;
+ const v=s.values,c=s.settings,r=s.recommendation,h=s.heating||{},e=h.economics?.validUntil>Date.now()/1000?h.economics:null;
  renderGasSettings(c);
  el('consumption-panel').hidden=!c.consumptionHistoryEnabled;
  consumptionStart=c.consumptionHistoryFrom||'';consumptionThrough=c.consumptionHistoryThrough||'';waterStart=c.waterHistoryFrom||'';
@@ -88,35 +87,31 @@ function render(s){
  el('price-period').textContent=stamp(v.PriceStart)+' – '+stamp(v.PriceEnd)+' · Berlin';
  el('price-valid').textContent=v.PriceValid?'Tariff-confirmed interval':v.PriceAvailable?'Regional quote · confirm tariff in module form':v.PriceStatus||'Price not verified or expired';
  for(const id of ['price','price-period','price-valid']) el('heating-'+id).textContent=el(id).textContent;
- el('source').textContent=r.source===1?'Heat pump':r.source===2?(r.valid?'Gas':'Gas fallback'):'Disabled';
- el('power').textContent=r.source===1&&r.valid?'Published power: '+num(r.powerPercent,0)+'%':'Published heat-pump power: 0%';
- el('valid-until').textContent=r.valid?'Recommendation valid until '+stamp(r.validUntil):'Economic recommendation unavailable';
- const usable=!c.weatherEnabled||model;
- el('ceiling').textContent=usable?num(v.EffectiveThresholdCt)+' ct/kWh':'Unavailable';
- el('entry').textContent=usable?'Heat-pump entry below '+num(v.EntryThresholdCt)+' ct/kWh':'Weather model unavailable';
+ el('heating-mode').textContent=h.connected?'Heating Control '+h.instanceID+' · '+(h.automatic?'Automatic switchover on':'Manual source selection')+' · selected air source: '+(h.effectiveSource===1?'heat pump':h.effectiveSource===2?'gas':'off / no demand'):'No unambiguous Heating Control connection.';
+ const link=el('heating-control-link');link.hidden=!/^\/hook\/heating_[1-9][0-9]*$/.test(h.path||'');if(!link.hidden)link.href=h.path;else link.removeAttribute('href');
+ el('source').textContent=e?(e.source===1?'Heat pump':'Gas'):'Comparison unavailable';
+ el('power').textContent=e?'Measured candidate: '+num(e.powerPercent,0)+'%':'No eligible current measured point';
+ el('valid-until').textContent=e?'Comparison valid until '+stamp(e.validUntil):'Use Heating Control for automatic selection and calibration.';
+ el('ceiling').textContent=e?'€'+num(e.exitEuro,4)+'/kWh':'Unavailable';
+ el('entry').textContent=e?'Heat-pump entry below €'+num(e.entryEuro,4)+'/kWh':'No current measured threshold';
  el('margin').textContent=num(c.safetyMarginPercent,1)+'% safety margin · '+num(c.hysteresisCt)+' ct hysteresis';
- el('reason').textContent=r.reason;
+ el('reason').textContent=h.reason||r.reason;
  rows('calculation',[
-  ['Reference threshold',num(v.ReferenceThresholdCt)+' ct/kWh'],['Current raw threshold',usable?num(v.ThresholdCt)+' ct/kWh':'—'],
-  ['Safety margin',num(c.safetyMarginPercent,1)+'%'],['Reference outside temperature',num(c.referenceTemperatureC,1)+' °C'],
-  ['Current gas price',num(c.gasPriceCt)+' ct/kWh'],['Reference gas price',num(c.referenceGasPriceCt)+' ct/kWh'],
-  ['Model',c.weatherEnabled?'Temperature curve':'Fixed threshold & power']]);
- rows('weather',[
-  ['Outside reading',num(s.outside.temperatureC,1)+' °C'],['Reading timestamp',stamp(s.outside.updatedAt)],
-  ['Temperature used by model',model?num(v.WeatherOutsideTemperatureC,1)+' °C':'—'],
-  ['Weather power candidate',model?num(v.WeatherHeatPumpPowerPercent,0)+'%':'—'],
-  ['Provisional heat-pump COP',model?num(v.WeatherCOP):'—'],['COP with fan allowance',model?num(v.WeatherSystemCOP):'—'],
-  ['Estimated heat-pump input',model?num(v.WeatherHeatPumpKW)+' kW':'—'],['Fan allowance',num(c.fanKW)+' kW']]);
- el('weather-status').textContent=v.WeatherModelStatus;
- table('curve',s.curve.map(p=>[num(p.outsideC,1),num(p.powerPercent,0),num(p.cop),num(p.heatPumpKW)]));
- rows('learning',[['Latest reference candidate',v.DailyCandidateCt>0?num(v.DailyCandidateCt)+' ct/kWh':'—'],['Last threshold update',stamp(v.ThresholdCalculatedAt)],['Last successful fetch',stamp(v.LastSuccessfulFetch)],['Postcode',c.postalCode]]);
- el('daily-status').textContent=v.DailyStatus||'No daily calculation recorded.';el('fetch-status').textContent=v.FetchStatus;
+  ['Break-even electricity price',e?'€'+num(e.breakEvenEuro,4)+'/kWh':'—'],['Heat-pump entry below',e?'€'+num(e.entryEuro,4)+'/kWh':'—'],['Gas at or above',e?'€'+num(e.exitEuro,4)+'/kWh':'—'],
+  ['Current gas price',num(c.gasPriceCt)+' ct/kWh'],['Gas heating efficiency',e?num(e.gasEfficiencyPercent,1)+'% (assumption)':'Configured in Heating Control'],
+  ['Safety margin',num(c.safetyMarginPercent,1)+'%'],['Price hysteresis',num(c.hysteresisCt)+' ct/kWh']]);
+ const p=e?.point||{};
+ rows('weather',[['Outside air',num(e?.outside,1)+' °C'],['Intake air',num(e?.incoming,1)+' °C'],['Highest active room target',num(e?.target,1)+' °C'],
+  ['Target minus intake',num(e?.targetMinusIncoming,1)+' °C'],['Chosen power',num(e?.powerPercent,0)+'%'],['Estimated system COP',num(p.estimatedSystemCOP)],
+  ['House-meter input above baseline',num(p.systemInputKW)+' kW'],['Assumed airflow',num(p.airflowM3h,0)+' m³/h']]);
+ table('measured-points',(h.points||[]).map(p=>[num(p.outside,1),num(p.incoming,1),num(p.powerPercent,0),num(p.systemInputKW),num(p.estimatedSystemCOP),p.usable?'eligible':'excluded / unsettled']));
+ rows('retrieval',[['Last successful fetch',stamp(v.LastSuccessfulFetch)],['Postcode',c.postalCode]]);el('fetch-status').textContent=v.FetchStatus;
  table('schedule',s.slots.map(p=>[stamp(p.start),stamp(p.end),num(p.price,3)]),s.slots.findIndex(p=>p.start<=s.updatedAt&&s.updatedAt<p.end));
  el('coverage').textContent=s.slots.length?s.slots.length+' actual current/upcoming intervals. Gaps and missing future prices are not filled.':'No current or upcoming intervals available.';
  el('debug').textContent=s.debug||'No debug entries.';
  historyStart=c.historyStartDate||'2026-10-01';el('history-start').textContent=historyStart;el('history-from').min=historyStart;el('history-to').min=historyStart;
  el('history-status').textContent=v.PriceHistoryStatus||'';
- el('status').textContent='Updated '+stamp(s.updatedAt)+' · Berlin · '+(s.enabled?'Recommendation enabled':'Recommendation disabled');
+ el('status').textContent='Updated '+stamp(s.updatedAt)+' · Berlin · '+(s.enabled?'Heating price supply enabled':'Heating price supply disabled');
  el('status').classList.remove('error');el('dashboard').hidden=false;el('login').hidden=true;
 }
 let historyStart='2026-10-01',historyBusy=false,historyRequest=0;

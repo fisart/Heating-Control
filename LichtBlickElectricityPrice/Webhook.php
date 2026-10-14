@@ -126,46 +126,22 @@ trait LichtBlickElectricityPriceWebhook
             && $now < $values['PriceEnd'] && $values['LastSuccessfulFetch'] > 0
             && $now < $values['LastSuccessfulFetch'] + $this->ReadPropertyInteger('MaxCacheAgeHours') * 3600;
         $values['PriceValid'] = $values['PriceValid'] === true && $values['PriceAvailable'];
-        $snapshot = json_decode((string)$this->GetValue('RecommendationJSON'), true);
-        $fresh = is_array($snapshot) && ($snapshot['schema'] ?? 0) === 1 && ($snapshot['valid'] ?? false) === true
-            && is_int($snapshot['updatedAt'] ?? null) && $snapshot['updatedAt'] <= $now + 30
-            && $now - $snapshot['updatedAt'] <= 180 && is_int($snapshot['validUntil'] ?? null)
-            && $now < $snapshot['validUntil'] && in_array($snapshot['source'] ?? null,[1,2],true)
-            && is_int($snapshot['powerPercent'] ?? null)
-            && ($snapshot['source'] === 2 ? $snapshot['powerPercent'] === 0 : ($snapshot['powerPercent'] >= 1 && $snapshot['powerPercent'] <= 100));
-        $enabled = $this->ReadPropertyBoolean('Enabled');
-        $fresh = $fresh && $enabled && $values['PriceValid'];
-        $outside = null; $outsideUpdated = null;
-        $id = $this->ReadPropertyInteger('OutsideTemperatureID');
-        if ($id > 1 && IPS_VariableExists($id)) {
-            $meta = IPS_GetVariable($id); $v = GetValue($id);
-            if (in_array($meta['VariableType'] ?? -1,[1,2],true) && (is_float($v) || is_int($v)) && is_finite((float)$v)) {
-                $outside = $v; $outsideUpdated = (int)($meta['VariableUpdated'] ?? 0);
-            }
-        }
-        if ($this->ReadPropertyBoolean('WeatherModelEnabled') && ($outsideUpdated === null || $outsideUpdated <= 0
-            || $outsideUpdated > $now + 30 || $now >= $outsideUpdated + $this->ReadPropertyInteger('OutsideTemperatureMaxAgeSeconds'))) {
-            $values['WeatherModelValid'] = false; $fresh = false;
-        }
+        $heating=$this->measuredHeatingView();$e=$heating['economics'];
+        $enabled=$this->ReadPropertyBoolean('Enabled');$fresh=$enabled&&$values['PriceValid']&&$e!==null;
+        $outside=$e['outside']??null;$outsideUpdated=$e['updatedAt']??null;
         $slots = json_decode((string)$this->GetValue('PriceSchedule'), true);
         if (!is_array($slots) || !array_is_list($slots) || count($slots) > 512) $slots = [];
         $slots = array_values(array_filter($slots, static fn($s)=>is_array($s) && is_int($s['start'] ?? null)
             && is_int($s['end'] ?? null) && $s['end'] > $now && is_numeric($s['price'] ?? null)));
-        try { $curve = LichtBlickWeatherModel::curve($this->ReadPropertyString('WeatherCurve')); }
-        catch (Throwable $e) { $curve = []; }
-        return ['instanceID'=>$this->InstanceID, 'updatedAt'=>$now, 'enabled'=>$enabled,
-            'recommendation'=>['valid'=>$fresh, 'source'=>$fresh ? $snapshot['source'] : ($enabled ? 2 : 0),
-                'powerPercent'=>$fresh ? $snapshot['powerPercent'] : 0,
-                'validUntil'=>$fresh ? $snapshot['validUntil'] : 0,
-                'reason'=>$fresh ? (string)($snapshot['reason'] ?? '') : ($enabled ? 'Recommendation unavailable or stale; gas fallback.' : 'Recommendation disabled.')],
-            'values'=>$values, 'outside'=>['temperatureC'=>$outside,'updatedAt'=>$outsideUpdated],
+        return ['instanceID'=>$this->InstanceID,'updatedAt'=>$now,'enabled'=>$enabled,
+            'recommendation'=>['valid'=>$fresh,'source'=>$fresh?$e['source']:($enabled?2:0),
+                'powerPercent'=>$fresh?$e['powerPercent']:0,'validUntil'=>$fresh?$e['validUntil']:0,'reason'=>$heating['reason']],
+            'values'=>$values,'outside'=>['temperatureC'=>$outside,'updatedAt'=>$outsideUpdated],'heating'=>$heating,
             'settings'=>['postalCode'=>$this->ReadPropertyString('PostalCode'),'tariffVerified'=>$this->ReadPropertyBoolean('TariffVerified'),
                 'historyStartDate'=>$this->ReadPropertyString('PriceHistoryStartDate'),
                 'safetyMarginPercent'=>$this->ReadPropertyFloat('SafetyMarginPercent'),'hysteresisCt'=>$this->ReadPropertyFloat('HysteresisCt'),
-                'weatherEnabled'=>$this->ReadPropertyBoolean('WeatherModelEnabled'),'fanKW'=>$this->ReadPropertyFloat('WeatherFanKW'),
-                'gasPriceCt'=>$this->ReadPropertyFloat('GasPriceCt'),'referenceTemperatureC'=>$this->ReadPropertyFloat('WeatherReferenceTemperatureC'),
-                'referenceGasPriceCt'=>$this->ReadPropertyFloat('WeatherReferenceGasPriceCt')]+$this->consumptionSettings()+$this->gasHistorySettings()+$this->waterSettings(),
-            'curve'=>$curve, 'slots'=>$slots, 'debug'=>substr((string)$this->GetValue('DebugLog'),-32000)];
+                'gasPriceCt'=>$this->ReadPropertyFloat('GasPriceCt')]+$this->consumptionSettings()+$this->gasHistorySettings()+$this->waterSettings(),
+            'curve'=>[],'slots'=>$slots,'debug'=>substr((string)$this->GetValue('DebugLog'),-32000)];
     }
 
     protected function ProcessHookData()

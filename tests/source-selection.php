@@ -9,18 +9,26 @@ $checks=0;
 function check($ok,$why) {global $checks;if(!$ok)throw new RuntimeException($why);$checks++;}
 function fixture(): TimedHeating {
     $m=heatingFixture(TimedHeating::class);
-    $m->properties['HeatPumpUseTestModel']=false; // Legacy provider path regression tests.
     foreach(json_decode($m->properties['Rooms'],true) as $room) foreach($room['sensors'] as $id) $GLOBALS['variables'][$id]['value']=20.0;
     $GLOBALS['variables'][$m->properties['GasMixerID']]['value']=$m->properties['MixerClosed'];
     $m->properties['ElectricityPriceInstanceID']=20;
     $GLOBALS['instanceModules'][20]='{5C0EEDE9-5C09-4F18-BCD1-CE65CFA7B1B7}';
-    $GLOBALS['instanceIdents'][20]['RecommendationJSON']=82000;
+    $GLOBALS['instanceIdents'][20]['PriceQuoteJSON']=82000;
     $GLOBALS['variables'][82000]=['VariableType'=>3,'value'=>''];
     foreach(['HeatPumpOnID','HeatPumpPowerID','HeatPumpHeatModeID','GasPumpID','GasMixerID','FanOnID','FanSpeedID','GasFlowTargetID'] as $key) $GLOBALS['variables'][$m->properties[$key]]['VariableAction']=1;
+    $GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=12.0;
+    $GLOBALS['variables'][$m->properties['FanDesiredSpeedID']]['value']=90;
     plan($m,1,35);return $m;
 }
 function plan($m,$source,$power=35,$overrides=[]) {
-    $GLOBALS['variables'][82000]['value']=json_encode(array_replace(['schema'=>1,'source'=>$source,'powerPercent'=>$power,'valid'=>true,'updatedAt'=>$m->clock,'validUntil'=>$m->clock+900,'reason'=>'Fixture'], $overrides));
+    $point=HeatPumpMatrix::seed()[2];$point['powerPercent']=$power?:35;
+    $m->properties['HeatPumpMeasuredMatrix']=json_encode([$point]);
+    $quote=array_replace(['schema'=>1,'enabled'=>true,'valid'=>true,'updatedAt'=>$m->clock,'validUntil'=>$m->clock+900,
+        'priceCt'=>$source===1?10.0:100.0,'gasPriceCt'=>10.48,'safetyMarginPercent'=>25,'hysteresisCt'=>2],$overrides);
+    if($source===0)$quote['valid']=false;
+    if(isset($overrides['powerPercent']))$m->properties['HeatPumpMeasuredMatrix']=json_encode([array_replace($point,['powerPercent'=>$overrides['powerPercent']])]);
+    if(isset($overrides['source']))$quote['valid']=false;
+    $GLOBALS['variables'][82000]['value']=json_encode($quote);
 }
 function run($m,$ack=true) {
     $GLOBALS['commands']=[];$m->ProcessHeating();
@@ -124,7 +132,8 @@ run($m);check(!value($m,'GasPumpID'),'Brief no-demand interval preserves stop de
 $m->clock+=119;plan($m,2,0);run($m);check(value($m,'GasPumpID'),'Observed idle stop counts toward delay');
 // Provider display uses the same atomic snapshot, with independent price context.
 $m=fixture();$GLOBALS['authenticated']=true;
-$GLOBALS['instanceProperties'][20]=['WebEnabled'=>true,'MaxCacheAgeHours'=>24];
+$GLOBALS['instanceProperties'][20]=['WebEnabled'=>true,'MaxCacheAgeHours'=>24,'VaultInstanceID'=>7];
+$GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/lichtblick_20","TargetID":20}]';
 $display=['CurrentPriceCt'=>[2,25.84],'PriceValid'=>[0,true],'PriceStart'=>[1,$m->clock-60],
  'PriceEnd'=>[1,$m->clock+900],'LastSuccessfulFetch'=>[1,$m->clock],
  'EffectiveThresholdCt'=>[2,27.82],'EntryThresholdCt'=>[2,25.82]];
@@ -133,16 +142,16 @@ $i=83000;foreach($display as $ident=>[$type,$v]){
 }
 $before=serialize([$m->values,$m->attributes,$GLOBALS['commands'],$GLOBALS['directWrites']]);
 $provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
-check($provider['connected']&&$provider['valid']&&$provider['source']===1&&$provider['powerPercent']===35,'Manual page still shows a valid atomic provider recommendation');
+check($provider['connected']&&$provider['valid']&&$provider['source']===0,'Manual page shows a verified price quote without a duplicate provider command');
 check($provider['path']==='/hook/lichtblick_20'&&$provider['readings']['CurrentPriceCt']===25.84&&$provider['readings']['PriceValid'],'Provider dashboard link and tariff context');
 check(serialize([$m->values,$m->attributes,$GLOBALS['commands'],$GLOBALS['directWrites']])===$before,'Reading provider context never changes heating or settings');
 plan($m,1,35,['validUntil'=>$m->clock]);
 $provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
 check(!$provider['valid']&&$provider['source']===0&&$provider['powerPercent']===0,'Expired provider is not displayed as a valid power command');
 plan($m,2,0);$provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
-check($provider['valid']&&$provider['source']===2&&$provider['powerPercent']===0,'Gas recommendation displayed with zero heat-pump power');
+check($provider['valid']&&$provider['source']===0&&$provider['powerPercent']===0,'Verified quote displayed without provider source/power advice');
 plan($m,2,65);$provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];
-check(!$provider['valid'],'Gas snapshot with nonzero heat-pump power rejected');
+check($provider['valid'],'Retired provider power advice does not invalidate a verified electricity quote');
 $m->ApplyChanges();check(($m->messages[82000]??0)===VM_UPDATE,'Provider final JSON changes trigger heating evaluation');
 $GLOBALS['instanceModules'][20]='{WRONG}';
 $provider=json_decode(response($m,'GET',['view'=>'state'])['body'],true)['sourceSelection']['provider'];

@@ -2,205 +2,36 @@
   "elements": [
     {
       "type": "Label",
-      "caption": "For measured heat-pump economics, use the operating matrix and EUR/kWh thresholds in Heating Control. This module supplies verified PriceQuoteJSON; its legacy reference/weather thresholds apply only when the measured matrix is disabled."
-    },
-    {
-      "type": "Label",
-      "caption": "Electricity-price and provisional air-source recommendation. This instance does not command equipment."
-    },
-    {
-      "type": "CheckBox",
-      "name": "Enabled",
-      "caption": "Enable prices and source recommendation"
-    },
-    {
-      "type": "ValidationTextBox",
-      "name": "PostalCode",
-      "caption": "Delivery postcode (5 digits)"
-    },
-    {
-      "type": "CheckBox",
-      "name": "TariffVerified",
-      "caption": "I have checked that these prices, including correction, match my variable gross tariff"
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "ThresholdCt",
-      "caption": "Reference break-even threshold (ct/kWh); fixed when weather model is off",
-      "minimum": 0,
-      "maximum": 1000,
-      "digits": 3
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "SafetyMarginPercent",
-      "caption": "Safety margin (%) \u2014 default 25; editable",
-      "minimum": 0,
-      "maximum": 95,
-      "digits": 1
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "ReferenceCapacityPercent",
-      "caption": "Automatic heat-pump power / learning reference (%)",
-      "minimum": 1,
-      "maximum": 100,
-      "digits": 1
-    },
-    {
-      "type": "Label",
-      "caption": "Fixed power when weather model is off. With weather model on, the editable temperature curve supplies power and adjusts the reference threshold."
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "HysteresisCt",
-      "caption": "Switching hysteresis below safe threshold (ct/kWh)",
-      "minimum": 0,
-      "maximum": 100,
-      "digits": 3
+      "caption": "Electricity, gas and water consumption/costs, verified electricity prices and the measured heating comparison."
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Legacy provisional weather model",
+      "caption": "Electricity tariff and price retrieval",
+      "expanded": true,
       "items": [
         {
           "type": "CheckBox",
-          "name": "WeatherModelEnabled",
-          "caption": "Use editable outside-temperature curve for power and threshold"
+          "name": "Enabled",
+          "caption": "Enable electricity-price supply for heating comparison"
         },
         {
-          "type": "Label",
-          "caption": "Provisional starting points: manufacturer COP at different test loads; 35/50% input estimates from site consumption; 65% and 3.19 kW estimated. Not a verified optimum. Cold below first row uses gas; above last row holds its values."
+          "type": "ValidationTextBox",
+          "name": "PostalCode",
+          "caption": "Delivery postcode (5 digits)"
+        },
+        {
+          "type": "CheckBox",
+          "name": "TariffVerified",
+          "caption": "I have checked that these prices, including correction, match my variable gross tariff"
         },
         {
           "type": "NumberSpinner",
-          "name": "GasPriceCt",
-          "caption": "Gas variable gross price (ct/kWh)",
-          "minimum": 0.001,
+          "name": "PriceCorrectionCt",
+          "caption": "Verified constant tariff correction (ct/kWh)",
+          "minimum": -100,
           "maximum": 100,
           "digits": 3
         },
-        {
-          "type": "SelectVariable",
-          "name": "OutsideTemperatureID",
-          "caption": "Outside temperature"
-        },
-        {
-          "type": "List",
-          "name": "WeatherCurve",
-          "caption": "Legacy provisional weather curve (measured Heating Control matrix takes precedence)",
-          "rowCount": 5,
-          "add": true,
-          "delete": true,
-          "columns": [
-            {
-              "name": "outsideC",
-              "caption": "Outside \u00b0C",
-              "width": "150px",
-              "add": 0,
-              "edit": {
-                "type": "NumberSpinner",
-                "minimum": -30,
-                "maximum": 30,
-                "digits": 1
-              }
-            },
-            {
-              "name": "powerPercent",
-              "caption": "HP command %",
-              "width": "150px",
-              "add": 50,
-              "edit": {
-                "type": "NumberSpinner",
-                "minimum": 1,
-                "maximum": 100,
-                "digits": 0
-              }
-            },
-            {
-              "name": "cop",
-              "caption": "Provisional COP",
-              "width": "150px",
-              "add": 3,
-              "edit": {
-                "type": "NumberSpinner",
-                "minimum": 0.5,
-                "maximum": 10,
-                "digits": 2
-              }
-            },
-            {
-              "name": "heatPumpKW",
-              "caption": "Estimated HP input kW",
-              "width": "150px",
-              "add": 2.12,
-              "edit": {
-                "type": "NumberSpinner",
-                "minimum": 0.05,
-                "maximum": 15,
-                "digits": 2
-              }
-            }
-          ]
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "WeatherReferenceTemperatureC",
-          "caption": "Temperature of reference threshold (\u00b0C)",
-          "minimum": -30,
-          "maximum": 30,
-          "digits": 1
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "WeatherReferenceGasPriceCt",
-          "caption": "Gas price underlying reference threshold (ct/kWh)",
-          "minimum": 0.001,
-          "maximum": 100,
-          "digits": 3
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "WeatherFanKW",
-          "caption": "HP fan allowance (kW); no gas fan credit",
-          "minimum": 0,
-          "maximum": 3,
-          "digits": 3
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "WeatherPowerStepPercent",
-          "caption": "Power command step (%)",
-          "minimum": 1,
-          "maximum": 10,
-          "digits": 0
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "WeatherTemperatureHysteresisC",
-          "caption": "Outside temperature deadband (\u00b0C)",
-          "minimum": 0,
-          "maximum": 2,
-          "digits": 2
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "OutsideTemperatureMaxAgeSeconds",
-          "caption": "Maximum outside sensor age (seconds)",
-          "minimum": 60,
-          "maximum": 7200,
-          "digits": 0
-        },
-        {
-          "type": "Label",
-          "caption": "Threshold(T) = reference threshold \u00d7 current/reference gas price \u00d7 fan-adjusted COP(T)/fan-adjusted COP(reference). The margin is applied once afterward. Fan-adjusted COP = COP \u00d7 HP kW/(HP kW + fan kW). This is an approximate empirical-reference model, not measured COP."
-        }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Price retrieval",
-      "items": [
         {
           "type": "NumberSpinner",
           "name": "FetchIntervalMinutes",
@@ -214,215 +45,124 @@
           "caption": "Maximum cache age (hours)",
           "minimum": 1,
           "maximum": 48
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Gas / heat-pump switching settings",
+      "expanded": true,
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "GasPriceCt",
+          "caption": "Current gas energy price including VAT (ct/kWh)",
+          "minimum": 0.001,
+          "maximum": 100,
+          "digits": 3
         },
         {
           "type": "NumberSpinner",
-          "name": "PriceCorrectionCt",
-          "caption": "Verified constant tariff correction (ct/kWh)",
-          "minimum": -100,
+          "name": "SafetyMarginPercent",
+          "caption": "Safety margin for gas / heat-pump switching (%)",
+          "minimum": 0,
+          "maximum": 95,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HysteresisCt",
+          "caption": "Price hysteresis for gas / heat-pump switching (ct/kWh)",
+          "minimum": 0,
           "maximum": 100,
           "digits": 3
         },
         {
           "type": "Label",
-          "caption": "Uses the public LichtBlick regional price display. Enter your postcode and compare against your contract/app. Percentage-based or time-varying corrections are not supported."
+          "caption": "The measured Heating Control matrix calculates break-even, entry and exit prices. Use its Automatic heating source selection switch to activate the switchover. These settings are sent in the verified price snapshot."
         }
       ]
     },
     {
-      "type": "CheckBox",
-      "name": "DebugEnabled",
-      "caption": "Write debug string below instance"
-    },
-    {
       "type": "ExpansionPanel",
-      "caption": "Daily threshold learner",
+      "caption": "Consumption history — shared settings",
+      "expanded": false,
       "items": [
-        {
-          "type": "CheckBox",
-          "name": "DailyLearningEnabled",
-          "caption": "Calculate threshold from previous day at/after 00:10 Berlin time"
-        },
-        {
-          "type": "Label",
-          "caption": "Opt-in learner: stable holiday rooms, no significant radiator/DHW load, pure source. Fixed mode requires reference capacity; weather mode checks the curve and normalizes accepted consumption to the reference temperature/gas price."
-        },
         {
           "type": "SelectInstance",
           "name": "ArchiveID",
-          "caption": "Archive Control",
+          "caption": "Archive Control for electricity, gas and water history",
           "validModules": [
             "{43192F0B-135B-4CE7-A0A7-1475603F3060}"
           ]
         },
         {
-          "type": "NumberSpinner",
-          "name": "GasKWhPerM3",
-          "caption": "Gas conversion (kWh/m\u00b3)",
-          "minimum": 1,
-          "maximum": 20,
-          "digits": 6
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "MinimumReferenceDays",
-          "caption": "Required suitable opposite-source days",
-          "minimum": 1,
-          "maximum": 14
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "ElectricalBackgroundKW",
-          "caption": "Shared electric background load (kW)",
-          "minimum": 0,
-          "maximum": 10,
-          "digits": 3
-        },
-        {
-          "type": "SelectVariable",
-          "name": "GasCounterID",
-          "caption": "Cumulative gas counter"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpCounterID",
-          "caption": "Cumulative heat-pump/shared circuit counter"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "AuxCounterID",
-          "caption": "Cumulative air/gas auxiliary circuit counter"
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "GasCounterScale",
-          "caption": "Gas counter multiplier to m\u00b3",
-          "minimum": 1e-06,
-          "maximum": 100,
-          "digits": 6
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpCounterScale",
-          "caption": "Heat-pump counter multiplier to kWh",
-          "minimum": 1e-06,
-          "maximum": 100,
-          "digits": 6
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "AuxCounterScale",
-          "caption": "Auxiliary counter multiplier to kWh",
-          "minimum": 1e-06,
-          "maximum": 100,
-          "digits": 6
-        },
-        {
-          "type": "SelectVariable",
-          "name": "SourceModeID",
-          "caption": "Source mode: 1 heat pump / 2 gas"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HolidayID",
-          "caption": "Holiday status: true = holiday"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpOnID",
-          "caption": "Heat pump on status"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpHeatModeID",
-          "caption": "Heat pump heating mode: true = heating"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpCapacityID",
-          "caption": "Actual heat-pump power command (%)"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "GasAirPumpID",
-          "caption": "Gas air-exchanger pump status"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "RadiatorPumpID",
-          "caption": "Radiator circuit pump status"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HotWaterPumpID",
-          "caption": "DHW storage load pump (not circulation pump)"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "StorageTemperatureID",
-          "caption": "DHW storage temperature"
-        },
-        {
-          "type": "List",
-          "name": "LearningRooms",
-          "caption": "Air-heated rooms (all relevant rooms)",
-          "rowCount": 4,
-          "add": true,
-          "delete": true,
-          "columns": [
-            {
-              "name": "name",
-              "caption": "Room",
-              "width": "auto",
-              "add": "",
-              "edit": {
-                "type": "ValidationTextBox"
-              }
-            },
-            {
-              "name": "temperatureID",
-              "caption": "Temperature",
-              "width": "200px",
-              "add": 0,
-              "edit": {
-                "type": "SelectVariable"
-              }
-            },
-            {
-              "name": "targetID",
-              "caption": "Target",
-              "width": "200px",
-              "add": 0,
-              "edit": {
-                "type": "SelectVariable"
-              }
-            }
-          ]
-        },
-        {
-          "type": "Label",
-          "caption": "All selected inputs must be archived. Existing IDs are Berlin defaults; verify them. Counter scales default to gas m\u00b3 and electric pulses at 0.001 kWh/pulse. Shared humidifier load must be comparable between reference days."
+          "type": "ValidationTextBox",
+          "name": "ConsumptionZeroPeriods",
+          "caption": "Confirmed no-consumption periods for electricity, gas and future water history (JSON)"
         }
       ]
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Protected consumption and costs web page",
+      "caption": "Reviewed electricity consumption and costs",
       "items": [
         {
           "type": "CheckBox",
-          "name": "WebEnabled",
-          "caption": "Enable read-only HTML page and portal link"
+          "name": "PreparedHistoryEnabled",
+          "caption": "Show imported consumption history and later recorded meter/price periods"
         },
         {
-          "type": "SelectInstance",
-          "name": "VaultInstanceID",
-          "caption": "SecretsManager (0 = only eligible instance)",
-          "moduleID": "{7C5A3841-3F7B-4D2A-9E1C-5B6D8F9A0E12}"
+          "type": "ValidationTextBox",
+          "name": "PreparedHistoryManifest",
+          "caption": "Import manifest path relative to the Symcon kernel directory"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "PreparedCleanedCounterID",
+          "caption": "Imported cleaned cumulative consumption (kWh)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "PreparedReferenceCounterID",
+          "caption": "Imported reference-adjusted cumulative consumption (kWh)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "PreparedQualityID",
+          "caption": "Imported interval quality bitmask",
+          "validVariableTypes": [
+            1
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "ConsumptionCounterID",
+          "caption": "Whole-house cumulative electricity meter for later periods",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "ConsumptionCounterScale",
+          "caption": "Later meter scale to kWh",
+          "minimum": 1e-06,
+          "maximum": 100,
+          "digits": 6
         },
         {
           "type": "Label",
-          "caption": "Uses the existing SecretsManager HTTPS portal and passkey session. Page path: /hook/lichtblick_<instanceID>. Update MyAlarmSystem for automatic Smart Home discovery."
+          "caption": "Reviewed history is read from its own archive counters. Invoice totals, tariff costs and billing residuals are separate. Later closed quarter hours use recorded meter deltas and stored retail prices; missing data stay blank. No guessed reset energy or additional undocumented basic charges. The imported archives remain a fixed snapshot."
         }
       ]
     },
@@ -448,59 +188,6 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Reviewed electricity consumption and costs",
-      "items": [
-        {
-          "type": "CheckBox",
-          "name": "PreparedHistoryEnabled",
-          "caption": "Show imported consumption history and later recorded meter/price periods"
-        },
-        {
-          "type": "ValidationTextBox",
-          "name": "PreparedHistoryManifest",
-          "caption": "Import manifest path relative to the Symcon kernel directory"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "PreparedCleanedCounterID",
-          "caption": "Imported cleaned cumulative consumption (kWh)"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "PreparedReferenceCounterID",
-          "caption": "Imported reference-adjusted cumulative consumption (kWh)"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "PreparedQualityID",
-          "caption": "Imported interval quality bitmask"
-        },
-        {
-          "type": "SelectVariable",
-          "name": "ConsumptionCounterID",
-          "caption": "Whole-house cumulative electricity meter for later periods"
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "ConsumptionCounterScale",
-          "caption": "Later meter scale to kWh",
-          "minimum": 1e-06,
-          "maximum": 100,
-          "digits": 6
-        },
-        {
-          "type": "ValidationTextBox",
-          "name": "ConsumptionZeroPeriods",
-          "caption": "Confirmed no-consumption periods for electricity, gas and future water history (JSON)"
-        },
-        {
-          "type": "Label",
-          "caption": "Reviewed history is read from its own archive counters. Invoice totals, tariff costs and billing residuals are separate. Later closed quarter hours use recorded meter deltas and stored retail prices; missing data stay blank. No guessed reset energy or additional undocumented basic charges. The imported archives remain a fixed snapshot."
-        }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
       "caption": "Reviewed gas consumption and invoice costs",
       "items": [
         {
@@ -511,37 +198,63 @@
         {
           "type": "SelectVariable",
           "name": "GasHistoryMetadataID",
-          "caption": "Verified gas import metadata (JSON)"
+          "caption": "Verified gas import metadata (JSON)",
+          "validVariableTypes": [
+            3
+          ]
         },
         {
           "type": "SelectVariable",
           "name": "GasHistoryCleanedCounterID",
-          "caption": "Reviewed observed cumulative gas (m3)"
+          "caption": "Reviewed observed cumulative gas (m3)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
         },
         {
           "type": "SelectVariable",
           "name": "GasHistoryDailyID",
-          "caption": "Reviewed observed daily gas (m3)"
+          "caption": "Reviewed observed daily gas (m3)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
         },
         {
           "type": "SelectVariable",
           "name": "GasHistoryReferenceM3ID",
-          "caption": "Sparse invoice-reference cumulative gas (m3)"
+          "caption": "Sparse invoice-reference cumulative gas (m3)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
         },
         {
           "type": "SelectVariable",
           "name": "GasHistoryReferenceKWhID",
-          "caption": "Sparse invoice-reference cumulative gas (kWh)"
+          "caption": "Sparse invoice-reference cumulative gas (kWh)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
         },
         {
           "type": "SelectVariable",
           "name": "GasHistoryQualityID",
-          "caption": "Reviewed daily quality bitmask"
+          "caption": "Reviewed daily quality bitmask",
+          "validVariableTypes": [
+            1
+          ]
         },
         {
           "type": "SelectVariable",
           "name": "GasHistoryLaterCounterID",
-          "caption": "Original raw gas counter for later recorded events"
+          "caption": "Original raw gas counter for later recorded events",
+          "validVariableTypes": [
+            1,
+            2
+          ]
         },
         {
           "type": "NumberSpinner",
@@ -586,7 +299,7 @@
           "columns": [
             {
               "name": "from",
-              "caption": "From \u00b7 YYYY-MM-DD",
+              "caption": "From · YYYY-MM-DD",
               "width": "auto",
               "add": "",
               "edit": {
@@ -595,7 +308,7 @@
             },
             {
               "name": "through",
-              "caption": "Through \u00b7 YYYY-MM-DD",
+              "caption": "Through · YYYY-MM-DD",
               "width": "auto",
               "add": "",
               "edit": {
@@ -604,7 +317,7 @@
             },
             {
               "name": "m3",
-              "caption": "Garden consumption m\u00b3",
+              "caption": "Garden consumption m³",
               "width": "auto",
               "add": 0,
               "edit": {
@@ -628,7 +341,10 @@
         {
           "type": "SelectVariable",
           "name": "WaterHistoryReviewedMetadataID",
-          "caption": "Verified water import metadata (0 = original raw counters)"
+          "caption": "Verified water import metadata (0 = original raw counters)",
+          "validVariableTypes": [
+            3
+          ]
         },
         {
           "type": "ValidationTextBox",
@@ -653,7 +369,7 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Daily consumption email \u00b7 midnight",
+      "caption": "Daily consumption email · midnight",
       "items": [
         {
           "type": "CheckBox",
@@ -677,46 +393,63 @@
           "caption": "Newly enabled reports start at the next midnight. After a server interruption only yesterday is sent. One recorded send attempt per day avoids duplicate emails; inspect Daily consumption email status for failures."
         }
       ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Protected consumption and costs web page",
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "WebEnabled",
+          "caption": "Enable read-only HTML page and portal link"
+        },
+        {
+          "type": "SelectInstance",
+          "name": "VaultInstanceID",
+          "caption": "SecretsManager (0 = only eligible instance)",
+          "moduleID": "{7C5A3841-3F7B-4D2A-9E1C-5B6D8F9A0E12}"
+        },
+        {
+          "type": "Label",
+          "caption": "Uses the existing SecretsManager HTTPS portal and passkey session. Page path: /hook/lichtblick_<instanceID>. Update MyAlarmSystem for automatic Smart Home discovery."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Diagnostics",
+      "expanded": false,
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "DebugEnabled",
+          "caption": "Write debug string below instance"
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "type": "Button",
-      "caption": "Download yesterday\u2019s email preview (no sending)",
-      "download": "Daily-consumption-preview.html",
-      "onClick": "try { echo 'data:text/html;base64,' . base64_encode(LBEP_GetDailyConsumptionReport($id, '')); } catch (Throwable $e) { echo $e->getMessage(); }"
-    },
-    {
-      "type": "Button",
-      "caption": "Send yesterday\u2019s report as test email",
-      "onClick": "echo LBEP_SendDailyConsumptionReportTest($id);"
+      "type": "ExpansionPanel",
+      "caption": "Daily report preview and test",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Download yesterday’s email preview (no sending)",
+          "download": "Daily-consumption-preview.html",
+          "onClick": "try { echo 'data:text/html;base64,' . base64_encode(LBEP_GetDailyConsumptionReport($id, '')); } catch (Throwable $e) { echo $e->getMessage(); }"
+        },
+        {
+          "type": "Button",
+          "caption": "Send yesterday’s report as test email",
+          "onClick": "echo LBEP_SendDailyConsumptionReportTest($id);"
+        }
+      ]
     },
     {
       "type": "Button",
       "caption": "Fetch prices now",
       "onClick": "LBEP_RefreshPrices($id);"
-    },
-    {
-      "type": "Button",
-      "caption": "Recalculate yesterday (once per accepted day)",
-      "onClick": "LBEP_CalculateYesterday($id);"
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Add historical reference",
-      "items": [
-        {
-          "type": "ValidationTextBox",
-          "name": "ReferenceDate",
-          "caption": "Completed date (YYYY-MM-DD)",
-          "value": ""
-        },
-        {
-          "type": "Button",
-          "caption": "Check and add reference day (no threshold change)",
-          "onClick": "echo LBEP_AddReferenceDay($id, $ReferenceDate);"
-        }
-      ]
     },
     {
       "type": "ExpansionPanel",

@@ -39,36 +39,16 @@ trait HeatingControlSourceSelection
 
     protected function sourceClock(): int { return time(); }
 
-    private function priceRecommendationID(): int
+    private function priceQuoteID(): int
     {
         $instance = $this->ReadPropertyInteger('ElectricityPriceInstanceID');
         if ($instance <= 1 || !IPS_InstanceExists($instance)
             || strtoupper(IPS_GetInstance($instance)['ModuleInfo']['ModuleID']) !== self::PRICE_MODULE_ID) return 0;
         try {
-            $id = IPS_GetObjectIDByIdent('RecommendationJSON', $instance);
+            $id = IPS_GetObjectIDByIdent('PriceQuoteJSON', $instance);
             if (!IPS_VariableExists($id) || IPS_GetVariable($id)['VariableType'] !== 3) return 0;
             return $id;
         } catch (Throwable $e) { return 0; }
-    }
-
-    /** The same strict snapshot validation is used by control and the read-only dashboard. */
-    private function readPriceRecommendation(): array
-    {
-        $id = $this->priceRecommendationID();
-        if (!$id) throw new RuntimeException('Select an updated LichtBlick price instance');
-        $json = GetValue($id);
-        if (!is_string($json) || strlen($json) > 8192) throw new RuntimeException('Invalid recommendation snapshot');
-        $r = json_decode($json, true, 16, JSON_THROW_ON_ERROR);
-        $now = $this->sourceClock();
-        if (!is_array($r) || ($r['schema'] ?? null) !== 1 || !is_int($r['updatedAt'] ?? null)
-            || $r['updatedAt'] > $now + 30 || $now - $r['updatedAt'] > 180
-            || ($r['valid'] ?? null) !== true || !is_int($r['validUntil'] ?? null) || $r['validUntil'] <= $now
-            || !in_array($r['source'] ?? null, [1, 2], true)) throw new RuntimeException('Recommendation unavailable, unconfirmed or expired');
-        if (!is_int($r['powerPercent'] ?? null) || ($r['source'] === 1
-            ? ($r['powerPercent'] < 1 || $r['powerPercent'] > 100) : $r['powerPercent'] !== 0)) {
-            throw new RuntimeException('Heat-pump power recommendation missing or invalid');
-        }
-        return $r;
     }
 
     /** One final JSON publication avoids reading half-updated provider variables. */
@@ -82,17 +62,8 @@ trait HeatingControlSourceSelection
             $this->WriteAttributeString('AutomaticWasActive', '1');
             $mode = $this->ReadPropertyInteger('GasModeValue'); $power = 0;
             try {
-                if($this->ReadPropertyBoolean('HeatPumpUseTestModel')) {
-                    $power=$this->measuredEconomicChoice($reason);
-                    $mode=$power>0?$this->ReadPropertyInteger('HeatPumpModeValue'):$this->ReadPropertyInteger('GasModeValue');
-                } else {
-                    $r = $this->readPriceRecommendation();
-                    if ($r['source'] === 1) {
-                        $power = $r['powerPercent']; $mode = $this->ReadPropertyInteger('HeatPumpModeValue');
-                    }
-                    $reason = 'Automatic: ' . ($r['source'] === 1 ? 'heat pump at ' . $power . '%' : 'gas')
-                        . '; ' . substr((string)($r['reason'] ?? ''), 0, 500);
-                }
+                $power=$this->measuredEconomicChoice($reason);
+                $mode=$power>0?$this->ReadPropertyInteger('HeatPumpModeValue'):$this->ReadPropertyInteger('GasModeValue');
             } catch (Throwable $e) { $reason = 'Automatic gas fallback: ' . $e->getMessage(); }
             // Mirror the selected mode, including fallback and transfer/no-demand periods.
             // Dispatch respects DryRun and does not invoke a legacy mode action script.

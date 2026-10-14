@@ -126,6 +126,8 @@ class HeatingControl extends IPSModule
                 'intake'=>round($p['incoming'],2),'input'=>round($p['systemInputKW'],3),'cop'=>round($p['estimatedSystemCOP'],3),'eligible'=>$p['usable']?'yes':'unsettled'];
             foreach($form['elements'] as &$panel)foreach($panel['items']??[] as $i=>$item)if(($item['name']??'')==='HeatPumpMatrixOverview')$panel['items'][$i]['values']=$values;
             unset($panel);
+            foreach($form['elements'] as &$panel)if(($panel['caption']??'')==='Automatic gas / heat-pump switchover')$panel['items'][]=['type'=>'Label','caption'=>'Current automatic switchover: '.($this->GetValue('AutomaticSourceSelection')?'ON':'OFF').' — use the enable/disable buttons below or the protected page.'];
+            unset($panel);
         }catch(Throwable $e){/* Malformed custom matrix remains available for repair. */}
         return json_encode($form, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
@@ -689,9 +691,8 @@ class HeatingControl extends IPSModule
             if ($id > 0 && IPS_VariableExists($id)) $ids[$id] = true;
         }
         $ids[$this->GetIDForIdent('AutomaticSourceSelection')] = true;
-        $providerID = $this->priceRecommendationID();
+        $providerID = $this->priceQuoteID();
         if ($providerID > 0) $ids[$providerID] = true;
-        try {$quoteID=IPS_GetObjectIDByIdent('PriceQuoteJSON',$this->ReadPropertyInteger('ElectricityPriceInstanceID'));if($quoteID>1&&IPS_VariableExists($quoteID))$ids[$quoteID]=true;}catch(Throwable $e){}
         $recoveryID = $this->id('RecoveryEnableID');
         if ($recoveryID > 0 && IPS_VariableExists($recoveryID)) $ids[$recoveryID] = true;
         try {

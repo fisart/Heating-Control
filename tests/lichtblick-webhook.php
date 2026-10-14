@@ -42,8 +42,8 @@ $GLOBALS['liveVariables'][25911]=['value'=>7.0,'VariableType'=>2,'VariableUpdate
 $start=(int)(floor(time()/900)*900);$m->response=quote(19,$start);$m->RefreshPrices();
 $before=serialize([$m->values,$m->attributes,$m->buffers,$m->properties]);
 $data=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
-check($data['recommendation']['valid'] && $data['recommendation']['source']===1 && $data['recommendation']['powerPercent']===35,'Dashboard publishes coherent source/power');
-check(count($data['curve'])===4 && count($data['slots'])===1 && $data['values']['PriceValid'],'Model and actual price intervals');
+check(!$data['recommendation']['valid'] && $data['recommendation']['source']===2,'No measured controller gives explicit comparison unavailable/gas fallback');
+check(count($data['curve'])===0 && count($data['slots'])===1 && $data['values']['PriceValid'],'Model and actual price intervals');
 check(serialize([$m->values,$m->attributes,$m->buffers,$m->properties])===$before,'Page reads never fetch, learn or mutate instance');
 $historyResponse=response($m,'GET',['view'=>'price-history','from'=>'2026-10-01','to'=>'2026-10-11']);
 check($historyResponse['status']===200&&json_decode($historyResponse['body'],true)['expectedIntervals']===1056,'Authenticated bounded history data');

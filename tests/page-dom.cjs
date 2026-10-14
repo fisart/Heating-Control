@@ -60,13 +60,13 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  state.sourceSelection.provider=provider;state.sourceSelection.power=65;
  d.querySelector('#refresh').click();await settle();
  assert.ok(d.querySelector('#price-provider').textContent.includes('LichtBlick Berlin'));
- assert.ok(d.querySelector('#price-provider').textContent.includes('65 %'));
+ assert.ok(!d.querySelector('#price-provider').textContent.includes('65 %'),'Retired duplicate provider power display removed');
  assert.ok(d.querySelector('#price-provider').textContent.includes('19.25 ct/kWh'));
  assert.ok(d.querySelector('#automatic-selected').textContent.includes('65 %'));
  assert.equal(d.querySelector('#price-provider-link').getAttribute('href'),'/hook/lichtblick_20');
  state.sourceSelection.provider={...provider,valid:false,source:0,powerPercent:0,reason:'Expired <img src=x onerror=alert(1)>',path:'javascript:alert(1)'};
  d.querySelector('#refresh').click();await settle();
- assert.ok(d.querySelector('#price-provider').textContent.includes('Gas fallback'));
+ assert.ok(d.querySelector('#price-provider').textContent.includes('Unavailable'));
  assert.equal(d.querySelector('#price-provider-link').hidden,true);
  assert.equal(d.querySelectorAll('#automatic-source img').length,0);
  // Both directions use the same protected action, and manual controls unlock when off.
@@ -108,7 +108,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  const room=d.querySelector('#rooms article');assert.equal(room.querySelector('.temperature button'),null);
  assert.equal(room.querySelectorAll('.sensor-values button').length,1);
  assert.equal(room.querySelectorAll('img').length,0);
- state.heatPumpTest.economics={valid:true,source:1,powerPercent:50,breakEvenEuro:.378576,entryEuro:.263932,exitEuro:.283932,exitCt:28.3932,entryCt:26.3932,gasEfficiencyPercent:100,reason:'Measured house-meter result'};
+ state.heatPumpTest.economics={valid:true,source:1,powerPercent:50,breakEvenEuro:.378576,entryEuro:.263932,exitEuro:.283932,exitCt:28.3932,entryCt:26.3932,validUntil:Date.now()/1000+600,gasEfficiencyPercent:100,reason:'Measured house-meter result'};
  d.querySelector('#refresh').click();await settle();
  assert.ok(d.querySelector('#matrix-economic').textContent.includes('50%'),'Measured power and EUR/kWh thresholds rendered');
  assert.ok(d.querySelector('#price-provider-reason').textContent.includes('Measured house-meter result'),'Measured decision takes precedence over legacy page recommendation');

@@ -254,45 +254,34 @@ trait HeatingControlWebhook
             'rooms'=>$roomData, 'environment'=>$environment, 'equipment'=>$equipment, 'controls'=>$controls];
     }
 
-    /** Display-only provider data. Only RecommendationJSON can supply control commands. */
+    /** Verified price context; the controller alone chooses source/power from its matrix. */
     private function webSourceProvider(): array
     {
-        $instance = $this->ReadPropertyInteger('ElectricityPriceInstanceID');
-        $data = ['instanceID'=>$instance,'connected'=>false,'name'=>'No LichtBlick instance selected','path'=>'',
-            'valid'=>false,'source'=>0,'powerPercent'=>0,'updatedAt'=>0,'validUntil'=>0,
-            'reason'=>'Select the LichtBlick instance in the heating configuration.','readings'=>[]];
+        $instance=$this->ReadPropertyInteger('ElectricityPriceInstanceID');$now=$this->sourceClock();
+        $data=['instanceID'=>$instance,'connected'=>false,'name'=>'No LichtBlick instance selected','path'=>'','valid'=>false,
+            'source'=>0,'powerPercent'=>0,'reason'=>'Select the LichtBlick instance in the heating configuration.','readings'=>[]];
         try {
-            if (!$this->priceRecommendationID()) return $data;
-            $data['connected'] = true; $data['name'] = IPS_GetName($instance);
-            try {
-                if (IPS_GetProperty($instance,'WebEnabled') === true) $data['path'] = '/hook/lichtblick_'.$instance;
-            } catch (Throwable $e) { /* Older providers do not have a dashboard. */ }
-            foreach (['CurrentPriceCt'=>2,'PriceValid'=>0,'PriceStart'=>1,'PriceEnd'=>1,'LastSuccessfulFetch'=>1,
-                'EffectiveThresholdCt'=>2,'EntryThresholdCt'=>2] as $ident=>$type) {
-                $data['readings'][$ident] = null;
-                try {
-                    $id = IPS_GetObjectIDByIdent($ident,$instance);
-                    if (!IPS_VariableExists($id)) continue;
-                    $meta = IPS_GetVariable($id); $value = GetValue($id);
-                    if ($meta['VariableType'] !== $type) continue;
-                    if ($type === 0 ? is_bool($value) : (is_int($value) || is_float($value)) && is_finite((float)$value)) {
-                        $data['readings'][$ident] = $value;
-                    }
-                } catch (Throwable $e) { /* Missing display inputs never affect source control. */ }
+            if(!$this->priceQuoteID())return $data;
+            $data['connected']=true;$data['name']=IPS_GetName($instance);
+            $quote=json_decode((string)GetValue($this->priceQuoteID()),true,16,JSON_THROW_ON_ERROR);
+            $data['valid']=($quote['schema']??0)===1&&($quote['valid']??false)===true&&($quote['enabled']??false)===true
+                &&is_int($quote['updatedAt']??null)&&$quote['updatedAt']<=$now+30&&$now-$quote['updatedAt']<=180
+                &&is_int($quote['validUntil']??null)&&$quote['validUntil']>$now;
+            $data['validUntil']=$data['valid']?$quote['validUntil']:0;
+            $data['reason']=$data['valid']?'Verified electricity quote; Heating Control computes the measured decision.':'Price quote unavailable, disabled or expired; automatic selection uses gas.';
+            foreach(['CurrentPriceCt'=>2,'PriceValid'=>0,'PriceStart'=>1,'PriceEnd'=>1,'LastSuccessfulFetch'=>1] as $ident=>$type) {
+                $id=IPS_GetObjectIDByIdent($ident,$instance);$data['readings'][$ident]=$id&&IPS_VariableExists($id)&&IPS_GetVariable($id)['VariableType']===$type?GetValue($id):null;
             }
-            $v = &$data['readings']; $now = $this->sourceClock();
-            $cacheHours = 0;
-            try { $cacheHours = (int)IPS_GetProperty($instance,'MaxCacheAgeHours'); }
-            catch (Throwable $e) { /* Price context is optional; snapshot validation remains authoritative. */ }
-            $v['PriceAvailable'] = (is_int($v['CurrentPriceCt']) || is_float($v['CurrentPriceCt'])) && is_int($v['PriceStart']) && is_int($v['PriceEnd']) && is_int($v['LastSuccessfulFetch'])
-                && $v['PriceStart'] > 0 && $v['PriceStart'] <= $now && $now < $v['PriceEnd']
-                && $v['LastSuccessfulFetch'] > 0 && $cacheHours > 0 && $now < $v['LastSuccessfulFetch'] + $cacheHours * 3600;
-            $v['PriceValid'] = $v['PriceValid'] === true && $v['PriceAvailable'];
-            unset($v);
-            $r = $this->readPriceRecommendation();
-            foreach (['source','powerPercent','updatedAt','validUntil'] as $key) $data[$key] = $r[$key];
-            $data['valid'] = true; $data['reason'] = substr((string)($r['reason'] ?? ''),0,500);
-        } catch (Throwable $e) { $data['reason'] = $e->getMessage(); }
+            $v=&$data['readings'];$hours=(int)IPS_GetProperty($instance,'MaxCacheAgeHours');
+            $v['PriceAvailable']=is_numeric($v['CurrentPriceCt'])&&is_int($v['PriceStart'])&&is_int($v['PriceEnd'])&&$v['PriceStart']>0&&$v['PriceStart']<=$now&&$now<$v['PriceEnd']
+                &&is_int($v['LastSuccessfulFetch'])&&$v['LastSuccessfulFetch']>0&&$hours>0&&$now<$v['LastSuccessfulFetch']+$hours*3600;
+            $v['PriceValid']=$v['PriceValid']===true&&$v['PriceAvailable'];unset($v);
+            if($this->webVault()>0&&IPS_GetProperty($instance,'WebEnabled')&&$this->webVaultForSelection((int)IPS_GetProperty($instance,'VaultInstanceID'))===$this->webVault())
+                foreach(IPS_GetInstanceListByModuleID(self::WEBHOOK_CONTROL) as $hook) {
+                    $routes=json_decode((string)IPS_GetProperty($hook,'Hooks'),true);
+                    foreach(is_array($routes)?$routes:[] as $route)if(($route['Hook']??'')==='/hook/lichtblick_'.$instance&&($route['TargetID']??0)===$instance)$data['path']='/hook/lichtblick_'.$instance;
+                }
+        }catch(Throwable $e){$data['valid']=false;$data['reason']='Price context unavailable: '.$e->getMessage();}
         return $data;
     }
 
