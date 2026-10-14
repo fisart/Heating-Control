@@ -39,7 +39,7 @@ trait LichtBlickMeasuredHeating
             // Cross-page links require the same vault AND a registered route owned by that controller.
             if(IPS_GetProperty($id,'WebEnabled')) {
                 $vault=(int)IPS_GetProperty($id,'VaultInstanceID');$own=$this->webVault();
-                if($vault===0){$eligible=[];foreach(IPS_GetInstanceListByModuleID(self::PORTAL_VAULT) as $candidate)if(IPS_GetProperty($candidate,'PortalEnabled')===true&&$this->webOrigin((string)IPS_GetProperty($candidate,'PortalOrigin'))!=='')$eligible[]=(int)$candidate;$vault=count($eligible)===1?$eligible[0]:0;}
+                if($vault<=1){$eligible=[];foreach(IPS_GetInstanceListByModuleID(self::PORTAL_VAULT) as $candidate)if(IPS_GetProperty($candidate,'PortalEnabled')===true&&$this->webOrigin((string)IPS_GetProperty($candidate,'PortalOrigin'))!=='')$eligible[]=(int)$candidate;$vault=count($eligible)===1?$eligible[0]:0;}
                 if($vault===$own&&$own>0)foreach(IPS_GetInstanceListByModuleID(self::WEBHOOK_CONTROL) as $hook) {
                     $routes=json_decode((string)IPS_GetProperty($hook,'Hooks'),true);
                     foreach(is_array($routes)?$routes:[] as $route)if(($route['Hook']??'')==='/hook/heating_'.$id&&($route['TargetID']??0)===$id)$view['path']='/hook/heating_'.$id;
