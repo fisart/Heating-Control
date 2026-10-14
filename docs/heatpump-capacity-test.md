@@ -1,4 +1,4 @@
-# Controlled heat-pump test — Heating-Control 0.3.23
+# Controlled heat-pump test — Heating-Control 0.3.24
 
 Start/cancel from the configuration form or the existing passkey-protected heating
 page. The default sequence is **30, 40, 50, 60, 70, 80, 90, 100%**, with **15 minutes
@@ -38,6 +38,14 @@ duration stop the test. Apply/restart never resumes it. If a source cannot be
 confirmed stopped, the test retains control and retries rather than handing a
 running experiment to normal heating. No blocking sleeps or automatic scheduling.
 
+Temperature age checks follow the controller's **MaxSensorAgeSeconds** setting:
+**0 disables age-based stops**, while a positive value sets the maximum accepted
+temperature age after the startup grace period. There is no separate hardcoded
+15-minute temperature timeout. Change-triggered sensors can hold an unchanged value;
+an old update timestamp alone does not establish a fault or prove the sensor is
+healthy. Numeric/plausibility checks and temperature cutoffs remain active. Electrical
+power meters must still update within 180 seconds during measurement.
+
 Radiator/DHW pumps are not operated by the test. Shared-circuit loads, including
 humidifier/boiler activity, can contaminate power measurements; stable power alone
 does not prove isolated compressor input. View/download raw readings to review it.
@@ -46,7 +54,9 @@ does not prove isolated compressor input. View/download raw readings to review i
 
 Raw samples approximately every ten seconds include outside/intake/outgoing/
 exchanger temperatures, power, room temperatures/targets/flaps and input update
-timestamps. Archive change-only history remains distinct. Each step stores averages,
+timestamps and ages. Step summaries retain each temperature's maximum age in the
+measurement window; the report records the configured age limit. Archive change-only
+history remains distinct. Each step stores averages,
 air rise, exchanger lift, baseline-adjusted HP input, gross system input, estimated
 heat output/COP and stability flags.
 

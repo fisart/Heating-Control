@@ -76,6 +76,8 @@ Version **0.3.13**, build 23 adds independently calculated gas costs from dated 
 
 Version **0.3.14**, build 24 moves the gas/heat-pump threshold and associated recommendation, weather/power model, learning status and diagnostics into a separate **Heizung** tab. Strom retains electricity prices, consumption and costs. State refresh continues every 60 seconds and preserves the selected tab.
 
+Version **0.3.24**, build 34 makes the capacity test follow the controller's `MaxSensorAgeSeconds` policy, including 0 to disable age-based stops for change-triggered temperature inputs. Raw readings and completed points retain temperature-age diagnostics; the electrical-meter update guard remains active.
+
 Version **0.3.22**, build 32 fixes the email-preview download by supplying the explicit date argument required by Symcon’s generated function wrapper. The actual form action is covered by a strict-wrapper regression check.
 
 Version **0.3.21**, build 31 adds **Send yesterday’s report as test email** in the instance form. It uses the selected SMTP instance, stores the identical HTML under the instance, and leaves daily scheduling unchanged.

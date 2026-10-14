@@ -68,6 +68,8 @@ trait HeatingControlHeatPumpTest
     {
         $s=[];foreach(self::TEST_DEFAULTS as $n=>$v)$s[$n]=is_bool($v)?$this->ReadPropertyBoolean($n):(is_int($v)?$this->ReadPropertyInteger($n):$this->ReadPropertyFloat($n));
         $s['HeatPumpTestStepMinutes']=$minutes;
+        // Change-triggered temperature inputs may legitimately hold their value.
+        $s['MaxSensorAgeSeconds']=max(0,$this->ReadPropertyInteger('MaxSensorAgeSeconds'));
         if($minutes<3||$minutes>60 || $s['HeatPumpTestFanSpeed']<20||$s['HeatPumpTestFanSpeed']>100
             || $s['HeatPumpTestAirflowM3h']<100||$s['HeatPumpTestAirflowM3h']>10000
             || $s['HeatPumpTestMaximumRoomC']<15||$s['HeatPumpTestMaximumRoomC']>35
@@ -186,6 +188,7 @@ trait HeatingControlHeatPumpTest
             'complete'=>$s['complete'],'reason'=>$s['finishReason'],'stepMinutes'=>$s['settings']['HeatPumpTestStepMinutes'],
             'airflowM3h'=>$s['settings']['HeatPumpTestAirflowM3h'],'airflowIsMeasured'=>false,'fanSpeed'=>$s['settings']['HeatPumpTestFanSpeed'],
             'excludedFlapID'=>$s['settings']['HeatPumpTestExcludedFlapID'],'rooms'=>$s['rooms'],'baseline'=>$s['baseline'],
+            'temperatureMaxAgeSeconds'=>$s['settings']['MaxSensorAgeSeconds']??0,
             'points'=>$s['points'],'relationships'=>$relationships,'modelQualified'=>$qualified];
         $json=json_encode($report,JSON_THROW_ON_ERROR|JSON_PRETTY_PRINT);
         $this->testSaveJSON($this->testFile($s,'.summary.json'),$json);
@@ -220,8 +223,12 @@ trait HeatingControlHeatPumpTest
         }
         if($row['coil']>=$s['settings']['HeatPumpTestMaximumCoilC'])throw new RuntimeException('Heat-pump exchanger temperature limit');
         $row['rooms']=$rooms;$row['target']=max($targets);
-        $row['sensorUpdated']=[];
-        foreach(['OutsideTempID','IncomingAirTempID','OutgoingAirTempID','HeatPumpTempID'] as $key)$row['sensorUpdated'][$key]=IPS_GetVariable($this->id($key))['VariableUpdated'];
+        $row['sensorUpdated']=[];$row['sensorAgeSeconds']=[];
+        foreach(['OutsideTempID','IncomingAirTempID','OutgoingAirTempID','HeatPumpTempID'] as $key) {
+            $updated=(int)(IPS_GetVariable($this->id($key))['VariableUpdated']??0);
+            $row['sensorUpdated'][$key]=$updated;
+            $row['sensorAgeSeconds'][$key]=$updated>0?max(0,$row['timestamp']-$updated):null;
+        }
         return $row;
     }
     private function processHeatPumpTest(): bool
@@ -273,7 +280,8 @@ trait HeatingControlHeatPumpTest
                         if(GetValue($r['flapID'])!==$expected)throw new RuntimeException('Test flap command not confirmed: '.$r['name']);
                     }
                     if($s['index']>0 || $now-$s['phaseSince']>180) {
-                        foreach($row['sensorUpdated'] as $key=>$updated)if($updated<=0||$now-$updated>900)throw new RuntimeException('Test sensor stale: '.$key);
+                        $maxAge=$s['settings']['MaxSensorAgeSeconds']??$this->ReadPropertyInteger('MaxSensorAgeSeconds');
+                        if($maxAge>0)foreach($row['sensorUpdated'] as $key=>$updated)if($updated<=0||$now-$updated>$maxAge)throw new RuntimeException('Test sensor stale: '.$key);
                         foreach(['HeatPumpTestPowerMeterID','HeatPumpTestFanMeterID'] as $key)if($now-(IPS_GetVariable($s['settings'][$key])['VariableUpdated']??0)>180)throw new RuntimeException('Power meter stale: '.$key);
                     }
                     $row['powerPercent']=$power;

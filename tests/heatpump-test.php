@@ -17,7 +17,7 @@ function fixture():TestHeating {
     $GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=15.0;
     return $m;
 }
-function tick(TestHeating $m,int $seconds=10):void {
+function tick(TestHeating $m,int $seconds=10,?int $heldIncomingUpdated=null):void {
     $m->clock+=$seconds;$s=json_decode($m->attributes['HeatPumpTestState']?:'{}',true);
     if(($s['phase']??'')==='step') {
         $power=$s['powers'][$s['index']];
@@ -25,6 +25,7 @@ function tick(TestHeating $m,int $seconds=10):void {
             'HeatPumpTestPowerMeterID'=>100+$power*20.0,'HeatPumpTestFanMeterID'=>680.0] as $k=>$v)$GLOBALS['variables'][$m->properties[$k]]['value']=$v;
     }
     foreach($GLOBALS['variables'] as &$v)$v['VariableUpdated']=$m->clock;unset($v);
+    if($heldIncomingUpdated!==null)$GLOBALS['variables'][$m->properties['IncomingAirTempID']]['VariableUpdated']=$heldIncomingUpdated;
     $m->ProcessHeating();
 }
 $samples=[];for($t=0;$t<=300;$t+=10)$samples[]=['timestamp'=>$t,'outside'=>15,'incoming'=>23,'outgoing'=>33,'coil'=>45,'hpWatts'=>2100,'fanWatts'=>680,'target'=>23];
@@ -56,6 +57,23 @@ check(is_file($root.'/media/heatpump-tests/1/model.json'),'Model persists separa
 check(GetValue(40259)===false&&GetValue(36911)===100,'Previous flap positions restored');
 check(!GetValue(35931)&&!GetValue(46921),'Sources and fan stopped before normal controller resumes');
 check(GetValue(59800)===50&&GetValue(48646)===90,'Manual desired power/fan settings retained');
+$m=fixture();$m->StartHeatPumpTest(15);
+for($i=0;$i<100;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(($s['phase']??'')==='step')break;}
+$heldIncomingUpdated=$m->clock;
+for($i=0;$i<100&&$m->values['HeatPumpTestActive'];$i++)tick($m,10,$heldIncomingUpdated);
+$s=json_decode($m->attributes['HeatPumpTestState'],true);
+check($m->values['HeatPumpTestActive']&&$s['index']===1,'Default age policy allows held intake beyond 15 minutes during the 40% step');
+$last=$s['window'][count($s['window'])-1];
+check($last['sensorUpdated']['IncomingAirTempID']===$heldIncomingUpdated&&$last['sensorAgeSeconds']['IncomingAirTempID']>900,'Raw readings retain held intake timestamp and age');
+check($s['points'][0]['maximumSensorAgeSeconds']['IncomingAirTempID']>=900,'Completed point retains maximum temperature age');
+$m->CancelHeatPumpTest();
+check(json_decode($m->values['HeatPumpTestResults'],true)['temperatureMaxAgeSeconds']===0,'Summary records disabled age limit rather than implying fresh telemetry');
+$m=fixture();$m->properties['MaxSensorAgeSeconds']=900;$m->StartHeatPumpTest(15);
+for($i=0;$i<100;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(($s['phase']??'')==='step')break;}
+$heldIncomingUpdated=$m->clock;
+for($i=0;$i<100&&$m->values['HeatPumpTestActive'];$i++)tick($m,10,$heldIncomingUpdated);
+check(!$m->values['HeatPumpTestActive']&&str_contains($m->values['HeatPumpTestStatus'],'Test sensor stale: IncomingAirTempID'),'Configured positive sensor age limit still stops a held input');
+check(json_decode($m->values['HeatPumpTestResults'],true)['temperatureMaxAgeSeconds']===900,'Summary records configured temperature age cutoff');
 $m=fixture();$m->StartHeatPumpTest(3);tick($m);$m->CancelHeatPumpTest();
 check(!$m->values['HeatPumpTestActive']&&!json_decode($m->values['HeatPumpTestResults'],true)['complete'],'Cancellation stores partial run without learning');
 $m=fixture();$m->StartHeatPumpTest(3);$m->properties['Enabled']=false;$m->ProcessHeating();

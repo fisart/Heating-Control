@@ -13,6 +13,12 @@ final class HeatPumpPerformance
         $mean=static function(string $key,array $rows): float {return array_sum(array_column($rows,$key))/count($rows);};
         $keys=['outside','incoming','outgoing','coil','hpWatts','fanWatts','target']; $p=['powerPercent'=>$power,'sampleCount'=>count($samples)];
         foreach ($keys as $key) $p[$key]=$mean($key,$samples);
+        $p['maximumSensorAgeSeconds']=[];
+        foreach($samples as $sample)foreach($sample['sensorAgeSeconds']??[] as $key=>$age) {
+            if(!array_key_exists($key,$p['maximumSensorAgeSeconds']))$p['maximumSensorAgeSeconds'][$key]=$age;
+            elseif($age===null||$p['maximumSensorAgeSeconds'][$key]===null)$p['maximumSensorAgeSeconds'][$key]=null;
+            else $p['maximumSensorAgeSeconds'][$key]=max($age,$p['maximumSensorAgeSeconds'][$key]);
+        }
         $p['airRise']=$p['outgoing']-$p['incoming']; $p['coilLift']=$p['coil']-$p['incoming'];
         $p['heatPumpKW']=max(0,($p['hpWatts']-$baseline['hpWatts'])/1000);
         $p['fanIncrementKW']=max(0,($p['fanWatts']-$baseline['fanWatts'])/1000);
