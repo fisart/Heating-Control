@@ -20,6 +20,13 @@ trait HeatingControlHeatPumpEconomics
         $model=json_decode($this->ReadAttributeString('HeatPumpPerformanceModel')?:'{}',true,64,JSON_THROW_ON_ERROR);
         // Never allow the old circuit-meter model to overwrite the reviewed calibration.
         if(($model['schema']??0)===2)$rows=HeatPumpMatrix::merge($rows,$model['points']??[]);
+        // Recover the specifically reviewed 40% point from the completed report.
+        // Its original report and raw files are never changed.
+        $report=json_decode($this->ReadAttributeString('HeatPumpTestLastReport')?:'{}',true,64,JSON_THROW_ON_ERROR);
+        if(($report['modelQualified']??false)===true)foreach($report['points']??[] as $point) {
+            $reviewed=HeatPumpMatrix::applyPointReview($point);
+            if(isset($reviewed['reviewNote']))$rows=HeatPumpMatrix::merge($rows,[$reviewed]);
+        }
         $rows=HeatPumpMatrix::validate($rows);
         return $rows;
     }

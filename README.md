@@ -1,10 +1,10 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.28, build 38** explains why no measured operating point qualifies,
-including the current value, tested conditions and matching tolerance. Fresh
-outside/intake readings, room target, fan setting and airflow remain visible
-when price thresholds are unavailable. Switching criteria and calculation units
-are unchanged; both pages continue to display energy prices in **ct/kWh**.
+Version **0.3.29, build 39** adds the afternoon 14 October calibration at
+13.5–15.8°C outside and accepts its 40% point after explicit review. Its air-rise
+and power checks pass; exchanger warming is recorded as a diagnostic for that
+point. Original files/flags are preserved privately. The measured matrix retains
+the morning points, and protected pages label the reviewed acceptance.
 
 The measured outside/intake/power matrix is seeded with the reviewed
 14 October house-meter test. Automatic Heating Control computes

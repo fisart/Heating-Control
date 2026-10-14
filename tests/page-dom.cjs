@@ -22,7 +22,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  };
  w.eval(d.querySelector('script').textContent);
  const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
- assert.equal(d.querySelectorAll('#matrix-results tr').length,8,'Reviewed matrix is rendered on the protected page');
+ assert.equal(d.querySelectorAll('#matrix-results tr').length,16,'Reviewed matrix is rendered on the protected page');
  assert.ok(d.querySelector('#test-requirements').textContent.includes('Same rule for occupied and holiday'));
  assert.equal(d.querySelector('#portal').getAttribute('href'),'/hook/alarm_portal_10');
  assert.equal(d.querySelector('#portal').hidden,false,'Actual portal backlink visible');
@@ -112,6 +112,11 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  d.querySelector('#refresh').click();await settle();
  assert.ok(d.querySelector('#matrix-economic').textContent.includes('Break-even 37.86 ct/kWh · Enter below 26.39 ct/kWh · Exit at 28.39 ct/kWh · 50%'),'Measured power and cent/kWh thresholds rendered');
  assert.ok(d.querySelector('#price-provider-reason').textContent.includes('Measured house-meter result'),'Measured decision takes precedence over legacy page recommendation');
+ state.heatPumpTest.points=[{powerPercent:40,outside:15.6,incoming:23.7,outgoing:35.5,coil:35.8,airRise:13.3,systemInputKW:2.22,estimatedSystemCOP:3.57,stable:true,usable:true,reviewNote:'Owner-reviewed exchanger drift <img src=x onerror=alert(1)>'}];
+ d.querySelector('#refresh').click();await settle();
+ assert.ok(d.querySelector('#test-results').textContent.includes('reviewed / usable'),'Completed test shows reviewed acceptance');
+ assert.ok(d.querySelector('#test-results').textContent.includes('exchanger drift'),'Review reason shown');
+ assert.equal(d.querySelectorAll('#test-results img').length,0,'Review notes are escaped text');
  // Delayed replies must not reopen or repopulate a closed chart.
  resolveHistory={};d.querySelector('#environment .sensor-value').click();await settle();d.querySelector('#chart-close').click();
  resolveHistory.resolve({ok:true,status:200,json:async()=>({name:'Late',aggregation:'hourly',from:stamp-10,to:stamp,points:[{time:stamp,value:99,min:99,max:99,duration:1}]})});resolveHistory=null;await settle();

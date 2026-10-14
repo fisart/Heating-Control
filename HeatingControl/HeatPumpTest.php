@@ -368,6 +368,7 @@ trait HeatingControlHeatPumpTest
             $replacement=null;foreach($matrix as $row)if(isset($row['runID'])&&$row['runID']===($report['runID']??'')&&$row['powerPercent']===$point['powerPercent']){$replacement=$row;break;}
             if($replacement)$point=$replacement;else {$point['systemInputKW']=null;$point['estimatedSystemCOP']=null;}
         }unset($point);
+        if(!$s)$viewPoints=array_map([HeatPumpMatrix::class,'applyPointReview'],$viewPoints);
         return ['active'=>(bool)$s,'phase'=>$s['phase']??'idle','stepMinutes'=>$s['settings']['HeatPumpTestStepMinutes']??$this->ReadPropertyInteger('HeatPumpTestStepMinutes'),
             'status'=>$this->GetValue('HeatPumpTestStatus'),'powerPercent'=>($s['phase']??'')==='step' ? ($s['powers'][$s['index']]??0):0,
             'report'=>$report,'points'=>$viewPoints,'performanceStatus'=>$this->GetValue('HeatPumpPerformanceStatus'),

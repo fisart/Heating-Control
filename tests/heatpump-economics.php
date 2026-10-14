@@ -4,7 +4,7 @@ require __DIR__.'/webhook-fixture.php';
 class EconomicHeating extends HeatingControl {public int $clock=1791962400;protected function sourceClock():int{return $this->clock;}}
 $checks=0;function check($ok,$why){global $checks;if(!$ok)throw new RuntimeException($why);$checks++;}
 $seed=HeatPumpMatrix::validate(HeatPumpMatrix::seed());
-check(count($seed)===8,'All reviewed steps retained');
+check(count($seed)===16,'All reviewed steps retained');
 $point=HeatPumpMatrix::choose($seed,12,23,23,5,5,90,2000,3);
 check($point['powerPercent']===50,'50% is highest COP among stable supported points');
 check(abs($point['estimatedSystemCOP']-3.6123684283)<.00001,'House-counter matched full-period COP reproduced');
@@ -22,14 +22,14 @@ check(HeatPumpMatrix::choose($seed,12,10,10,5,5,90,2000,3)===null,'Warm-house ca
 check(HeatPumpMatrix::choose($seed,12,23,23,5,5,70,2000,3)===null,'Fan context must match');
 check(HeatPumpMatrix::choose($seed,12,23,23,5,5,90,1500,3)===null,'Changed airflow cannot silently reuse old COP');
 check(HeatPumpMatrix::choose($seed,-21,23,23,5,5,90,2000,3)===null,'Manufacturer lower boundary enforced');
-check(str_contains(HeatPumpMatrix::unavailableReason($seed,16,23,23,5,5,90,2000,3),'Outside air 16.0°C has no tested point within ±3.0°C'),'Outside mismatch states current temperature and tolerance');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,19,23,23,5,5,90,2000,3),'Outside air 19.0°C has no tested point within ±3.0°C'),'Outside mismatch states current temperature and tolerance');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,10,10,5,5,90,2000,3),'Intake air 10.0°C'),'Intake mismatch states the current intake');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,23,5,5,70,2000,3),'Requested fan speed 70%'),'Fan mismatch states requested and tested settings');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,23,5,5,90,1500,3),'Configured airflow 1500'),'Airflow mismatch explains the rejected calibration');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,50,5,5,90,2000,3),'required supply ≥55.0°C'),'Supply mismatch states the target-based requirement');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,-21,23,23,5,5,90,2000,3),'supported operating range'),'Operating boundary is distinguished from missing tests');
 $other=$seed[2];$other['pointID']='cold';$other['outside']=2;
-check(count(HeatPumpMatrix::merge($seed,[$other]))===9,'New temperature point preserves existing measurements');
+check(count(HeatPumpMatrix::merge($seed,[$other]))===17,'New temperature point preserves existing measurements');
 $legacy=$seed;$legacy[0]['electricalMethod']='old-hp-circuit';
 try{HeatPumpMatrix::validate($legacy);check(false,'Legacy circuit provenance rejected');}catch(InvalidArgumentException $e){check(true,'Legacy circuit provenance rejected');}
 try{HeatPumpMatrix::counterAt([['TimeStamp'=>0,'Value'=>100],['TimeStamp'=>60,'Value'=>99]],30);check(false,'Counter reset rejected');}catch(RuntimeException $e){check(true,'Counter reset rejected');}
@@ -62,8 +62,28 @@ check($fallback['outside']===2&&$fallback['incoming']===23&&$fallback['fanSpeed'
 check(str_contains($fallback['reason'],'Outside air 2.0°C')&&str_contains($fallback['reason'],'±3.0°C'),'Fallback snapshot names the failed matching criterion');
 check(!isset($fallback['point'])&&!isset($fallback['breakEvenCt']),'Unsupported conditions never expose a made-up threshold or COP');
 $m=fixture();$m->attributes['HeatPumpPerformanceModel']=json_encode(['schema'=>1,'points'=>[['powerPercent'=>100,'estimatedSystemCOP'=>9]]]);
-check(count(webInvoke($m,'measuredMatrix'))===8,'Existing wrong-circuit model does not overwrite house-meter calibration');
-$m=fixture();$m->GetConfigurationForm();$m->ExportConfig();check(count(webInvoke($m,'measuredMatrix'))===8,'Form and backup retain populated matrix');
+check(count(webInvoke($m,'measuredMatrix'))===16,'Existing wrong-circuit model does not overwrite house-meter calibration');
+$m=fixture();$m->GetConfigurationForm();$m->ExportConfig();check(count(webInvoke($m,'measuredMatrix'))===16,'Form and backup retain populated matrix');
 $GLOBALS['authenticated']=true;$state=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
-check(count($state['heatPumpTest']['matrixPoints'])===8,'Protected dashboard exposes full matrix');
+check(count($state['heatPumpTest']['matrixPoints'])===16,'Protected dashboard exposes full matrix');
+$afternoon=HeatPumpMatrix::choose($seed,15.6,23.7,23,5,5,90,2000,3);
+check($afternoon['powerPercent']===40&&abs($afternoon['estimatedSystemCOP']-3.5682758776)<0.00001,'Explicitly reviewed afternoon 40% point is the best matching COP');
+$prices=HeatPumpMatrix::economics($afternoon,10.48,100,5,1,30,2);
+check(abs($prices['breakEvenCt']-37.3955311977)<0.00001&&abs($prices['entryCt']-34.5257546378)<0.00001&&abs($prices['exitCt']-35.5257546378)<0.00001,'Reviewed 40% prices use current displayed tariff assumptions');
+$original=$afternoon;$original['pointID']=$afternoon['reviewedSourcePointID'];$original['stable']=false;$original['usable']=false;unset($original['reviewNote']);
+$reviewed=HeatPumpMatrix::applyPointReview($original);
+check($reviewed['usable']&&$reviewed['originalStable']===false&&$original['stable']===false,'Reviewed overlay preserves the original exclusion');
+foreach([['pointID'=>'other-run-40'],['estimatedSystemCOP'=>4.0],['airRise'=>30.0],['electricalMethod'=>'old-hp-circuit']] as $bad)
+ check(HeatPumpMatrix::applyPointReview(array_replace($original,$bad))['usable']===false,'Review cannot promote a different run, changed measurement or wrong electrical source');
+$m=fixture();$m->properties['HeatPumpMeasuredMatrix']=json_encode(array_slice($seed,0,8));
+$rawReport=json_encode(['schema'=>1,'modelQualified'=>true,'points'=>[$original]]);$m->attributes['HeatPumpTestLastReport']=$rawReport;
+$matrix=webInvoke($m,'measuredMatrix');
+check(count($matrix)===9&&HeatPumpMatrix::choose($matrix,15.6,23.7,23,5,5,90,2000,3)['powerPercent']===40,'Existing custom matrix recovers the owner-reviewed point from its qualified completed report');
+check($m->attributes['HeatPumpTestLastReport']===$rawReport,'Matrix lookup does not rewrite original report data');
+$GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=15.6;$GLOBALS['variables'][$m->properties['IncomingAirTempID']]['value']=23.7;
+$queue=[];$choice=$method->invokeArgs($m,[2,&$queue]);
+check($choice===[1,40],'Automatic integration selects reviewed 40% under matching conditions');
+$view=webInvoke($m,'heatPumpTestView');check($view['points'][0]['usable']&&str_contains($view['points'][0]['reviewNote'],'exchanger'),'Protected test view identifies reviewed acceptance');
+$m->attributes['HeatPumpTestLastReport']=json_encode(['schema'=>1,'modelQualified'=>false,'points'=>[$original]]);
+check(count(webInvoke($m,'measuredMatrix'))===8,'Unqualified or cancelled reports do not auto-import reviewed points');
 echo "PASS: $checks measured economics / integration checks\n";

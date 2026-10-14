@@ -8,6 +8,21 @@ final class HeatPumpMatrix
     {
         return json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-calibration.json'),true,64,JSON_THROW_ON_ERROR)['points'];
     }
+    /** Apply only the explicitly reviewed point; never relax future-run stability gates. */
+    public static function applyPointReview(array $point): array
+    {
+        if(($point['electricalMethod']??'')!=='house-counter-minus-pretest-baseline'
+            ||!is_bool($point['stable']??null)||!is_bool($point['usable']??null))return $point;
+        foreach(self::seed() as $review) {
+            if(!isset($review['reviewedSourcePointID'])||$review['reviewedSourcePointID']!==($point['pointID']??''))continue;
+            foreach(['powerPercent','outside','incoming','outgoing','coil','airRise','coilLift','systemInputKW','estimatedHeatKW','estimatedSystemCOP','fanSpeed','airflowM3h'] as $key)
+                if(!is_numeric($point[$key]??null)||abs((float)$point[$key]-(float)$review[$key])>0.00000001)return $point;
+            $point['originalStable']=$point['stable'];$point['originalUsable']=$point['usable'];
+            $point['stable']=$review['stable'];$point['usable']=$review['usable'];$point['reviewNote']=$review['reviewNote'];
+            return $point;
+        }
+        return $point;
+    }
     public static function validate(array $rows): array
     {
         if(!array_is_list($rows)||count($rows)>512)throw new InvalidArgumentException('Measured matrix needs a list of at most 512 points');

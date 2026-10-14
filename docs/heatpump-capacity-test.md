@@ -192,3 +192,25 @@ current conditions. Fresh environmental readings remain visible on LichtBlick
 without publishing a threshold or COP for unsupported conditions. Expired
 readings are hidden. The controller retains its gas fallback; no room demand
 still leaves the heat sources off.
+
+### Afternoon calibration and reviewed 40% point (0.3.29)
+
+The completed 14 October afternoon run extends the default matrix with eight
+additional power points at mean outside temperatures 13.5–15.8°C and mean
+intake temperatures 23.3–25.2°C. Use the 2,000 m³/h fan-nameplate airflow;
+the control labelled 90% selects full-speed transformer voltage.
+
+The owner explicitly requested accepting the 40% step. Only its exchanger
+half-window change (1.217°C) failed the old 1°C rule. Air-rise change (0.316°C),
+house-power change (0.250%) and sample coverage/gaps passed. Its matched-period
+COP is 3.5683, house input above baseline 2.2187 kW and estimated heat output
+7.9169 kW. The reviewed seed retains the original flags and records the reason.
+A narrowly matched point review also recovers this exact point from an existing
+completed qualified report, including when a custom matrix is configured.
+Original report files and stored report attributes are never rewritten.
+Future-run stability criteria and the test temperature limits remain in force.
+
+Using gas 10.48 ct/kWh, assumed gas efficiency 100%, 5% safety margin and
+1 ct/kWh hysteresis gives break-even 37.40 ct/kWh, entry below 34.53 ct/kWh
+and exit to gas at or above 35.53 ct/kWh for this point. These values apply only
+when the recorded weather/intake/fan/flap context and supply requirements match.

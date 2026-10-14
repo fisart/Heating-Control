@@ -18,7 +18,7 @@ function view($m){return (new ReflectionMethod(LichtBlickElectricityPrice::class
 function snapshot(array $e){$GLOBALS['liveVariables'][$GLOBALS['idents'][10]['HeatPumpEconomicsJSON']]['value']=json_encode($e);}
 $m->response=quote(19,(int)(floor(time()/900)*900));$m->RefreshPrices();
 $v=view($m);check($v['connected']&&$v['path']==='/hook/heating_10'&&$v['automatic']&&$v['economics']['source']===1,'One matched measured controller and registered same-vault link');
-check(count($v['points'])===8,'Only current measured matrix is exposed');
+check(count($v['points'])===16,'Only current measured matrix is exposed');
 check($m->values['RecommendedSource']===1&&$m->values['ThresholdCt']===37.8,'Provider mirrors measured comparison rather than a retired threshold');
 $before=serialize([$m->values,$m->attributes,$m->properties,$m->updates]);view($m);check($before===serialize([$m->values,$m->attributes,$m->properties,$m->updates]),'Cross-page status/link lookup is read only');
 $GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/heating_10","TargetID":999}]';check(view($m)['path']==='','Link rejected when route belongs to another instance');
