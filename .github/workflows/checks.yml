@@ -12,6 +12,8 @@ jobs:
           php -l HeatingControl/module.php
           php -l HeatingControl/HeatPumpTest.php
           php -l HeatingControl/HeatPumpPerformance.php
+          php -l HeatingControl/HeatPumpMatrix.php
+          php -l HeatingControl/HeatPumpEconomics.php
           php -l HeatingControl/SourceSelection.php
           php -l HeatingControl/Webhook.php
           php -l HeatingControl/Archive.php
@@ -45,6 +47,7 @@ jobs:
           php tests/lichtblick-webhook.php
           php tests/lichtblick-webhook.php --no-auth-api
           php tests/heatpump-test.php
+          php tests/heatpump-economics.php
           php tests/source-selection.php
           php tests/room-editor.php
           php tests/recovery-hysteresis.php

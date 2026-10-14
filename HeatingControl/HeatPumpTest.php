@@ -7,6 +7,7 @@ trait HeatingControlHeatPumpTest
     private const TEST_DEFAULTS = [
         'HeatPumpTestStepMinutes'=>15,'HeatPumpTestFanSpeed'=>90,'HeatPumpTestExcludedFlapID'=>40259,'HeatPumpTestArchiveID'=>14817,
         'HeatPumpTestPowerMeterID'=>35702,'HeatPumpTestFanMeterID'=>47831,
+        'HeatPumpTestHousePowerID'=>13869,'HeatPumpTestHouseCounterID'=>38023,'HeatPumpTestHouseCounterScale'=>0.001,
         'HeatPumpTestMaximumRoomC'=>28.0,'HeatPumpTestMaximumCoilC'=>55.0,'HeatPumpTestAirflowM3h'=>2000.0,
         'HeatPumpOccupiedMinimumCoilC'=>40.0,'HeatPumpHolidayMinimumCoilC'=>20.0,
         'HeatPumpHolidayCoilAboveTargetC'=>10.0,'HeatPumpSupplyAboveTargetC'=>5.0,
@@ -101,11 +102,12 @@ trait HeatingControlHeatPumpTest
                 $flaps[$r['flapID']]=GetValue($r['flapID']);
             }
             if(!$found||count($rooms)<2)throw new RuntimeException('Select the configured master-bedroom flap to exclude; at least one other room is required');
-            foreach(['HeatPumpTestPowerMeterID','HeatPumpTestFanMeterID'] as $key)$this->testValue($settings[$key]);
+            foreach(['HeatPumpTestHousePowerID','HeatPumpTestHouseCounterID'] as $key)$this->testValue($settings[$key]);
+            if($settings['HeatPumpTestHouseCounterScale']<=0||$settings['HeatPumpTestHouseCounterScale']>1)throw new RuntimeException('Invalid house-counter kWh/unit');
             foreach(['OutsideTempID','IncomingAirTempID','OutgoingAirTempID','HeatPumpTempID'] as $key)$this->testValue($this->id($key),true);
             $archive=$settings['HeatPumpTestArchiveID'];
             if(!function_exists('AC_SetLoggingStatus')||!IPS_InstanceExists($archive)||strtoupper(IPS_GetInstance($archive)['ModuleInfo']['ModuleID'])!==self::ARCHIVE_MODULE)throw new RuntimeException('Select Archive Control for test logging');
-            $logged=[$settings['HeatPumpTestPowerMeterID'],$settings['HeatPumpTestFanMeterID']];
+            $logged=[$settings['HeatPumpTestHousePowerID'],$settings['HeatPumpTestHouseCounterID']];
             foreach(['OutsideTempID','IncomingAirTempID','OutgoingAirTempID','HeatPumpTempID','HeatPumpPowerID','HeatPumpOnID','HeatPumpHeatModeID','FanOnID','FanSpeedID','GasPumpID','GasMixerID'] as $key)$logged[]=$this->id($key);
             foreach($rooms as $r)$logged=array_merge($logged,$r['sensors'],[$r['targetID'],$r['flapID']]);
             foreach(array_unique($logged) as $id)if(!AC_GetLoggingStatus($archive,$id)) {
@@ -114,7 +116,7 @@ trait HeatingControlHeatPumpTest
             $dir=$this->testDirectory();if(!is_dir($dir)&&!mkdir($dir,0700,true)&&!is_dir($dir))throw new RuntimeException('Cannot create test storage');
             $now=$this->sourceClock();
             $s=['schema'=>1,'runID'=>gmdate('Ymd-His',$now).'-'.bin2hex(random_bytes(6)),'startedAt'=>$now,'phase'=>'prepare',
-                'deadline'=>$now+8*$settings['HeatPumpTestStepMinutes']*60+1200,'settings'=>$settings,'rooms'=>$rooms,
+                'deadline'=>$now+8*$settings['HeatPumpTestStepMinutes']*60+2400,'settings'=>$settings,'rooms'=>$rooms,
                 'ids'=>array_map(fn($key)=>$this->id($key),array_combine(['HeatPumpOnID','HeatPumpPowerID','HeatPumpHeatModeID','GasPumpID','GasMixerID','FanOnID','FanSpeedID','OperatingModeID'],['HeatPumpOnID','HeatPumpPowerID','HeatPumpHeatModeID','GasPumpID','GasMixerID','FanOnID','FanSpeedID','OperatingModeID'])),
                 'originalFlaps'=>$flaps,'originalMode'=>$this->intValue('OperatingModeID'),'mixerClosed'=>$this->ReadPropertyInteger('MixerClosed'),'powers'=>[30,40,50,60,70,80,90,100],
                 'index'=>0,'points'=>[],'window'=>[],'lastTick'=>0,'baseline'=>null,'readySince'=>0,
@@ -179,6 +181,20 @@ trait HeatingControlHeatPumpTest
         }
         // The test never edits source mode or manual desired settings; preserve any
         // explicit external shutdown rather than overwriting it with an old mode.
+
+        if($s['points'] && isset($s['baselineStartedAt']) && !($s['counterFinalized']??false)) {
+            $end=$s['points'][count($s['points'])-1]['stepEndedAt'];
+            if($this->sourceClock()<$end+75) {
+                $this->SetValue('HeatPumpTestStatus','Sources stopped; waiting for final house-counter archive boundary');
+                $this->saveTestState($s);return;
+            }
+            try {$this->finalizeHouseCounterPoints($s);}
+            catch(Throwable $e) {
+                foreach($s['points'] as &$point){$point['usable']=false;$point['counterError']=$e->getMessage();}unset($point);
+                $s['finishReason'].='; house-counter validation failed: '.$e->getMessage();
+            }
+            $s['counterFinalized']=true;
+        }
         $relationships=HeatPumpPerformance::relationships($s['points']);
         // A normal configured temperature cutoff may end a run before 100%.
         // Its previously completed stable steps are still valid measurements.
@@ -188,15 +204,16 @@ trait HeatingControlHeatPumpTest
             'complete'=>$s['complete'],'reason'=>$s['finishReason'],'stepMinutes'=>$s['settings']['HeatPumpTestStepMinutes'],
             'airflowM3h'=>$s['settings']['HeatPumpTestAirflowM3h'],'airflowIsMeasured'=>false,'fanSpeed'=>$s['settings']['HeatPumpTestFanSpeed'],
             'excludedFlapID'=>$s['settings']['HeatPumpTestExcludedFlapID'],'rooms'=>$s['rooms'],'baseline'=>$s['baseline'],
-            'temperatureMaxAgeSeconds'=>$s['settings']['MaxSensorAgeSeconds']??0,
+            'temperatureMaxAgeSeconds'=>$s['settings']['MaxSensorAgeSeconds']??0,'electricalMethod'=>'house-counter-minus-pretest-baseline',
             'points'=>$s['points'],'relationships'=>$relationships,'modelQualified'=>$qualified];
         $json=json_encode($report,JSON_THROW_ON_ERROR|JSON_PRETTY_PRINT);
         $this->testSaveJSON($this->testFile($s,'.summary.json'),$json);
         $this->testWrite($s,['kind'=>'footer','report'=>$report]);
         $this->WriteAttributeString('HeatPumpTestLastReport',$json);$this->SetValue('HeatPumpTestResults',$json);
         if($qualified) {
-            $model=['schema'=>1,'runID'=>$s['runID'],'createdAt'=>$this->sourceClock(),'fanSpeed'=>$report['fanSpeed'],
-                'airflowM3h'=>$report['airflowM3h'],'airflowIsMeasured'=>false,'roomSignature'=>hash('sha256',json_encode($s['rooms'])),'points'=>$s['points'],'relationships'=>$relationships];
+            $existing=$this->measuredMatrix();
+            $model=['schema'=>2,'runID'=>$s['runID'],'createdAt'=>$this->sourceClock(),'fanSpeed'=>$report['fanSpeed'],
+                'airflowM3h'=>$report['airflowM3h'],'airflowIsMeasured'=>false,'roomSignature'=>hash('sha256',json_encode($s['rooms'])),'points'=>HeatPumpMatrix::merge($existing,array_values(array_filter($s['points'],static fn($p)=>$p['usable']))),'relationships'=>$relationships];
             $m=json_encode($model,JSON_THROW_ON_ERROR);
             $this->testSaveJSON($this->testDirectory().'/model.json',$m);
             $this->WriteAttributeString('HeatPumpPerformanceModel',$m);$this->SetValue('HeatPumpModelJSON',$m);
@@ -211,8 +228,11 @@ trait HeatingControlHeatPumpTest
     {
         $row=['timestamp'=>$this->sourceClock()];
         foreach(['outside'=>'OutsideTempID','incoming'=>'IncomingAirTempID','outgoing'=>'OutgoingAirTempID','coil'=>'HeatPumpTempID'] as $key=>$property)$row[$key]=$this->testValue($this->id($property),true);
-        $row['hpWatts']=$this->testValue($s['settings']['HeatPumpTestPowerMeterID']);
-        $row['fanWatts']=$this->testValue($s['settings']['HeatPumpTestFanMeterID']);
+        if($row['outside'] < -20 || $row['outside'] > 24)throw new RuntimeException('Outside temperature beyond Sinclair heating range -20 to +24C');
+        $row['houseWatts']=$this->testValue($s['settings']['HeatPumpTestHousePowerID']);
+        $row['houseCounter']=$this->testValue($s['settings']['HeatPumpTestHouseCounterID']);
+        $row['hpWatts']=$row['houseWatts'];$row['fanWatts']=0.0; // Stability only; no HP circuit readings.
+        $row['electricalMethod']='house-counter-minus-pretest-baseline';
         $targets=[];$rooms=[];
         foreach($s['rooms'] as $r) {
             $temperatures=array_map(fn($id)=>$this->testValue($id,true),$r['sensors']);
@@ -263,11 +283,13 @@ trait HeatingControlHeatPumpTest
                 if($s['phase']==='baseline') {
                     $this->queueHeatOff($q);$this->queueFanOff($q);$this->dispatch($q,$log);
                     $s['window'][]=$row;
-                    if($now-$s['phaseSince']>=120) {
+                    if($now-$s['phaseSince']>=900) {
                         $s['baseline']=['hpWatts'=>array_sum(array_column($s['window'],'hpWatts'))/count($s['window']),
                             'fanWatts'=>array_sum(array_column($s['window'],'fanWatts'))/count($s['window'])];
-                        // Both sources and external fan are off for the electrical baseline.
-                        $s['phase']='step';$s['phaseSince']=$now;$s['window']=[];
+                        $s['baselineStartedAt']=$s['phaseSince'];$s['baselineEndedAt']=$now;
+                        $s['baseline']['houseWatts']=$s['baseline']['hpWatts'];
+                        // Full 15-minute clean baseline with both sources and fan off.
+                        $s['phase']='step';$s['phaseSince']=$now;$s['window']=[];$s['fullWindow']=[$row];
                     }
                 } else {
                     if($this->boolValue('GasPumpID'))throw new RuntimeException('Gas air pump activated during heat-pump test');
@@ -282,15 +304,24 @@ trait HeatingControlHeatPumpTest
                     if($s['index']>0 || $now-$s['phaseSince']>180) {
                         $maxAge=$s['settings']['MaxSensorAgeSeconds']??$this->ReadPropertyInteger('MaxSensorAgeSeconds');
                         if($maxAge>0)foreach($row['sensorUpdated'] as $key=>$updated)if($updated<=0||$now-$updated>$maxAge)throw new RuntimeException('Test sensor stale: '.$key);
-                        foreach(['HeatPumpTestPowerMeterID','HeatPumpTestFanMeterID'] as $key)if($now-(IPS_GetVariable($s['settings'][$key])['VariableUpdated']??0)>180)throw new RuntimeException('Power meter stale: '.$key);
+                        foreach(['HeatPumpTestHousePowerID'] as $key)if($now-(IPS_GetVariable($s['settings'][$key])['VariableUpdated']??0)>180)throw new RuntimeException('Power meter stale: '.$key);
                     }
                     $row['powerPercent']=$power;
+                    $s['fullWindow'][]=$row;
                     $s['window'][]=$row;$s['window']=array_values(array_filter($s['window'],static fn($r)=>$r['timestamp']>=$now-$s['averageSeconds']));
                     if($now-$s['phaseSince']>=$s['settings']['HeatPumpTestStepMinutes']*60) {
                         $point=HeatPumpPerformance::point($s['window'],$s['baseline'],$s['settings']['HeatPumpTestAirflowM3h'],$power,$s['averageSeconds']);
                         $point['stepStartedAt']=$s['phaseSince'];$point['stepEndedAt']=$now;
+                        $point['pointID']=$s['runID'].'-'.$power;$point['runID']=$s['runID'];$point['measuredAt']=$s['phaseSince'];
+                        $point['steadyIncoming']=$point['incoming'];$point['steadyOutgoing']=$point['outgoing'];
+                        foreach(['outside','incoming','outgoing','coil','target'] as $key)$point[$key]=HeatPumpMatrix::mean($s['fullWindow'],$key,$s['phaseSince'],$now);
+                        $point['fullPeriodAirRise']=$point['outgoing']-$point['incoming'];
+                        $point['fanSpeed']=$s['settings']['HeatPumpTestFanSpeed'];$point['airflowM3h']=$s['settings']['HeatPumpTestAirflowM3h'];
+                        $point['airflowIsMeasured']=false;$point['excludedFlapID']=$s['settings']['HeatPumpTestExcludedFlapID'];
+                        $point['usable']=false;$point['systemInputKW']=null;$point['estimatedSystemCOP']=null; // Finalized after stop.
+
                         $s['points'][]=$point;$this->testWrite($s,['kind'=>'point','point'=>$point]);
-                        $s['index']++;$s['window']=[];$s['phaseSince']=$now;
+                        $s['index']++;$s['window']=[];$s['fullWindow']=[$row];$s['phaseSince']=$now;
                         if($s['index']>=count($s['powers'])){$this->beginTestFinish($s,'All eight power steps measured',true);$this->finishTestTick($s);return true;}
                         $this->queueHeatSource($q,$this->ReadPropertyInteger('HeatPumpModeValue'),$s['powers'][$s['index']]);$this->dispatch($q,$log);
                     }
@@ -302,55 +333,50 @@ trait HeatingControlHeatPumpTest
         } catch(Throwable $e){$this->beginTestFinish($s,$e->getMessage(),false);$this->finishTestTick($s);}
         return true;
     }
+    private function finalizeHouseCounterPoints(array &$s): void
+    {
+        $start=$s['baselineStartedAt'];$end=$s['points'][count($s['points'])-1]['stepEndedAt'];
+        $records=AC_GetLoggedValues($s['settings']['HeatPumpTestArchiveID'],$s['settings']['HeatPumpTestHouseCounterID'],$start-90,$this->sourceClock(),0);
+        if(!is_array($records))throw new RuntimeException('House counter history unavailable');
+        $scale=$s['settings']['HeatPumpTestHouseCounterScale'];
+        // Detect any reset, not just a reset across an interpolated boundary.
+        usort($records,static fn($a,$b)=>$a['TimeStamp']<=>$b['TimeStamp']);
+        foreach($records as $i=>$record)if($i&&$record['Value']<$records[$i-1]['Value'])throw new RuntimeException('House counter reset in test interval');
+        $baseEnergy=(HeatPumpMatrix::counterAt($records,$s['baselineEndedAt'])-HeatPumpMatrix::counterAt($records,$start))*$scale;
+        $baseKW=$baseEnergy*3600/($s['baselineEndedAt']-$start);
+        $s['baseline']['houseKW']=$baseKW;$s['baseline']['seconds']=$s['baselineEndedAt']-$start;
+        foreach($s['points'] as &$p) {
+            $seconds=$p['stepEndedAt']-$p['stepStartedAt'];
+            $gross=(HeatPumpMatrix::counterAt($records,$p['stepEndedAt'])-HeatPumpMatrix::counterAt($records,$p['stepStartedAt']))*$scale;
+            $net=$gross-$baseKW*$seconds/3600;
+            $p['systemInputKW']=$net*3600/$seconds;
+            $p['estimatedHeatKW']=0.000335*$s['settings']['HeatPumpTestAirflowM3h']*$p['fullPeriodAirRise'];
+            $p['estimatedSystemCOP']=$net>0?$p['estimatedHeatKW']/$p['systemInputKW']:null;
+            $p['grossElectricityKWh']=$gross;$p['netElectricityKWh']=$net;$p['estimatedHeatKWh']=$p['estimatedHeatKW']*$seconds/3600;
+            $p['electricalMethod']='house-counter-minus-pretest-baseline';$p['counterID']=$s['settings']['HeatPumpTestHouseCounterID'];$p['counterScale']=$scale;
+            $p['baselineKW']=$baseKW;$p['baselineSeconds']=$s['baselineEndedAt']-$start;$p['measurementSeconds']=$seconds;$p['lightingCorrectionApplied']=false;
+            // Remove falsely labelled HP-specific watt values from future summaries.
+            unset($p['hpWatts'],$p['fanWatts'],$p['heatPumpKW'],$p['fanIncrementKW']);
+            $p['usable']=$p['stable']&&$p['airRise']>0&&$p['systemInputKW']>0.05&&$p['estimatedSystemCOP']>=0.5&&$p['estimatedSystemCOP']<=10;
+        }unset($p);
+    }
     private function heatPumpTestView(): array
     {
         $s=$this->testState();$report=json_decode($this->ReadAttributeString('HeatPumpTestLastReport')?:'null',true);
+        $matrix=$this->measuredMatrix();$viewPoints=$s['points']??($report['points']??[]);
+        foreach($viewPoints as &$point)if(!isset($point['electricalMethod'])) {
+            $replacement=null;foreach($matrix as $row)if(isset($row['runID'])&&$row['runID']===($report['runID']??'')&&$row['powerPercent']===$point['powerPercent']){$replacement=$row;break;}
+            if($replacement)$point=$replacement;else {$point['systemInputKW']=null;$point['estimatedSystemCOP']=null;}
+        }unset($point);
         return ['active'=>(bool)$s,'phase'=>$s['phase']??'idle','stepMinutes'=>$s['settings']['HeatPumpTestStepMinutes']??$this->ReadPropertyInteger('HeatPumpTestStepMinutes'),
             'status'=>$this->GetValue('HeatPumpTestStatus'),'powerPercent'=>($s['phase']??'')==='step' ? ($s['powers'][$s['index']]??0):0,
-            'report'=>$report,'points'=>$s['points']??($report['points']??[]),'performanceStatus'=>$this->GetValue('HeatPumpPerformanceStatus'),
-            'occupiedMinimumCoil'=>$this->ReadPropertyFloat('HeatPumpOccupiedMinimumCoilC'),
-            'holidayMinimumCoil'=>$this->ReadPropertyFloat('HeatPumpHolidayMinimumCoilC')];
+            'report'=>$report,'points'=>$viewPoints,'performanceStatus'=>$this->GetValue('HeatPumpPerformanceStatus'),
+            'supplyAboveTarget'=>$this->ReadPropertyFloat('HeatPumpSupplyAboveTargetC'),'minimumAirRise'=>$this->ReadPropertyFloat('HeatPumpMinimumAirRiseC'),
+            'matrixPoints'=>$matrix,'economics'=>json_decode((string)$this->GetValue('HeatPumpEconomicsJSON')?:'null',true)];
     }
     private function heatPumpRequirement(array $rooms): array
     {
         $targets=[];foreach($rooms as $r)$targets[]=$this->temperature($r['targetID'],false);
-        $target=max($targets);$holiday=$this->boolValue('HolidayID');
-        $minimum=$holiday?max($this->ReadPropertyFloat('HeatPumpHolidayMinimumCoilC'),$target+$this->ReadPropertyFloat('HeatPumpHolidayCoilAboveTargetC')):$this->ReadPropertyFloat('HeatPumpOccupiedMinimumCoilC');
-        return ['holiday'=>$holiday,'target'=>$target,'coilMinimum'=>$minimum];
-    }
-    private function measuredPowerChoice(int $power,string &$reason): int
-    {
-        if(!$this->ReadPropertyBoolean('HeatPumpUseTestModel'))return $power;
-        $raw=$this->ReadAttributeString('HeatPumpPerformanceModel');if($raw==='')return $power;
-        $model=json_decode($raw,true,64,JSON_THROW_ON_ERROR);$req=$this->heatPumpRequirement($this->rooms());
-        if(($model['schema']??0)!==1 || $this->sourceClock()-($model['createdAt']??0)>90*86400
-            || ($model['fanSpeed']??0)!==$this->intValue('FanDesiredSpeedID') || ($model['roomSignature']??'')!==hash('sha256',json_encode($this->rooms()))) {$reason.='; measured model unavailable for current fan/rooms/age';return $power;}
-        $p=HeatPumpPerformance::choose($model['points'],$this->temperature($this->id('OutsideTempID')),$this->temperature($this->id('IncomingAirTempID')),
-            $req['coilMinimum'],$req['target'],$this->ReadPropertyFloat('HeatPumpSupplyAboveTargetC'),$this->ReadPropertyFloat('HeatPumpMinimumAirRiseC'));
-        if(!$p){$reason.='; gas fallback: no qualified local test point satisfies current exchanger/room target requirements';$this->SetValue('HeatPumpPerformanceStatus',$reason);return 0;}
-        $reason.='; measured local point '.$p['powerPercent'].'% for exchanger ≥'.round($req['coilMinimum'],1).'°C';
-        $this->SetValue('HeatPumpPerformanceStatus',$reason.'; estimated COP, airflow not calibrated');
-        // The provider's economic power may not authorize a more expensive command.
-        // Never retain its old price threshold blindly after raising the percentage.
-        if($p['powerPercent']>$power && !$this->measuredPriceAllows($p,$reason))return 0;
-        return max($power,(int)$p['powerPercent']);
-    }
-    private function measuredPriceAllows(array $point,string &$reason): bool
-    {
-        try {
-            $instance=$this->ReadPropertyInteger('ElectricityPriceInstanceID');
-            $read=static function(string $ident)use($instance){return GetValue(IPS_GetObjectIDByIdent($ident,$instance));};
-            if($read('PriceValid')!==true)throw new RuntimeException('Price is not verified');
-            $price=(float)$read('CurrentPriceCt');$ceiling=(float)$read('EffectiveThresholdCt');
-            require_once __DIR__.'/../LichtBlickElectricityPrice/WeatherModel.php';
-            $curve=LichtBlickWeatherModel::curve((string)IPS_GetProperty($instance,'WeatherCurve'));
-            $ref=LichtBlickWeatherModel::point($curve,(float)IPS_GetProperty($instance,'WeatherReferenceTemperatureC'),(int)IPS_GetProperty($instance,'WeatherPowerStepPercent'));
-            $fan=(float)IPS_GetProperty($instance,'WeatherFanKW');$refCOP=$ref['cop']*$ref['heatPumpKW']/($ref['heatPumpKW']+$fan);
-            $threshold=(float)$read('ReferenceThresholdCt')*(float)IPS_GetProperty($instance,'GasPriceCt')/(float)IPS_GetProperty($instance,'WeatherReferenceGasPriceCt')*$point['estimatedSystemCOP']/$refCOP;
-            $safe=$threshold*(1-(float)IPS_GetProperty($instance,'SafetyMarginPercent')/100);
-            $entry=min($ceiling,$safe)-(float)IPS_GetProperty($instance,'HysteresisCt');
-            if(!is_finite($entry)||!is_finite($price)||$price>=$entry)throw new RuntimeException('Higher measured power is not economical under the conservative adjusted threshold');
-            $reason.='; adjusted higher-power entry '.round($entry,2).' ct/kWh';return true;
-        }catch(Throwable $e){$reason.='; gas fallback: '.$e->getMessage();$this->SetValue('HeatPumpPerformanceStatus',$reason);return false;}
+        return ['target'=>max($targets),'coilMinimum'=>0.0];
     }
 }

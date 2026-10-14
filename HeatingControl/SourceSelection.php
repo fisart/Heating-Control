@@ -82,15 +82,16 @@ trait HeatingControlSourceSelection
             $this->WriteAttributeString('AutomaticWasActive', '1');
             $mode = $this->ReadPropertyInteger('GasModeValue'); $power = 0;
             try {
-                $r = $this->readPriceRecommendation();
-                if ($r['source'] === 1) {
-                    $power = $r['powerPercent']; $mode = $this->ReadPropertyInteger('HeatPumpModeValue');
-                }
-                $reason = 'Automatic: ' . ($r['source'] === 1 ? 'heat pump at ' . $power . '%' : 'gas')
-                    . '; ' . substr((string)($r['reason'] ?? ''), 0, 500);
-                if ($r['source']===1) {
-                    $power=$this->measuredPowerChoice($power,$reason);
-                    if($power===0)$mode=$this->ReadPropertyInteger('GasModeValue');
+                if($this->ReadPropertyBoolean('HeatPumpUseTestModel')) {
+                    $power=$this->measuredEconomicChoice($reason);
+                    $mode=$power>0?$this->ReadPropertyInteger('HeatPumpModeValue'):$this->ReadPropertyInteger('GasModeValue');
+                } else {
+                    $r = $this->readPriceRecommendation();
+                    if ($r['source'] === 1) {
+                        $power = $r['powerPercent']; $mode = $this->ReadPropertyInteger('HeatPumpModeValue');
+                    }
+                    $reason = 'Automatic: ' . ($r['source'] === 1 ? 'heat pump at ' . $power . '%' : 'gas')
+                        . '; ' . substr((string)($r['reason'] ?? ''), 0, 500);
                 }
             } catch (Throwable $e) { $reason = 'Automatic gas fallback: ' . $e->getMessage(); }
             // Mirror the selected mode, including fallback and transfer/no-demand periods.

@@ -15,14 +15,19 @@ function fixture():TestHeating {
     $GLOBALS['variables'][$m->properties['HeatPumpTestPowerMeterID']]['value']=100.0;
     $GLOBALS['variables'][$m->properties['HeatPumpTestFanMeterID']]['value']=80.0;
     $GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=15.0;
+    $GLOBALS['variables'][13869]['value']=180.0;$GLOBALS['variables'][38023]['value']=100000.0;
+    $GLOBALS['loggedValues'][38023]=[['TimeStamp'=>$m->clock-90,'Value'=>100000.0-180*90/3600]];
     return $m;
 }
 function tick(TestHeating $m,int $seconds=10,?int $heldIncomingUpdated=null):void {
-    $m->clock+=$seconds;$s=json_decode($m->attributes['HeatPumpTestState']?:'{}',true);
+    $energy=$GLOBALS['variables'][13869]['value']*$seconds/3600;
+    $GLOBALS['variables'][38023]['value']+=$energy;
+    $m->clock+=$seconds;
+    $GLOBALS['loggedValues'][38023][]=['TimeStamp'=>$m->clock,'Value'=>$GLOBALS['variables'][38023]['value']];$s=json_decode($m->attributes['HeatPumpTestState']?:'{}',true);
     if(($s['phase']??'')==='step') {
         $power=$s['powers'][$s['index']];
         foreach(['IncomingAirTempID'=>23.0,'OutgoingAirTempID'=>23+$power*0.1,'HeatPumpTempID'=>23+$power*0.24,
-            'HeatPumpTestPowerMeterID'=>100+$power*20.0,'HeatPumpTestFanMeterID'=>680.0] as $k=>$v)$GLOBALS['variables'][$m->properties[$k]]['value']=$v;
+            'HeatPumpTestPowerMeterID'=>100+$power*20.0,'HeatPumpTestFanMeterID'=>680.0,'HeatPumpTestHousePowerID'=>180+$power*20.0+600.0] as $k=>$v)$GLOBALS['variables'][$m->properties[$k]]['value']=$v;
     }
     foreach($GLOBALS['variables'] as &$v)$v['VariableUpdated']=$m->clock;unset($v);
     if($heldIncomingUpdated!==null)$GLOBALS['variables'][$m->properties['IncomingAirTempID']]['VariableUpdated']=$heldIncomingUpdated;
@@ -42,7 +47,7 @@ $m=fixture();$m->properties['DryRun']=true;try{$m->StartHeatPumpTest();check(fal
 $m=fixture();$m->properties['HeatPumpTestExcludedFlapID']=999;try{$m->StartHeatPumpTest();check(false,'Missing exclusion must refuse');}catch(RuntimeException $e){check(!$m->values['HeatPumpTestActive'],'Master-bedroom exclusion must match configured room');}
 $m=fixture();$m->StartHeatPumpTest(3);
 check($m->values['HeatPumpTestActive'],'Form/API starts test');
-check(AC_GetLoggingStatus(9,15315)&&AC_GetLoggingStatus(9,35702),'Start enables missing selected-variable logging');
+check(AC_GetLoggingStatus(9,15315)&&AC_GetLoggingStatus(9,38023),'Start enables missing selected-variable logging');
 for($i=0;$i<300&&$m->values['HeatPumpTestActive'];$i++) {
     tick($m);
     if($m->values['HeatPumpTestActive'])check(GetValue(40259)===false,'Master bedroom stays closed throughout every step');
@@ -58,7 +63,7 @@ check(GetValue(40259)===false&&GetValue(36911)===100,'Previous flap positions re
 check(!GetValue(35931)&&!GetValue(46921),'Sources and fan stopped before normal controller resumes');
 check(GetValue(59800)===50&&GetValue(48646)===90,'Manual desired power/fan settings retained');
 $m=fixture();$m->StartHeatPumpTest(15);
-for($i=0;$i<100;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(($s['phase']??'')==='step')break;}
+for($i=0;$i<150;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(($s['phase']??'')==='step')break;}
 $heldIncomingUpdated=$m->clock;
 for($i=0;$i<100&&$m->values['HeatPumpTestActive'];$i++)tick($m,10,$heldIncomingUpdated);
 $s=json_decode($m->attributes['HeatPumpTestState'],true);
@@ -69,7 +74,7 @@ check($s['points'][0]['maximumSensorAgeSeconds']['IncomingAirTempID']>=900,'Comp
 $m->CancelHeatPumpTest();
 check(json_decode($m->values['HeatPumpTestResults'],true)['temperatureMaxAgeSeconds']===0,'Summary records disabled age limit rather than implying fresh telemetry');
 $m=fixture();$m->properties['MaxSensorAgeSeconds']=900;$m->StartHeatPumpTest(15);
-for($i=0;$i<100;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(($s['phase']??'')==='step')break;}
+for($i=0;$i<150;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(($s['phase']??'')==='step')break;}
 $heldIncomingUpdated=$m->clock;
 for($i=0;$i<100&&$m->values['HeatPumpTestActive'];$i++)tick($m,10,$heldIncomingUpdated);
 check(!$m->values['HeatPumpTestActive']&&str_contains($m->values['HeatPumpTestStatus'],'Test sensor stale: IncomingAirTempID'),'Configured positive sensor age limit still stops a held input');
@@ -88,8 +93,9 @@ check(!$m->values['HeatPumpTestActive'],'Apply/restart never resumes an experime
 $m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][57694]['value']=28.0;tick($m);
 check(!$m->values['HeatPumpTestActive']&&str_contains($m->values['HeatPumpTestStatus'],'Room temperature limit'),'Room limit cancels test');
 $m=fixture();$m->StartHeatPumpTest(3);
-for($i=0;$i<150;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(count($s['points']??[])>=2)break;}
+for($i=0;$i<180;$i++){tick($m);$s=json_decode($m->attributes['HeatPumpTestState'],true);if(count($s['points']??[])>=2)break;}
 $GLOBALS['variables'][57694]['value']=28.0;tick($m);
+for($i=0;$i<10&&$m->values['HeatPumpTestActive'];$i++)tick($m);
 $cutoff=json_decode($m->values['HeatPumpTestResults'],true);
 check(!$cutoff['complete']&&$cutoff['modelQualified']&&count($cutoff['points'])>=2,'Temperature-limited run retains qualified completed steps without claiming all eight');
 $m=fixture();$m->StartHeatPumpTest(3);tick($m,100);
@@ -105,17 +111,7 @@ check(response($m,'POST',[],['control'=>'HeatPumpTestCancel','value'=>true])['st
 $GLOBALS['authenticated']=false;
 check(response($m,'GET',['view'=>'heatpump-test-readings'])['status']===401,'Raw readings cannot bypass authentication');
 $m=fixture();$req=webInvoke($m,'heatPumpRequirement',webInvoke($m,'rooms'));
-check($req['coilMinimum']===40.0,'Occupied exchanger minimum is 40C');
+check($req['coilMinimum']===0.0&&$req['target']===23.0,'Occupied uses active target without 40C exchanger veto');
 $GLOBALS['variables'][46970]['value']=true;foreach([12594,40975,30481,37341] as $id)$GLOBALS['variables'][$id]['value']=10.0;
-check(webInvoke($m,'heatPumpRequirement',webInvoke($m,'rooms'))['coilMinimum']===20.0,'Holiday 10C targets permit 20C exchanger');
-$m=fixture();$m->properties['ElectricityPriceInstanceID']=20;
-$point=$p;$point['powerPercent']=80;$point['outside']=15;$point['incoming']=23;$point['airRise']=10;$point['coilLift']=22;
-$model=['schema'=>1,'createdAt'=>$m->clock,'fanSpeed'=>90,'roomSignature'=>hash('sha256',json_encode(webInvoke($m,'rooms'))),'points'=>[$point]];
-$m->attributes['HeatPumpPerformanceModel']=json_encode($model);
-$GLOBALS['instanceProperties'][20]=['WeatherCurve'=>LichtBlickWeatherModel::DEFAULT_CURVE,'WeatherReferenceTemperatureC'=>2.0,'WeatherPowerStepPercent'=>5,'WeatherFanKW'=>0.6,'GasPriceCt'=>10.48,'WeatherReferenceGasPriceCt'=>10.48,'SafetyMarginPercent'=>25.0,'HysteresisCt'=>2.0];
-foreach(['PriceValid'=>true,'CurrentPriceCt'=>10.0,'EffectiveThresholdCt'=>22.5,'ReferenceThresholdCt'=>30.0] as $ident=>$v){$id=83000+count($GLOBALS['instanceIdents'][20]??[]);$GLOBALS['instanceIdents'][20][$ident]=$id;$GLOBALS['variables'][$id]=['value'=>$v,'VariableType'=>is_bool($v)?0:2];}
-$reason='Test';$method=new ReflectionMethod(HeatingControl::class,'measuredPowerChoice');
-check($method->invokeArgs($m,[35,&$reason])===80,'Qualified model can raise power after conservative price recheck');
-$GLOBALS['variables'][$GLOBALS['instanceIdents'][20]['CurrentPriceCt']]['value']=40.0;$reason='Test';
-check($method->invokeArgs($m,[35,&$reason])===0,'Expensive higher-power point uses gas instead of old cheap threshold');
+check(webInvoke($m,'heatPumpRequirement',webInvoke($m,'rooms'))['target']===10.0,'Holiday automatically uses changed room targets');
 echo "PASS: $checks heat-pump test/model checks\n";

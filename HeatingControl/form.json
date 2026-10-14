@@ -42,8 +42,21 @@
         },
         {
           "type": "SelectVariable",
-          "name": "HeatPumpTestPowerMeterID",
-          "caption": "Heat-pump circuit power (W)"
+          "name": "HeatPumpTestHousePowerID",
+          "caption": "Main-house power (W; stability check only)"
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestHouseCounterID",
+          "caption": "Main-house cumulative electricity counter"
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestHouseCounterScale",
+          "caption": "House-counter kWh per unit (default 0.001)",
+          "minimum": 1e-06,
+          "maximum": 1,
+          "digits": 6
         },
         {
           "type": "SelectInstance",
@@ -52,11 +65,6 @@
           "validModules": [
             "{43192F0B-135B-4CE7-A0A7-1475603F3060}"
           ]
-        },
-        {
-          "type": "SelectVariable",
-          "name": "HeatPumpTestFanMeterID",
-          "caption": "Fan / heating circuit power (W)"
         },
         {
           "type": "NumberSpinner",
@@ -84,38 +92,14 @@
         },
         {
           "type": "Label",
-          "caption": "30 → 40 → 50 → 60 → 70 → 80 → 90 → 100%. All other room flaps open; fan speed fixed. Final third of each step, up to five minutes, is averaged. Only stable readings enter the local model. 15 min × 8 = 2 hours plus transfer and baseline. Raw readings and summaries persist under media/heatpump-tests. Start only after reviewing the configured sensors and temperature limits."
+          "caption": "30 → 100% in 10% steps; master bedroom closed; fixed fan. A clean 15-minute house-meter baseline precedes the test. Heat and baseline-adjusted electricity are calculated over each FULL step; final five-minute stability determines eligibility. Prior temperature runs are retained. 15 min × 8 = 2 hours plus baseline/transfer/archive wait."
         }
       ]
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Heat-pump comfort and holiday requirements",
+      "caption": "Measured operating matrix and electricity break-even price",
       "items": [
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpOccupiedMinimumCoilC",
-          "caption": "Occupied: minimum heat-pump exchanger temperature (°C)",
-          "minimum": 30,
-          "maximum": 55,
-          "digits": 1
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpHolidayMinimumCoilC",
-          "caption": "Holiday: minimum exchanger floor (°C)",
-          "minimum": 10,
-          "maximum": 40,
-          "digits": 1
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpHolidayCoilAboveTargetC",
-          "caption": "Holiday: exchanger above highest room target (°C)",
-          "minimum": 1,
-          "maximum": 25,
-          "digits": 1
-        },
         {
           "type": "NumberSpinner",
           "name": "HeatPumpSupplyAboveTargetC",
@@ -135,11 +119,74 @@
         {
           "type": "CheckBox",
           "name": "HeatPumpUseTestModel",
-          "caption": "Use stable local test points for automatic power selection (within 3°C of measured weather and intake)"
+          "caption": "Use measured matrix and its break-even price for automatic source/power selection"
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpGasEfficiencyPercent",
+          "caption": "Useful gas-to-air heating efficiency (%; default 100 is conservative, not measured)",
+          "minimum": 50,
+          "maximum": 100,
+          "digits": 1
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpMatrixTemperatureToleranceC",
+          "caption": "Maximum difference from tested outside AND intake temperature (°C)",
+          "minimum": 0,
+          "maximum": 3,
+          "digits": 1
+        },
+        {
+          "type": "List",
+          "name": "HeatPumpMatrixOverview",
+          "caption": "Measured points (full-step COP; unsettled points excluded)",
+          "rowCount": 8,
+          "add": false,
+          "delete": false,
+          "columns": [
+            {
+              "caption": "Power %",
+              "name": "power",
+              "width": 70
+            },
+            {
+              "caption": "Outside °C",
+              "name": "outside",
+              "width": 85
+            },
+            {
+              "caption": "Intake °C",
+              "name": "intake",
+              "width": 85
+            },
+            {
+              "caption": "Net input kW",
+              "name": "input",
+              "width": 100
+            },
+            {
+              "caption": "COP (estimate)",
+              "name": "cop",
+              "width": 100
+            },
+            {
+              "caption": "Eligible",
+              "name": "eligible",
+              "width": 80
+            }
+          ],
+          "values": []
+        },
+        {
+          "type": "ScriptEditor",
+          "name": "HeatPumpMeasuredMatrix",
+          "caption": "Optional replacement measured matrix JSON (empty list uses reviewed 14 October calibration)",
+          "rowCount": 8
         },
         {
           "type": "Label",
-          "caption": "Occupied minimum defaults to 40°C. Holiday minimum = max(floor 20°C, highest room target + 10°C): with targets 10°C, 20°C is permitted. No weather extrapolation. A higher measured power command requires a conservative price recheck; an unverified/missing comparison falls back to gas. Actual fan/flap airflow can differ from the test, so COP remains estimated."
+          "caption": "Matrix axes: outside temperature, intake temperature and power, with fan/airflow context. Default includes 8 reviewed house-meter points near 12°C; 40% is unsettled. Supply must exceed room target by the configured margin and add useful air rise. The same rule applies at 10°C holiday targets. Break-even EUR/kWh = gas EUR/kWh × estimated system COP / gas efficiency. Gas price, safety margin and hysteresis come from LichtBlick; margin is applied once. No gas fan/pump electricity credit is assumed. Outside/intake conditions without nearby measurements use gas. Airflow and gas efficiency still need calibration. Old 40°C/holiday exchanger fields are retained internally but no longer used."
         }
       ]
     },
@@ -157,7 +204,7 @@
         },
         {
           "type": "Label",
-          "caption": "AutomaticSourceSelection below this instance or on the heating page switches automatic selection on/off. Select the LichtBlick instance above: RecommendationJSON supplies its RecommendedSource and RecommendedHeatPumpPowerPercent together. Missing/unconfirmed/expired recommendations use gas. Automatic selection updates OperatingModeID to the configured heat-pump/gas value. Automatic off keeps that source and uses the retained manual desired power."
+          "caption": "When measured matrix is enabled, LichtBlick supplies a verified PriceQuoteJSON (price, gas tariff, safety margin and hysteresis). Heating Control selects the most efficient eligible measured power and calculates its own EUR/kWh break-even/entry/exit thresholds. The provisional LichtBlick weather curve cannot veto that decision. If the matrix is disabled, legacy RecommendationJSON is used. Missing or expired price data use gas. The automatic switch remains below the instance and on the protected page."
         },
         {
           "type": "NumberSpinner",

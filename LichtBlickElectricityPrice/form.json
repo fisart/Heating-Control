@@ -2,6 +2,10 @@
   "elements": [
     {
       "type": "Label",
+      "caption": "For measured heat-pump economics, use the operating matrix and EUR/kWh thresholds in Heating Control. This module supplies verified PriceQuoteJSON; its legacy reference/weather thresholds apply only when the measured matrix is disabled."
+    },
+    {
+      "type": "Label",
       "caption": "Electricity-price and provisional air-source recommendation. This instance does not command equipment."
     },
     {
@@ -57,7 +61,7 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Outside-temperature power and threshold model",
+      "caption": "Legacy provisional weather model",
       "items": [
         {
           "type": "CheckBox",
@@ -84,7 +88,7 @@
         {
           "type": "List",
           "name": "WeatherCurve",
-          "caption": "Editable weather / power / COP points",
+          "caption": "Legacy provisional weather curve (measured Heating Control matrix takes precedence)",
           "rowCount": 5,
           "add": true,
           "delete": true,

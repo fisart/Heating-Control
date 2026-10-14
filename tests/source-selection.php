@@ -9,6 +9,7 @@ $checks=0;
 function check($ok,$why) {global $checks;if(!$ok)throw new RuntimeException($why);$checks++;}
 function fixture(): TimedHeating {
     $m=heatingFixture(TimedHeating::class);
+    $m->properties['HeatPumpUseTestModel']=false; // Legacy provider path regression tests.
     foreach(json_decode($m->properties['Rooms'],true) as $room) foreach($room['sensors'] as $id) $GLOBALS['variables'][$id]['value']=20.0;
     $GLOBALS['variables'][$m->properties['GasMixerID']]['value']=$m->properties['MixerClosed'];
     $m->properties['ElectricityPriceInstanceID']=20;

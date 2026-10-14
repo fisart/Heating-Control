@@ -25,7 +25,8 @@
 <p class="tiny">30% → 100% in steps of 10. The master-bedroom flap stays closed; other room flaps open and fan speed stays fixed.</p>
 <div class="edit"><label for="test-minutes">Minutes per step</label><input id="test-minutes" type="number" min="3" max="60" step="1" value="15"><button id="test-duration" class="secondary">Apply time</button><button id="test-start">Start test</button><button id="test-cancel" class="secondary">Cancel test</button></div>
 <p id="test-status" class="chart-summary" aria-live="polite"></p><p id="test-requirements" class="tiny"></p><p id="test-model-status" class="tiny"></p>
-<div class="test-table-scroll"><table class="chart-table"><thead><tr><th>Power %</th><th>Outside °C</th><th>Intake °C</th><th>Outgoing °C</th><th>Exchanger °C</th><th>Air rise °C</th><th>HP input kW</th><th>Estimated system COP</th><th>Stable / usable</th></tr></thead><tbody id="test-results"></tbody></table></div>
+<div class="test-table-scroll"><table class="chart-table"><thead><tr><th>Power %</th><th>Outside °C</th><th>Intake °C</th><th>Outgoing °C</th><th>Exchanger °C</th><th>Air rise °C</th><th>House input above baseline kW</th><th>Estimated system COP</th><th>Stable / usable</th></tr></thead><tbody id="test-results"></tbody></table></div>
+<h3>Measured operating matrix</h3><p id="matrix-economic" class="chart-summary"></p><div class="test-table-scroll"><table class="chart-table"><thead><tr><th>Power %</th><th>Outside °C</th><th>Intake °C</th><th>Stable air rise °C</th><th>Net system kW</th><th>Estimated COP</th><th>Eligibility</th></tr></thead><tbody id="matrix-results"></tbody></table></div>
 <p class="tiny">COP uses estimated airflow and shared circuit power. Stable points apply only near the tested weather and intake temperatures.</p>
 <div class="edit"><a id="test-download" hidden>Download results</a><a id="test-raw" hidden>Download raw readings</a></div></section>
 <div class="section-head"><h2>Room climate</h2><p>Actual temperatures · targets · last evaluated demand. Underlined sensor values open archive charts.</p></div><section id="rooms" class="rooms" aria-label="Room climate"></section>
@@ -57,7 +58,8 @@ function editor(c){const wrap=node('div',undefined,'edit');if(c.kind==='bool'){c
 else{const input=c.kind==='mode'?node('select'):node('input');input.setAttribute('aria-label',c.label);if(c.kind==='mode'){c.options.forEach(o=>{const opt=node('option',o.label);opt.value=o.value;input.append(opt);});input.value=c.value;}
 else{input.type='number';input.min=c.min;input.max=c.max;input.step=c.step;input.value=c.value??'';}input.disabled=!state.editable||!c.available;const b=node('button','Apply');b.disabled=input.disabled;b.addEventListener('click',()=>{if(!input.reportValidity())return;const v=Number(input.value);if(input.value===''||!Number.isFinite(v))return;command(c.key,v);});wrap.append(input,b);}return wrap;}
 function renderSourceSelection(s){
- const choice=s.sourceSelection||{},provider=choice.provider||{},readings=provider.readings||{};
+ const choice=s.sourceSelection||{},provider=choice.provider||{},readings=provider.readings||{},economic=s.heatPumpTest?.economics;
+ const measured=economic?.valid===true;
  const source=v=>v===1?'Heat pump':v===2?'Gas heating':'Off / no selection';
  const mode=document.querySelector('#automatic-mode');mode.textContent=choice.automatic?'Automatic on':'Manual';mode.className='badge'+(choice.automatic?'':' off');
  const control=document.querySelector('#automatic-control');control.replaceChildren();const c=s.controls.AutomaticSourceSelection;
@@ -69,13 +71,13 @@ function renderSourceSelection(s){
   ['Gas-air pump command',s.equipment.GasPumpID.value===null?'Unavailable':s.equipment.GasPumpID.value?'On':'Off']]);
  deviceRows('#price-provider',[
   ['Price provider',provider.name||'No LichtBlick instance selected'],['Recommendation',provider.valid?'Valid':'Unavailable'],
-  ['Recommended source',provider.valid?source(provider.source):(choice.automatic?'Gas fallback':'Unavailable')],
-  ['Recommended heat-pump power',provider.valid?fmt(provider.powerPercent,0)+' %':'—'],
+  ['Recommended source',measured?source(economic.source):provider.valid?source(provider.source):(choice.automatic?'Gas fallback':'Unavailable')],
+  ['Recommended heat-pump power',measured?fmt(economic.powerPercent,0)+' %':provider.valid?fmt(provider.powerPercent,0)+' %':'—'],
   ['Electricity price',readings.PriceAvailable?fmt(readings.CurrentPriceCt,2)+' ct/kWh'+(readings.PriceValid?'':' · unconfirmed tariff'):'Unavailable'],
-  ['Safe electricity ceiling',fmt(readings.EffectiveThresholdCt??null,2)+' ct/kWh'],
-  ['Heat-pump entry below',fmt(readings.EntryThresholdCt??null,2)+' ct/kWh'],
+  ['Safe electricity ceiling',fmt(measured?economic.exitCt:readings.EffectiveThresholdCt??null,2)+' ct/kWh'],
+  ['Heat-pump entry below',fmt(measured?economic.entryCt:readings.EntryThresholdCt??null,2)+' ct/kWh'],
   ['Recommendation valid until',provider.valid&&provider.validUntil?new Date(provider.validUntil*1000).toLocaleString():'—']]);
- document.querySelector('#price-provider-reason').textContent=provider.reason||'Select the LichtBlick instance in the heating configuration.';
+ document.querySelector('#price-provider-reason').textContent=(measured?economic.reason:provider.reason)||'Select the LichtBlick instance in the heating configuration.';
  const link=document.querySelector('#price-provider-link');link.hidden=!/^\/hook\/lichtblick_[1-9][0-9]*$/.test(provider.path||'');if(!link.hidden)link.href=provider.path;else link.removeAttribute('href');
  document.querySelector('#source-selection').textContent=[choice.automatic?'Automatic selection':'Manual selection',choice.status,choice.transfer].filter(Boolean).join(' · ');
 }
@@ -110,10 +112,13 @@ function renderHeatPumpTest(s){
  document.querySelector('#test-duration').disabled=!!t.active||!s.editable;
  document.querySelector('#test-start').disabled=!!t.active||!s.editable;
  document.querySelector('#test-cancel').disabled=!t.active;
- document.querySelector('#test-requirements').textContent='Occupied exchanger minimum '+fmt(t.occupiedMinimumCoil)+'°C. Holiday floor '+fmt(t.holidayMinimumCoil)+'°C; room targets also determine the requirement.';
+ document.querySelector('#test-requirements').textContent='Outgoing air ≥ active room target + '+fmt(t.supplyAboveTarget)+'°C; useful air rise ≥ '+fmt(t.minimumAirRise)+'°C. Same rule for occupied and holiday targets. Full-step heat and house electricity; COP uses estimated airflow.';
  document.querySelector('#test-model-status').textContent=t.performanceStatus||'';
+ const matrix=document.querySelector('#matrix-results');matrix.replaceChildren();
+ for(const p of t.matrixPoints||[]){const tr=node('tr');[fmt(p.powerPercent,0),fmt(p.outside),fmt(p.incoming),fmt(p.airRise),fmt(p.systemInputKW,2),fmt(p.estimatedSystemCOP,2),p.usable?'eligible':'unsettled / excluded'].forEach(v=>tr.append(node('td',v)));matrix.append(tr);}
+ const e=t.economics||{};document.querySelector('#matrix-economic').textContent=e.valid?'Break-even €'+fmt(e.breakEvenEuro,4)+'/kWh · Enter below €'+fmt(e.entryEuro,4)+' · Exit at €'+fmt(e.exitEuro,4)+' · '+fmt(e.powerPercent,0)+'% · Gas efficiency '+fmt(e.gasEfficiencyPercent,0)+'% (assumption)':'Measured decision: '+(e.reason||'Enable automatic selection to evaluate the current price.');
  const rows=document.querySelector('#test-results');rows.replaceChildren();
- for(const p of t.points||t.report?.points||[]){const tr=node('tr');[fmt(p.powerPercent,0),fmt(p.outside),fmt(p.incoming),fmt(p.outgoing),fmt(p.coil),fmt(p.airRise),fmt(p.heatPumpKW,2),fmt(p.estimatedSystemCOP,2),(p.stable?'stable':'unsettled')+' / '+(p.usable?'usable':'excluded')].forEach(v=>tr.append(node('td',v)));rows.append(tr);}
+ for(const p of t.points||t.report?.points||[]){const tr=node('tr');[fmt(p.powerPercent,0),fmt(p.outside),fmt(p.incoming),fmt(p.outgoing),fmt(p.coil),fmt(p.airRise),fmt(p.systemInputKW,2),fmt(p.estimatedSystemCOP,2),(p.stable?'stable':'unsettled')+' / '+(p.usable?'usable':'excluded')].forEach(v=>tr.append(node('td',v)));rows.append(tr);}
  for(const [id,view] of [['#test-download','heatpump-test-results'],['#test-raw','heatpump-test-readings']]){const a=document.querySelector(id);a.hidden=!t.report;a.href=path+'?view='+view;}
  if(t.active)document.querySelectorAll('#rooms .edit button,#rooms .edit input,#automatic-control button,#controls button,#controls select,#parameters button,#parameters input').forEach(e=>e.disabled=true);
 }

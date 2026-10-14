@@ -9,6 +9,7 @@ require_once __DIR__ . "/Webhook.php";
 require_once __DIR__ . "/Archive.php";
 require_once __DIR__ . "/SourceSelection.php";
 require_once __DIR__ . "/HeatPumpTest.php";
+require_once __DIR__ . "/HeatPumpEconomics.php";
 
 class HeatingControl extends IPSModule
 {
@@ -16,6 +17,7 @@ class HeatingControl extends IPSModule
     use HeatingControlArchive;
     use HeatingControlSourceSelection;
     use HeatingControlHeatPumpTest;
+    use HeatingControlHeatPumpEconomics;
 
     private const DEFAULT_IDS = [
         'MasterDisableID' => 11098,
@@ -64,6 +66,7 @@ class HeatingControl extends IPSModule
         parent::Create();
         $this->createSourceSelection();
         $this->createHeatPumpTest();
+        $this->createHeatPumpEconomics();
         $this->RegisterPropertyBoolean('Enabled', false);
         $this->RegisterPropertyBoolean('DryRun', true);
         $this->RegisterPropertyBoolean('DebugEnabled', false);
@@ -118,12 +121,19 @@ class HeatingControl extends IPSModule
             }
         }
         unset($element);
+        try {
+            $values=[];foreach($this->measuredMatrix() as $p)$values[]=['power'=>$p['powerPercent'],'outside'=>round($p['outside'],2),
+                'intake'=>round($p['incoming'],2),'input'=>round($p['systemInputKW'],3),'cop'=>round($p['estimatedSystemCOP'],3),'eligible'=>$p['usable']?'yes':'unsettled'];
+            foreach($form['elements'] as &$panel)foreach($panel['items']??[] as $i=>$item)if(($item['name']??'')==='HeatPumpMatrixOverview')$panel['items'][$i]['values']=$values;
+            unset($panel);
+        }catch(Throwable $e){/* Malformed custom matrix remains available for repair. */}
         return json_encode($form, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
     public function ApplyChanges()
     {
         parent::ApplyChanges();
+        try {$this->SetValue('HeatPumpModelJSON',json_encode(['schema'=>2,'points'=>$this->measuredMatrix()],JSON_THROW_ON_ERROR));} catch (Throwable $e) {$this->SetValue("HeatPumpPerformanceStatus",$e->getMessage());}
         // Never resume a hardware experiment across configuration changes/restart.
         if ($this->ReadAttributeString('HeatPumpTestState') !== '') {
             try { $s=$this->testState();$this->beginTestFinish($s,'Configuration changed or Symcon restarted',false);$this->finishTestTick($s); }
@@ -681,6 +691,7 @@ class HeatingControl extends IPSModule
         $ids[$this->GetIDForIdent('AutomaticSourceSelection')] = true;
         $providerID = $this->priceRecommendationID();
         if ($providerID > 0) $ids[$providerID] = true;
+        try {$quoteID=IPS_GetObjectIDByIdent('PriceQuoteJSON',$this->ReadPropertyInteger('ElectricityPriceInstanceID'));if($quoteID>1&&IPS_VariableExists($quoteID))$ids[$quoteID]=true;}catch(Throwable $e){}
         $recoveryID = $this->id('RecoveryEnableID');
         if ($recoveryID > 0 && IPS_VariableExists($recoveryID)) $ids[$recoveryID] = true;
         try {
@@ -723,10 +734,12 @@ class HeatingControl extends IPSModule
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
         $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS), array_keys(self::TEST_DEFAULTS),
-            ['Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
+            ['HeatPumpGasEfficiencyPercent','HeatPumpMatrixTemperatureToleranceC','HeatPumpMeasuredMatrix','Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
+        if(isset($incoming['HeatPumpMeasuredMatrix']))HeatPumpMatrix::validate(json_decode($incoming['HeatPumpMeasuredMatrix'],true,64,JSON_THROW_ON_ERROR));
+        foreach(['HeatPumpGasEfficiencyPercent'=>[50,100],'HeatPumpMatrixTemperatureToleranceC'=>[0,3]] as $name=>$limits)if(isset($incoming[$name])&&(!is_numeric($incoming[$name])||!is_finite((float)$incoming[$name])||$incoming[$name]<$limits[0]||$incoming[$name]>$limits[1]))throw new InvalidArgumentException('Invalid economic property: '.$name);
         foreach (self::TEST_DEFAULTS as $name=>$default) if(array_key_exists($name,$incoming)) {
             $value=$incoming[$name];
             if(is_bool($default)?!is_bool($value):(is_int($default)?!is_int($value):(!is_numeric($value)||!is_finite((float)$value))))throw new InvalidArgumentException('Invalid test/model property: '.$name);

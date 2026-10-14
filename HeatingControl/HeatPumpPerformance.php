@@ -50,7 +50,7 @@ final class HeatPumpPerformance
         for ($i=1;$i<count($p);$i++) {
             $a=$p[$i-1];$b=$p[$i];$d=$b['powerPercent']-$a['powerPercent'];if($d<=0)continue;
             $s=['fromPower'=>$a['powerPercent'],'toPower'=>$b['powerPercent']];
-            foreach(['heatPumpKW','airRise','coilLift','estimatedSystemCOP'] as $key) $s[$key.'Per10Percent']=10*($b[$key]-$a[$key])/$d;
+            foreach(['systemInputKW','airRise','coilLift','estimatedSystemCOP'] as $key) $s[$key.'Per10Percent']=10*($b[$key]-$a[$key])/$d;
             $segments[]=$s;
         }
         return ['usablePointCount'=>count($p),'segments'=>$segments,

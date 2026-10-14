@@ -68,6 +68,7 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->RegisterAttributeString($name, '');
         }
         $this->RegisterAttributeString('WeatherHeldTemperature', '');
+        $this->RegisterVariableString('PriceQuoteJSON','Verified electricity quote for measured heating model','~TextBox',99);
         foreach (['ConsumptionReportNextDue','ConsumptionReportLastAttemptDay','ConsumptionReportLastSentDay'] as $name) $this->RegisterAttributeString($name, '');
         $this->RegisterTimer('ConsumptionReport', 0, 'LBEP_ConsumptionReportTick($_IPS["TARGET"]);');
         $this->RegisterVariableString('ConsumptionReportStatus', 'Daily consumption email status', '~TextBox', 310);
@@ -357,6 +358,12 @@ class LichtBlickElectricityPrice extends IPSModule
             $this->SetValue('PriceEnd', $slot ? $slot['end'] : 0);
             $valid = $slot !== null && $fresh && $c['TariffVerified'];
             $this->SetValue('PriceValid', $valid);
+            // Independent of the provisional weather/recommendation model: a measured
+            // controller must be able to select HP when the old curve suggests gas.
+            $this->SetValue('PriceQuoteJSON',json_encode(['schema'=>1,'enabled'=>$c['Enabled'],'valid'=>$valid,
+                'priceCt'=>$slot?(float)$slot['price']:0.0,'gasPriceCt'=>$c['GasPriceCt'],
+                'safetyMarginPercent'=>$c['SafetyMarginPercent'],'hysteresisCt'=>$c['HysteresisCt'],
+                'updatedAt'=>time(),'validUntil'=>$valid?min($slot['end'],(int)$this->GetValue('LastSuccessfulFetch')+$c['MaxCacheAgeHours']*3600):0],JSON_THROW_ON_ERROR));
             $this->SetValue('PriceStatus', !$slot ? 'No price for current interval' : (!$fresh ? 'Price cache expired'
                 : (!$c['TariffVerified'] ? 'Regional quote: tariff confirmation required' : 'Valid current tariff price')));
             try { [$threshold,$power,$modelDeadline,$modelReason]=$this->weatherSelection($c); }
@@ -381,6 +388,7 @@ class LichtBlickElectricityPrice extends IPSModule
         } catch (Throwable $e) {
             $this->resetWeather('Invalid settings/cache: '.$e->getMessage());
             foreach (['ThresholdCt','EffectiveThresholdCt','EntryThresholdCt'] as $key) $this->SetValue($key,0.0);
+            $this->SetValue('PriceQuoteJSON',json_encode(['schema'=>1,'valid'=>false,'updatedAt'=>time()],JSON_THROW_ON_ERROR));
             $this->SetValue('PriceValid', false); $this->recommend(0, false, 'Invalid settings/cache: ' . $e->getMessage());
         }
     }

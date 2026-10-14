@@ -18,6 +18,7 @@ class IPSModule
     public function RegisterPropertyString($n, $v) { $this->properties[$n] = $v; }
     public function RegisterPropertyFloat($n, $v) { $this->properties[$n] = $v; }
     public function RegisterAttributeString($n, $v) { $this->attributes[$n] = $v; }
+    public function RegisterVariableFloat($n, ...$args) { $this->values[$n] = 0.0; }
     public function RegisterVariableInteger($n, ...$args) { $this->values[$n] = 0; }
     public function EnableAction($n) {}
     public function GetIDForIdent($n) {
