@@ -1,5 +1,13 @@
 # HeatingControl for IP-Symcon
 
+Version **0.3.33, build 43** adds a selectable **COP method** for the gas /
+heat-pump price threshold. Keep **Measured points** (default, unchanged temperature
+tolerance) or choose the fitted **COP surface** in the form or protected heating
+page. The surface uses 1% power increments within 5–16°C outside; supply-air,
+intake, fan/airflow and price safeguards still apply. It remains the frozen
+historical house-meter fit until explicitly refitted. See
+[COP surface selection](docs/heatpump-cop-surface.md).
+
 Version **0.3.32, build 42** adds the dedicated Shelly Pro 3EM heat-pump meter.
 New tests use total active power **28681** and consumed energy **22365** (kWh),
 without household/standby subtraction. Counter **57639** guards against new

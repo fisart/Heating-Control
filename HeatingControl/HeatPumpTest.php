@@ -426,7 +426,7 @@ trait HeatingControlHeatPumpTest
         }unset($point);
         if(!$s)$viewPoints=array_map([HeatPumpMatrix::class,'applyPointReview'],$viewPoints);
         $rebootTime=$this->testRebootTime($this->ReadPropertyString('HeatPumpTestRebootTime'));
-        return ['meterSource'=>$s['settings']['HeatPumpTestMeterSource']??$this->ReadPropertyString('HeatPumpTestMeterSource'),
+        return ['copMethod'=>$this->copMethodView(),'meterSource'=>$s['settings']['HeatPumpTestMeterSource']??$this->ReadPropertyString('HeatPumpTestMeterSource'),
             'configuredElectricalProvenance'=>$this->testElectricalProvenance($s?:['settings'=>$this->testSettings($this->ReadPropertyInteger('HeatPumpTestStepMinutes'))]),
             'reportElectricalProvenance'=>$report['electricalProvenance']??['electricalMethod'=>$report['electricalMethod']??'house-counter-minus-pretest-baseline'],
             'rebootGuardEnabled'=>$s['settings']['HeatPumpTestRebootGuardEnabled']??$this->ReadPropertyBoolean('HeatPumpTestRebootGuardEnabled'),

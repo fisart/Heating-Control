@@ -15,6 +15,7 @@ jobs:
           php -l HeatingControl/HeatPumpTestReboot.php
           php -l HeatingControl/HeatPumpPerformance.php
           php -l HeatingControl/HeatPumpMatrix.php
+          php -l HeatingControl/HeatPumpSurface.php
           php -l HeatingControl/HeatPumpEconomics.php
           php -l HeatingControl/SourceSelection.php
           php -l HeatingControl/Webhook.php
@@ -53,6 +54,7 @@ jobs:
           php tests/heatpump-dedicated-meter.php
           php tests/heatpump-reboot.php
           php tests/heatpump-economics.php
+          php tests/heatpump-surface.php
           php tests/form-audit.php
           php tests/measured-links.php
           php tests/source-selection.php

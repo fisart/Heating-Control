@@ -310,6 +310,11 @@ trait HeatingControlWebhook
         if (!$this->ReadPropertyBoolean('Enabled') || $this->ReadPropertyBoolean('DryRun')) {
             throw new InvalidArgumentException('Controller disabled or in dry run: page is read-only.');
         }
+        if($payload['control']==='HeatPumpCOPMethod') {
+            if(!is_string($payload['value']))throw new InvalidArgumentException('COP method requires measured or surface');
+            $this->SetHeatPumpCOPMethod($payload['value']);
+            return ['ok'=>true,'confirmed'=>true,'state'=>$this->webState()];
+        }
         $lock = 'HeatingControl.'.$this->InstanceID;
         if (!IPS_SemaphoreEnter($lock,1000)) throw new RuntimeException('Controller busy; retry.');
         try {

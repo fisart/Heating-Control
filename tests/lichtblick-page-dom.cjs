@@ -37,6 +37,14 @@ const settle=()=>new Promise(r=>setImmediate(r));
  assert.equal(d.querySelector('#price').textContent,'19.25 ct/kWh');
  assert.equal(d.querySelector('#source').textContent,'Heat pump');
  assert.ok(d.querySelector('#power').textContent.includes('50%'));
+ state.heating.economics.copMethod='surface';dom.window.render(state);
+ assert.ok(d.querySelector('#power').textContent.includes('Modeled COP surface candidate'),'Provider page labels the modeled method');
+ assert.ok(d.querySelector('#weather').textContent.includes('Calculated surface'),'Provider operating conditions show surface mode');
+ assert.ok(d.querySelector('#weather').textContent.includes('Modeled electrical input'),'Inferred surface power is not labelled a meter measurement');
+ state.heating.economics.copMethod='measured';state.heating.economics.point.electricalMethod='dedicated-heatpump-import-counter';dom.window.render(state);
+ assert.ok(d.querySelector('#weather').textContent.includes('Dedicated circuit input'),'Measured dedicated-meter input retains its circuit label');
+ delete state.heating.economics.copMethod;delete state.heating.economics.point.electricalMethod;dom.window.render(state);
+
  assert.equal(d.querySelector('#ceiling').textContent,'28.39 ct/kWh');
  assert.ok(d.querySelector('#entry').textContent.includes('26.39 ct/kWh'));
  assert.equal(d.querySelectorAll('#measured-points tr').length,1);
