@@ -143,11 +143,67 @@ temperature-limit stop can add previously completed stable points.
 Temperature limits remain 28°C rooms / 55°C exchanger, editable. Temperature age
 uses `MaxSensorAgeSeconds` (0 disables age stops); house power must update within
 180 seconds. Source/fan/flap acknowledgement, timer interruptions, external
-shutdown/cooling, disable/dry run and restart stop the experiment. It never
-resumes automatically. Radiator/DHW and other house loads should be comparable
+shutdown/cooling, disable/dry run and unplanned restarts stop the experiment.
+Only the acknowledged scheduled pause described below can resume automatically. Radiator/DHW and other house loads should be comparable
 between baseline and test; this remains a whole-house subtraction, not isolated
 compressor measurement. Full-cycle economics near freezing additionally needs
 longer runs including any defrost, which a short steady test may miss.
+
+### Daily Symcon reboot safeguard (0.3.31)
+
+In **Heating Control → Heat-pump capacity test**, enable **Pause and automatically
+resume around the daily Symcon reboot** and select **Daily Symcon reboot time**.
+It defaults to enabled at **03:00 in Symcon's local timezone**. The protected
+heating page provides the same checkbox, time input and apply button. Save these
+settings before starting; they cannot be changed from the page during a run.
+This does not create, change or initiate the backup/reboot schedule.
+
+Before each baseline or power step, the module checks whether it can finish
+before the reboot minus a **five-minute lead**, with another 90 seconds for
+archive boundaries/command confirmation. If not, it pauses before that step.
+An in-flight partial measurement is discarded from the measurement window;
+its raw readings remain in the append-only run file. Completed points and the
+pending power index remain in the persistent test attribute.
+
+The pause stops both air-heating sources, sets heat-pump power to zero, closes
+the gas mixer, and confirms the linked output values. Only then does it stop
+the fan and restore the original flaps. An acknowledged stop is saved before
+allowing automatic recovery. The test keeps control of the equipment during
+this wait, so normal heating decisions cannot restart it. Cancel remains
+available; ordinary control resumes after the usual stop/restoration handling.
+
+Recovery requires a changed `IPS_GetKernelStartTime()` within the planned reboot
+window, `KR_READY`, unchanged module configuration and the normal live/bypass
+permissions. It waits **five minutes after readiness is observed** (and at least
+five minutes after the selected reboot time), rechecks room/exchanger limits
+and the household power input, then repeats the normal off/transfer preparation.
+A **fresh 15-minute sources/fan-off baseline** precedes the next complete power
+step. Additional restarts during the settling interval restart that interval.
+Unchanged ApplyChanges calls alone cannot impersonate a kernel restart.
+
+Only a deliberately paused test can recover. An unplanned restart, changed
+configuration, disable/dry-run/bypass, missing stop confirmation or failed
+post-reboot safety check stops the run. If recovery has not completed within
+**two hours after the selected reboot time**, it also stops, preserves the
+partial report and does not learn from a cancelled run. Startup issues do not
+bypass the existing temperature, freshness, command or counter-boundary checks.
+
+Each complete step references its own `baselineIndex`; the results download
+includes `baselines` (start/end, baseline power), `rebootHistory` (pause,
+acknowledgement and restart times) and an optional `pendingRebootPause`.
+Pause, acknowledged stop and resume events also appear in the raw readings.
+Counter calculations are bounded to each continuous segment, so the shutdown
+logging gap or counter changes during downtime cannot contaminate other
+segments. Missing/reset/gapped boundaries inside a measured segment exclude
+its affected points with `counterError`, shown on the page. Historical exports
+and calibration rows are not rewritten. For later recalculation of resumed
+runs, use each point's recorded baseline segment rather than one run-wide
+baseline; the historical conversion script above targets the original exports.
+
+For example, a 15-minute-step run started at **02:00** can retain its completed
+30% and 40% steps, pause before 50%, and repeat 50% after the reboot, readiness
+wait, off/transfer preparation and fresh baseline. Actual times depend on output
+acknowledgements and the duration of the backup.
 
 | Outside target (aim ±1°C; record actual temperature) | Priority / purpose |
 |---:|---|

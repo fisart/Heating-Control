@@ -136,9 +136,9 @@ class HeatingControl extends IPSModule
     {
         parent::ApplyChanges();
         try {$this->SetValue('HeatPumpModelJSON',json_encode(['schema'=>2,'points'=>$this->measuredMatrix()],JSON_THROW_ON_ERROR));} catch (Throwable $e) {$this->SetValue("HeatPumpPerformanceStatus",$e->getMessage());}
-        // Never resume a hardware experiment across configuration changes/restart.
+        // Only an explicitly checkpointed scheduled pause may survive a restart.
         if ($this->ReadAttributeString('HeatPumpTestState') !== '') {
-            try { $s=$this->testState();$this->beginTestFinish($s,'Configuration changed or Symcon restarted',false);$this->finishTestTick($s); }
+            try { $this->recoverHeatPumpTest(); }
             catch (Throwable $e) { $this->SetValue('HeatPumpTestStatus','Test recovery requires attention: '.$e->getMessage());$this->SetTimerInterval('HeatPumpTestTimer',10000); }
         }
         // An ApplyChanges/restart cannot establish how long external equipment stayed off.
@@ -743,8 +743,9 @@ class HeatingControl extends IPSModule
         foreach(['HeatPumpGasEfficiencyPercent'=>[50,100],'HeatPumpMatrixTemperatureToleranceC'=>[0,3]] as $name=>$limits)if(isset($incoming[$name])&&(!is_numeric($incoming[$name])||!is_finite((float)$incoming[$name])||$incoming[$name]<$limits[0]||$incoming[$name]>$limits[1]))throw new InvalidArgumentException('Invalid economic property: '.$name);
         foreach (self::TEST_DEFAULTS as $name=>$default) if(array_key_exists($name,$incoming)) {
             $value=$incoming[$name];
-            if(is_bool($default)?!is_bool($value):(is_int($default)?!is_int($value):(!is_numeric($value)||!is_finite((float)$value))))throw new InvalidArgumentException('Invalid test/model property: '.$name);
+            if(is_bool($default)?!is_bool($value):(is_int($default)?!is_int($value):(is_string($default)?!is_string($value):(!is_numeric($value)||!is_finite((float)$value)))))throw new InvalidArgumentException('Invalid test/model property: '.$name);
         }
+        if(isset($incoming['HeatPumpTestRebootTime']))$this->testRebootTime($incoming['HeatPumpTestRebootTime']);
         foreach (['DryRun', 'DebugEnabled', 'WebEnabled'] as $name) {
             if (isset($incoming[$name]) && !is_bool($incoming[$name])) {
                 throw new \InvalidArgumentException('Expected Boolean ' . $name);

@@ -292,11 +292,14 @@ trait HeatingControlWebhook
         }
         if (!is_string($payload['control'] ?? null)) throw new InvalidArgumentException('Select a supported control.');
         if (IPS_GetKernelRunlevel() !== KR_READY) throw new RuntimeException('Symcon is not ready.');
-        if (in_array($payload['control'],['HeatPumpTestStart','HeatPumpTestCancel','HeatPumpTestMinutes'],true)) {
+        if (in_array($payload['control'],['HeatPumpTestStart','HeatPumpTestCancel','HeatPumpTestMinutes','HeatPumpTestReboot'],true)) {
             $control=$payload['control'];$value=$payload['value'];
             if($control==='HeatPumpTestMinutes') {
                 if(!is_int($value))throw new InvalidArgumentException('Test duration requires whole minutes');
                 $this->SetHeatPumpTestMinutes($value);
+            } elseif($control==='HeatPumpTestReboot') {
+                if(!is_array($value)||count($value)!==2||array_diff(array_keys($value),['enabled','time'])||!is_bool($value['enabled']??null)||!is_string($value['time']??null))throw new InvalidArgumentException('Reboot settings require enabled and HH:MM time');
+                $this->SetHeatPumpTestReboot($value['enabled'],$value['time']);
             } else {
                 if($value!==true)throw new InvalidArgumentException('Test start/cancel requires true');
                 if($control==='HeatPumpTestStart')$this->StartHeatPumpTest();else $this->CancelHeatPumpTest();

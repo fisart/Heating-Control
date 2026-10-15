@@ -635,6 +635,20 @@
           "digits": 0
         },
         {
+          "type": "CheckBox",
+          "name": "HeatPumpTestRebootGuardEnabled",
+          "caption": "Pause and automatically resume around the daily Symcon reboot"
+        },
+        {
+          "type": "SelectTime",
+          "name": "HeatPumpTestRebootTime",
+          "caption": "Daily Symcon reboot time (Symcon local time; default 03:00)"
+        },
+        {
+          "type": "Label",
+          "caption": "No step starts unless it can finish at least 5 minutes before reboot, with archive margin. Heating/fan stop and progress is saved. After an actual restart: wait 5 minutes, take a fresh 15-minute baseline, then repeat the pending step. Cancel and safety limits still apply. If no restart is detected within 2 hours, stop the test. This setting does not schedule or trigger a Symcon reboot."
+        },
+        {
           "type": "NumberSpinner",
           "name": "HeatPumpTestFanSpeed",
           "caption": "Fixed test fan speed (%)",

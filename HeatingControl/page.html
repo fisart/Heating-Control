@@ -26,6 +26,8 @@
 <section class="card control-section" id="heatpump-test"><h2>Heat-pump capacity test</h2>
 <p class="tiny">30% → 100% in steps of 10. The master-bedroom flap stays closed; other room flaps open and fan speed stays fixed.</p>
 <div class="edit"><label for="test-minutes">Minutes per step</label><input id="test-minutes" type="number" min="3" max="60" step="1" value="15"><button id="test-duration" class="secondary">Apply time</button><button id="test-start">Start test</button><button id="test-cancel" class="secondary">Cancel test</button></div>
+<div class="edit"><label for="test-reboot-enabled"><input id="test-reboot-enabled" type="checkbox"> Pause for daily Symcon reboot</label><label for="test-reboot-time">Reboot time</label><input id="test-reboot-time" type="time" step="60" value="03:00"><button id="test-reboot-save" class="secondary">Apply reboot setting</button></div>
+<p id="test-reboot-info" class="tiny"></p>
 <p id="test-status" class="chart-summary" aria-live="polite"></p><p id="test-requirements" class="tiny"></p><p id="test-model-status" class="tiny"></p>
 <div class="test-table-scroll"><table class="chart-table"><thead><tr><th>Power %</th><th>Outside °C</th><th>Intake °C</th><th>Outgoing °C</th><th>Exchanger °C</th><th>Air rise °C</th><th>House input above baseline kW</th><th>Estimated system COP</th><th>Stable / usable</th></tr></thead><tbody id="test-results"></tbody></table></div>
 <p class="tiny">COP uses estimated airflow and house-counter electricity above the baseline. Stable points apply only near the tested weather and intake temperatures.</p>
@@ -107,6 +109,10 @@ const controls=document.querySelector('#controls'),params=document.querySelector
 function renderHeatPumpTest(s){
  const t=s.heatPumpTest||{};document.querySelector('#test-status').textContent=t.status||'No test has run yet.';
  document.querySelector('#test-minutes').value=t.stepMinutes||15;
+ document.querySelector('#test-reboot-enabled').checked=t.rebootGuardEnabled!==false;
+ document.querySelector('#test-reboot-time').value=t.rebootTime||'03:00';
+ for(const id of ['#test-reboot-enabled','#test-reboot-time','#test-reboot-save'])document.querySelector(id).disabled=!!t.active||!s.editable;
+ document.querySelector('#test-reboot-info').textContent=(t.rebootGuardEnabled!==false?'Daily reboot protection: '+(t.rebootTime||'03:00')+' ('+(t.rebootTimezone||'Symcon local time')+'). Steps finish before the five-minute safety margin. After restart: five-minute startup wait, fresh 15-minute baseline, then repeat the pending step.':'Daily reboot protection is off; a restart stops the test.')+' This does not initiate a Symcon reboot.';
  document.querySelector('#test-minutes').disabled=!!t.active||!s.editable;
  document.querySelector('#test-duration').disabled=!!t.active||!s.editable;
  document.querySelector('#test-start').disabled=!!t.active||!s.editable;
@@ -117,7 +123,7 @@ function renderHeatPumpTest(s){
  for(const p of t.matrixPoints||[]){const tr=node('tr');[fmt(p.powerPercent,0),fmt(p.outside),fmt(p.incoming),fmt(p.airRise),fmt(p.systemInputKW,2),fmt(p.estimatedSystemCOP,2),p.reviewNote?(p.usable?'reviewed / usable':'reviewed / excluded'):p.usable?'eligible':'unsettled / excluded'].forEach(v=>tr.append(node('td',v)));matrix.append(tr);}
  const e=t.economics||{};const current=e.valid&&e.validUntil>Date.now()/1000;document.querySelector('#matrix-economic').textContent=current?'Break-even '+fmt(e.breakEvenCt,2)+' ct/kWh · Enter below '+fmt(e.entryCt,2)+' ct/kWh · Exit at '+fmt(e.exitCt,2)+' ct/kWh · '+fmt(e.powerPercent,0)+'% · Gas efficiency '+fmt(e.gasEfficiencyPercent,0)+'% (assumption)':'Measured decision: '+(e.reason||'Enable automatic selection to evaluate the current price.');
  const rows=document.querySelector('#test-results');rows.replaceChildren();
- for(const p of t.points||t.report?.points||[]){const tr=node('tr');[fmt(p.powerPercent,0),fmt(p.outside),fmt(p.incoming),fmt(p.outgoing),fmt(p.coil),fmt(p.airRise),fmt(p.systemInputKW,2),fmt(p.estimatedSystemCOP,2),p.reviewNote?(p.usable?'reviewed / usable · ':'reviewed / excluded · ')+p.reviewNote:(p.stable?'stable':'unsettled')+' / '+(p.usable?'usable':'excluded')].forEach(v=>tr.append(node('td',v)));rows.append(tr);}
+ for(const p of t.points||t.report?.points||[]){const tr=node('tr');[fmt(p.powerPercent,0),fmt(p.outside),fmt(p.incoming),fmt(p.outgoing),fmt(p.coil),fmt(p.airRise),fmt(p.systemInputKW,2),fmt(p.estimatedSystemCOP,2),p.counterError?'excluded · '+p.counterError:p.reviewNote?(p.usable?'reviewed / usable · ':'reviewed / excluded · ')+p.reviewNote:(p.stable?'stable':'unsettled')+' / '+(p.usable?'usable':'excluded')].forEach(v=>tr.append(node('td',v)));rows.append(tr);}
  for(const [id,view] of [['#test-download','heatpump-test-results'],['#test-raw','heatpump-test-readings']]){const a=document.querySelector(id);a.hidden=!t.report;a.href=path+'?view='+view;}
  if(t.active)document.querySelectorAll('#rooms .edit button,#rooms .edit input,#automatic-control button,#controls button,#controls select,#parameters button,#parameters input').forEach(e=>e.disabled=true);
 }
@@ -126,6 +132,7 @@ async function testCommand(control,value){
  try{const result=await api(path,{method:'POST',headers:{'Content-Type':'application/json','X-Heating-CSRF':csrf},body:JSON.stringify({control,value})});render(result.state);notify('Test setting updated.');}
  catch(e){notify(e.message,true,e.login);}finally{busy=false;await refresh();}
 }
+document.querySelector('#test-reboot-save').addEventListener('click',()=>{const input=document.querySelector('#test-reboot-time');if(input.reportValidity()&&input.value!=='')testCommand('HeatPumpTestReboot',{enabled:document.querySelector('#test-reboot-enabled').checked,time:input.value});});
 document.querySelector('#test-start').addEventListener('click',()=>testCommand('HeatPumpTestStart',true));
 document.querySelector('#test-cancel').addEventListener('click',()=>testCommand('HeatPumpTestCancel',true));
 document.querySelector('#test-duration').addEventListener('click',()=>{const input=document.querySelector('#test-minutes');if(input.reportValidity()&&input.value!=='')testCommand('HeatPumpTestMinutes',Number(input.value));});

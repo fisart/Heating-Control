@@ -1,11 +1,14 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.30, build 40** adds the cold-night measurements around 5°C.
-Five completed steps are accepted after review, including the 50% point whose
-only stability failure was exchanger drift. The 80% transient remains excluded;
-90% was unfinished and 100% was not reached. Exact reviewed measurements can
-be recovered from this interrupted run without treating future cancelled runs
-as automatically qualified. Original files and run status remain unchanged.
+Version **0.3.31, build 41** adds a daily-reboot safeguard for heat-pump tests.
+Select the reboot time in **Heat-pump capacity test** or on the protected page
+(default 03:00, Symcon local time). The test pauses before a step would cross
+the shutdown, confirms sources/fan off, and preserves completed steps.
+After an actual restart and startup settling, it takes a fresh 15-minute
+household baseline and repeats the pending step. Only a deliberately stopped,
+configuration-matching pause can resume; other restarts and safety stops cancel.
+The setting protects a test around an existing reboot; it does not trigger one.
+The reviewed 22-point calibration from all three temperature runs is retained.
 
 The measured outside/intake/power matrix is seeded with the reviewed
 14 October house-meter test. Automatic Heating Control computes

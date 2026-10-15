@@ -46,7 +46,8 @@ class IPSModule
     public function UpdateFormField($n, $field, $v) { $this->formUpdates[$n][$field] = $v; }
     public function LogMessage(...$args) {}
 }
-function IPS_GetKernelRunlevel() { return KR_READY; }
+function IPS_GetKernelRunlevel() { return $GLOBALS['kernelRunlevel'] ?? KR_READY; }
+function IPS_GetKernelStartTime() { return $GLOBALS['kernelStartTime'] ?? 1900000000; }
 function IPS_VariableExists($id) { return isset($GLOBALS['variables'][$id]); }
 function IPS_GetVariable($id) { return $GLOBALS['variables'][$id]; }
 function IPS_ObjectExists($id) { return isset($GLOBALS['categories'][$id]) || IPS_VariableExists($id); }
