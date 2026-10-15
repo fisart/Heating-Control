@@ -18,7 +18,7 @@ trait HeatingControlHeatPumpEconomics
         $configured=json_decode($this->ReadPropertyString('HeatPumpMeasuredMatrix'),true,64,JSON_THROW_ON_ERROR);
         $rows=$configured?:HeatPumpMatrix::seed();
         $model=json_decode($this->ReadAttributeString('HeatPumpPerformanceModel')?:'{}',true,64,JSON_THROW_ON_ERROR);
-        // Never allow the old circuit-meter model to overwrite the reviewed calibration.
+        // Only schema-2 points with explicitly validated meter provenance may extend calibration.
         if(($model['schema']??0)===2)$rows=HeatPumpMatrix::merge($rows,$model['points']??[]);
         // Recover only exact reviewed measurements from the last report.
         // Its original report and raw files are never changed.
