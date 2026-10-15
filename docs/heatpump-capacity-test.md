@@ -214,3 +214,28 @@ Using gas 10.48 ct/kWh, assumed gas efficiency 100%, 5% safety margin and
 1 ct/kWh hysteresis gives break-even 37.40 ct/kWh, entry below 34.53 ct/kWh
 and exit to gas at or above 35.53 ct/kWh for this point. These values apply only
 when the recorded weather/intake/fan/flap context and supply requirements match.
+
+### Cold-night interrupted run around 5°C (0.3.30)
+
+The 15 October overnight run stopped with "Configuration changed or Symcon
+restarted" after six completed steps (30–80%). Its 90% step was unfinished;
+100% was not reached. The original report remains incomplete and unqualified.
+Reviewed completed steps can still provide measurements; this does not enable
+automatic adoption of arbitrary future cancelled runs.
+
+The measured normal-heating COPs are 2.297 at 30%, 3.172 at 40%, 3.238 at
+50%, 3.151 at 60% and 2.904 at 70%. The 50% point passes air-rise (0.078°C),
+house-power (1.887%), coverage and gap checks. Only exchanger drift exceeds
+the old rule: it cooled 1.184°C between final-window means. It is accepted as
+a specific reviewed point under the exchanger-drift principle; original flags
+remain unchanged. The corresponding 50% prices at gas 10.48 ct/kWh,
+100% gas efficiency, 5% margin and 1 ct hysteresis are break-even 33.93,
+entry below 31.24 and exit at or above 32.24 ct/kWh.
+
+The 80% step contains a sharp cooling/recovery event, consistent with defrost
+but not confirmed by a logged defrost/reversing-valve state. Its air-rise,
+exchanger and power stability checks all fail. Keep its original data and COP
+as a transient observation, excluding it from steady normal-heating selection.
+A longer fixed-power test including complete defrost/recovery cycles is needed
+to measure cycle-inclusive efficiency and avoid treating normal-heating COP
+as a guarantee of cold-weather average performance.

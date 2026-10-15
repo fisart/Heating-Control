@@ -105,7 +105,7 @@ function render(s){
   ['Target minus intake',num(readings.targetMinusIncoming,1)+' °C'],['Chosen power',num(e?.powerPercent,0)+'%'],['Estimated system COP',num(p.estimatedSystemCOP)],
   ['House-meter input above baseline',num(p.systemInputKW)+' kW'],['Requested fan speed',num(readings.fanSpeed,0)+'%'],['Assumed airflow',num(p.airflowM3h??readings.airflowM3h,0)+' m³/h'],
   ['Temperature matching tolerance',num(readings.temperatureToleranceC,1)+' °C'],['Required supply air',num(readings.requiredSupplyC,1)+' °C']]);
- table('measured-points',(h.points||[]).map(p=>[num(p.outside,1),num(p.incoming,1),num(p.powerPercent,0),num(p.systemInputKW),num(p.estimatedSystemCOP),p.reviewNote?'reviewed / usable · '+p.reviewNote:p.usable&&p.stable!==false?'usable test point (current match required)':'excluded / unsettled']));
+ table('measured-points',(h.points||[]).map(p=>[num(p.outside,1),num(p.incoming,1),num(p.powerPercent,0),num(p.systemInputKW),num(p.estimatedSystemCOP),p.reviewNote?(p.usable?'reviewed / usable · ':'reviewed / excluded · ')+p.reviewNote:p.usable&&p.stable!==false?'usable test point (current match required)':'excluded / unsettled']));
  rows('retrieval',[['Last successful fetch',stamp(v.LastSuccessfulFetch)],['Postcode',c.postalCode]]);el('fetch-status').textContent=v.FetchStatus;
  table('schedule',s.slots.map(p=>[stamp(p.start),stamp(p.end),num(p.price,3)]),s.slots.findIndex(p=>p.start<=s.updatedAt&&s.updatedAt<p.end));
  el('coverage').textContent=s.slots.length?s.slots.length+' actual current/upcoming intervals. Gaps and missing future prices are not filled.':'No current or upcoming intervals available.';

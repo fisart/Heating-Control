@@ -20,12 +20,16 @@ trait HeatingControlHeatPumpEconomics
         $model=json_decode($this->ReadAttributeString('HeatPumpPerformanceModel')?:'{}',true,64,JSON_THROW_ON_ERROR);
         // Never allow the old circuit-meter model to overwrite the reviewed calibration.
         if(($model['schema']??0)===2)$rows=HeatPumpMatrix::merge($rows,$model['points']??[]);
-        // Recover the specifically reviewed 40% point from the completed report.
+        // Recover only exact reviewed measurements from the last report.
         // Its original report and raw files are never changed.
         $report=json_decode($this->ReadAttributeString('HeatPumpTestLastReport')?:'{}',true,64,JSON_THROW_ON_ERROR);
-        if(($report['modelQualified']??false)===true)foreach($report['points']??[] as $point) {
+        foreach($report['points']??[] as $point) {
             $reviewed=HeatPumpMatrix::applyPointReview($point);
-            if(isset($reviewed['reviewNote']))$rows=HeatPumpMatrix::merge($rows,[$reviewed]);
+            $partialReviewed=isset($reviewed['reviewedPartialRunReason'])&&($report['schema']??0)===1
+                &&($report['complete']??null)===false&&($report['reason']??'')===$reviewed['reviewedPartialRunReason']
+                &&($report['runID']??'')===($point['runID']??null);
+            if(isset($reviewed['reviewNote'])&&(($report['modelQualified']??false)===true||$partialReviewed))
+                $rows=HeatPumpMatrix::merge($rows,[$reviewed]);
         }
         $rows=HeatPumpMatrix::validate($rows);
         return $rows;

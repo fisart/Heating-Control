@@ -22,7 +22,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  };
  w.eval(d.querySelector('script').textContent);
  const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
- assert.equal(d.querySelectorAll('#matrix-results tr').length,16,'Reviewed matrix is rendered on the protected page');
+ assert.equal(d.querySelectorAll('#matrix-results tr').length,22,'Reviewed matrix is rendered on the protected page');
  assert.ok(d.querySelector('#test-requirements').textContent.includes('Same rule for occupied and holiday'));
  assert.equal(d.querySelector('#portal').getAttribute('href'),'/hook/alarm_portal_10');
  assert.equal(d.querySelector('#portal').hidden,false,'Actual portal backlink visible');
@@ -117,6 +117,10 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#test-results').textContent.includes('reviewed / usable'),'Completed test shows reviewed acceptance');
  assert.ok(d.querySelector('#test-results').textContent.includes('exchanger drift'),'Review reason shown');
  assert.equal(d.querySelectorAll('#test-results img').length,0,'Review notes are escaped text');
+ state.heatPumpTest.points[0].powerPercent=80;state.heatPumpTest.points[0].usable=false;state.heatPumpTest.points[0].stable=false;state.heatPumpTest.points[0].reviewNote='Excluded defrost-like transient';
+ d.querySelector('#refresh').click();await settle();
+ assert.ok(d.querySelector('#test-results').textContent.includes('reviewed / excluded'),'Reviewed excluded transient is never labelled usable');
+
  // Delayed replies must not reopen or repopulate a closed chart.
  resolveHistory={};d.querySelector('#environment .sensor-value').click();await settle();d.querySelector('#chart-close').click();
  resolveHistory.resolve({ok:true,status:200,json:async()=>({name:'Late',aggregation:'hourly',from:stamp-10,to:stamp,points:[{time:stamp,value:99,min:99,max:99,duration:1}]})});resolveHistory=null;await settle();

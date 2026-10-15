@@ -1,10 +1,11 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.29, build 39** adds the afternoon 14 October calibration at
-13.5–15.8°C outside and accepts its 40% point after explicit review. Its air-rise
-and power checks pass; exchanger warming is recorded as a diagnostic for that
-point. Original files/flags are preserved privately. The measured matrix retains
-the morning points, and protected pages label the reviewed acceptance.
+Version **0.3.30, build 40** adds the cold-night measurements around 5°C.
+Five completed steps are accepted after review, including the 50% point whose
+only stability failure was exchanger drift. The 80% transient remains excluded;
+90% was unfinished and 100% was not reached. Exact reviewed measurements can
+be recovered from this interrupted run without treating future cancelled runs
+as automatically qualified. Original files and run status remain unchanged.
 
 The measured outside/intake/power matrix is seeded with the reviewed
 14 October house-meter test. Automatic Heating Control computes
