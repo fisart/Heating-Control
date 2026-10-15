@@ -12,6 +12,7 @@ function fixture():TestHeating {
     $GLOBALS['testHouseBaselineWatts']=180.0;
     $m=heatingFixture(TestHeating::class);$m->properties['HeatPumpTestArchiveID']=9;
     $m->properties['HeatPumpTestRebootGuardEnabled']=false;
+    $m->properties['HeatPumpTestMeterSource']='house'; // Explicit legacy fixture; dedicated meter has its own regression suite.
     $GLOBALS['variables'][$m->properties['GasMixerID']]['value']=100;
     $GLOBALS['variables'][$m->properties['FanDesiredSpeedID']]['value']=90;
     $GLOBALS['variables'][$m->properties['HeatPumpTestPowerMeterID']]['value']=100.0;

@@ -1,5 +1,13 @@
 # HeatingControl for IP-Symcon
 
+Version **0.3.32, build 42** adds the dedicated Shelly Pro 3EM heat-pump meter.
+New tests use total active power **28681** and consumed energy **22365** (kWh),
+without household/standby subtraction. Counter **57639** guards against new
+export and **37456** verifies reachability. The form and protected page label
+each result’s electrical basis; historical house-meter tests remain intact.
+Meter mapping, scope, commissioning checks and setup:
+[dedicated meter and capacity tests](docs/heatpump-capacity-test.md).
+
 Version **0.3.31, build 41** adds a daily-reboot safeguard for heat-pump tests.
 Select the reboot time in **Heat-pump capacity test** or on the protected page
 (default 03:00, Symcon local time). The test pauses before a step would cross

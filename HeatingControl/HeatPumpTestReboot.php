@@ -62,8 +62,8 @@ trait HeatingControlHeatPumpTestReboot
         $elapsed=max(0,$now-($s['phaseSince']??$now));
         $duration=match($s['phase']) {
             'step'=>max(0,$s['settings']['HeatPumpTestStepMinutes']*60-$elapsed),
-            'baseline'=>max(0,900-$elapsed),
-            default=>900+max($this->ReadPropertyInteger('HeatPumpMinimumOffSeconds'),$this->ReadPropertyInteger('SourceTransferDelaySeconds')),
+            'baseline'=>max(0,$this->testBaselineSeconds($s)-$elapsed),
+            default=>$this->testBaselineSeconds($s)+max($this->ReadPropertyInteger('HeatPumpMinimumOffSeconds'),$this->ReadPropertyInteger('SourceTransferDelaySeconds')),
         };
         // Leave archive-boundary and command-confirmation time before the lead.
         return $now+$duration+90 >= $s['nextRebootAt']-self::TEST_REBOOT_LEAD;
@@ -105,6 +105,7 @@ trait HeatingControlHeatPumpTestReboot
     private function processTestRebootPause(array &$s): void
     {
         $now=$this->sourceClock();$pause=&$s['rebootPause'];
+        $this->captureTestMeterBoundaries($s);
         $this->SetValue('EffectiveSource',0);$this->SetValue('SelectedHeatPumpPower',0);$this->SetValue('LearningSourceMode',0);
         $this->SetValue('SourceSelectionStatus','Heat-pump test paused for scheduled Symcon reboot; sources held off');
         $this->testStopCommands($s);
@@ -133,7 +134,7 @@ trait HeatingControlHeatPumpTestReboot
         }
         // Finalize completed steps while their counter boundaries are still
         // local to this segment, independent of the upcoming logging gap.
-        if($s['points']&&$now>=end($s['points'])['stepEndedAt']+75)$this->finalizeHouseCounterPoints($s);
+        if($s['points']&&$now>=end($s['points'])['stepEndedAt']+75)$this->finalizeTestCounterPoints($s);
         if($now>$pause['scheduledAt']+self::TEST_REBOOT_MAX_WAIT)throw new RuntimeException('Scheduled reboot recovery timed out after two hours');
         $newBoot=$boot!==$pause['kernelStartedAt']&&$boot>=$pause['scheduledAt']-self::TEST_REBOOT_LEAD&&$boot>=$pause['pausedAt'];
         if($newBoot&&($pause['readyKernelStartedAt']??0)!==$boot) {
@@ -141,19 +142,19 @@ trait HeatingControlHeatPumpTestReboot
         }
         if($newBoot&&$now>=max($pause['readyObservedAt'],$pause['scheduledAt'])+self::TEST_REBOOT_SETTLE) {
             $this->validateConfiguration($s['rooms']);
-            $this->testSample($s); // Recheck room/exchanger/range limits before preparing.
-            if($now-(IPS_GetVariable($s['settings']['HeatPumpTestHousePowerID'])['VariableUpdated']??0)>180)
-                throw new RuntimeException('House power meter has not recovered after Symcon reboot');
+            $probe=$s;unset($probe['lastMeterSample'],$probe['meterSegmentExportStart']);
+            $this->testSample($probe); // Recheck limits; counter continuity restarts in the new segment.
+            $this->testMeterFresh($s);
             $pause['resumedAt']=$now;$pause['resumedKernelStartedAt']=$boot;
             $s['rebootHistory'][]=$pause;
             $this->testWrite($s,['kind'=>'reboot_resume','resume'=>$pause]);
             $s['phase']='prepare';$s['phaseSince']=$now;$s['readySince']=0;$s['lastTick']=$now;
             $s['window']=[];$s['fullWindow']=[];
-            unset($s['counterFinalized'],$s['rebootPause']);
+            unset($s['counterFinalized'],$s['rebootPause'],$s['lastMeterSample'],$s['meterSegmentExportStart']);
             $s['nextRebootAt']=$this->testNextReboot($s['settings'],$now+1,false);
             $s['deadline']=$now+(count($s['powers'])-$s['index'])*$s['settings']['HeatPumpTestStepMinutes']*60+2400;
             $this->saveTestState($s);
-            $this->SetValue('HeatPumpTestStatus','Symcon restarted; preparing a fresh 15-minute baseline, then repeating '.$s['powers'][$s['index']].'%');
+            $this->SetValue('HeatPumpTestStatus','Symcon restarted; preparing a fresh '.($this->testDedicatedMeter($s)?'two-minute meter check':'15-minute baseline').', then repeating '.$s['powers'][$s['index']].'%');
             return;
         }
         $s['lastTick']=$now;$this->saveTestState($s);

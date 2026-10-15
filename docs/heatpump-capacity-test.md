@@ -1,3 +1,64 @@
+# Dedicated heat-pump meter — 0.3.32, build 42
+
+New tests default to **Dedicated heat-pump meter**, with the owner's Shelly Pro
+3EM defaults: total active power **28681** (W), total consumed energy **22365**
+(kWh), total returned energy **57639** (kWh), reachable **37456**. The instance
+is **27137**. All three phases and every screenshot object ID are recorded in
+[data/heatpump-dedicated-meter.json](data/heatpump-dedicated-meter.json).
+
+After updating the Symcon library, apply Heating Control and check these inputs
+under **Heat-pump capacity test**. The counter multiplier is **1.0 kWh/unit**,
+not the legacy house meter's 0.001. Tests still start explicitly. No live test,
+archive setting or hardware action is performed just by updating the code.
+
+Dedicated mode enables logging for the selected power/import/export variables
+when a test starts and takes a **two-minute meter/standby check**. It does not
+subtract household or heat-pump standby consumption. Each full power step uses:
+
+    Electrical kWh = total consumed counter at end − counter at start
+    Mean electrical kW = electrical kWh × 3600 / measurement seconds
+    Estimated heat kW = 0.000335 × configured airflow m³/h × full-step air rise °C
+    Estimated COP = estimated heat kWh / electrical kWh
+
+Active power is used for stability; apparent power, current, phase totals added
+a second time and exported energy are not counted as imported electrical input.
+Airflow remains an estimate. **COP covers the dedicated circuit only.** A fan
+or other equipment outside that circuit is excluded; no invented fan consumption
+is added. The retained JSON field `estimatedSystemCOP` is compatible with the
+existing threshold calculation; `estimatedHeatPumpCOP`, method, circuit scope,
+IDs, counter units and energy interval make its actual measurement basis explicit.
+
+Meter offline/stale power or import telemetry, counter reset, >1 Wh new exported
+energy, negative total active power below −10 W or missing/gapped counter
+boundaries prevent learning. Constant export counters may use real poll timestamps
+recorded in the test samples to establish unchanged boundaries; the module does
+not fabricate fresh meter timestamps or substitute instantaneous power for energy.
+The screenshot's lifetime exported energy does not by itself prove the current
+wiring is wrong. Check clamp direction and phase assignment if export increases
+while the heat pump is drawing power. The meter's switch output **11103** is not
+controlled by this integration.
+
+The selected source/IDs are frozen in each test's settings. Existing reports and
+the reviewed historical matrix retain **house-counter-minus-pretest-baseline**;
+new points use **dedicated-heatpump-import-counter**. Every page row identifies
+its basis. The legacy mode remains selectable for a deliberate comparison and
+uses its original 15-minute house baseline. Existing in-progress test settings
+are never silently relabelled; applying a configuration change follows the
+existing stop/recovery rules.
+
+The daily reboot safeguard finalizes completed points before a gap and rechecks
+the selected meter after restart. It waits five minutes after startup, then takes
+a fresh two-minute dedicated check (or a 15-minute legacy house baseline). Export
+and monotonicity segment checks restart only after an acknowledged safe pause;
+no energy interval bridges the shutdown. Existing manual controls, test room
+limits, passkey/CSRF protection and price safety margin/hysteresis still apply.
+
+Local regression: `php tests/heatpump-dedicated-meter.php`,
+`php tests/heatpump-test.php`, `php tests/heatpump-reboot.php`,
+`php tests/heatpump-economics.php`, `php tests/form-audit.php`.
+
+---
+
 # Measured heat-pump economics — 0.3.26, build 36
 
 Update the Symcon library, apply the LichtBlick instance and Heating Control

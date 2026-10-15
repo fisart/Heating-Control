@@ -646,7 +646,7 @@
         },
         {
           "type": "Label",
-          "caption": "No step starts unless it can finish at least 5 minutes before reboot, with archive margin. Heating/fan stop and progress is saved. After an actual restart: wait 5 minutes, take a fresh 15-minute baseline, then repeat the pending step. Cancel and safety limits still apply. If no restart is detected within 2 hours, stop the test. This setting does not schedule or trigger a Symcon reboot."
+          "caption": "No step starts unless it can finish at least 5 minutes before reboot, with archive margin. Heating/fan stop and progress is saved. After an actual restart: wait 5 minutes, take a fresh meter check (2 minutes dedicated; 15-minute baseline for legacy house mode), then repeat the pending step. Cancel and safety limits still apply. If no restart is detected within 2 hours, stop the test. This setting does not schedule or trigger a Symcon reboot."
         },
         {
           "type": "NumberSpinner",
@@ -666,9 +666,71 @@
           ]
         },
         {
+          "type": "Select",
+          "name": "HeatPumpTestMeterSource",
+          "caption": "Electricity basis for NEW tests",
+          "options": [
+            {
+              "caption": "Dedicated heat-pump meter (Shelly Pro 3EM)",
+              "value": "dedicated"
+            },
+            {
+              "caption": "Legacy: house counter minus pre-test baseline",
+              "value": "house"
+            }
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestDedicatedPowerID",
+          "caption": "Dedicated meter: TOTAL active power (W; default 28681)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestDedicatedCounterID",
+          "caption": "Dedicated meter: TOTAL consumed energy (kWh; default 22365)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestDedicatedExportID",
+          "caption": "Dedicated meter: TOTAL exported energy (kWh; direction check, default 57639)",
+          "validVariableTypes": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "SelectVariable",
+          "name": "HeatPumpTestDedicatedOnlineID",
+          "caption": "Dedicated meter: reachable / online (default 37456)",
+          "validVariableTypes": [
+            0
+          ]
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "HeatPumpTestDedicatedCounterScale",
+          "caption": "Dedicated counter kWh per unit (Shelly kWh: 1.0)",
+          "minimum": 1e-06,
+          "maximum": 1,
+          "digits": 6
+        },
+        {
+          "type": "Label",
+          "caption": "Dedicated mode uses total active consumed energy across all phases, without house or standby subtraction. A two-minute meter check precedes the steps. COP covers the metered circuit; an external fan is not included unless fed through this meter. Export growth, reset, offline/stale readings or missing boundaries exclude affected measurements. Historical house-meter results retain their original basis."
+        },
+        {
           "type": "SelectVariable",
           "name": "HeatPumpTestHousePowerID",
-          "caption": "Main-house power (W; stability check only)",
+          "caption": "Legacy mode only: Main-house power (W; stability check only)",
           "validVariableTypes": [
             1,
             2
@@ -677,7 +739,7 @@
         {
           "type": "SelectVariable",
           "name": "HeatPumpTestHouseCounterID",
-          "caption": "Main-house cumulative electricity counter",
+          "caption": "Legacy mode only: Main-house cumulative electricity counter",
           "validVariableTypes": [
             1,
             2
@@ -686,7 +748,7 @@
         {
           "type": "NumberSpinner",
           "name": "HeatPumpTestHouseCounterScale",
-          "caption": "House-counter kWh per unit (default 0.001)",
+          "caption": "Legacy mode only: House-counter kWh per unit (default 0.001)",
           "minimum": 1e-06,
           "maximum": 1,
           "digits": 6
@@ -725,7 +787,7 @@
         },
         {
           "type": "Label",
-          "caption": "30 → 100% in 10% steps; master bedroom closed; fixed fan. A clean 15-minute house-meter baseline precedes the test. Heat and baseline-adjusted electricity are calculated over each FULL step; final five-minute stability determines eligibility. Prior temperature runs are retained. 15 min × 8 = 2 hours plus baseline/transfer/archive wait."
+          "caption": "30 → 100% in 10% steps; master bedroom closed; fixed fan. The selected meter basis is frozen for the whole run. Heat and electricity cover each FULL step; final five-minute stability determines eligibility. Prior temperature runs are retained. 15 min × 8 = 2 hours plus baseline/transfer/archive wait."
         }
       ]
     },

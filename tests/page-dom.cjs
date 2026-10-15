@@ -24,6 +24,10 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  w.eval(d.querySelector('script').textContent);
  const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
  assert.equal(d.querySelectorAll('#matrix-results tr').length,22,'Reviewed matrix is rendered on the protected page');
+ assert.ok(d.querySelector('#test-meter-basis').textContent.includes('Dedicated HP circuit'),'New-test basis identifies the dedicated circuit');
+ assert.ok(d.querySelector('#test-meter-basis').textContent.includes('28681')&&d.querySelector('#test-meter-basis').textContent.includes('22365'),'Configured meter IDs appear on the protected page');
+ assert.equal(d.querySelector('#matrix-results tr').children.length,8,'Matrix row aligns with the meter-basis column');
+ assert.ok(d.querySelector('#matrix-results').textContent.includes('House above baseline'),'Historical matrix retains its original method label');
  assert.ok(d.querySelector('#test-requirements').textContent.includes('Same rule for occupied and holiday'));
  assert.equal(d.querySelector('#test-reboot-time').value,'03:00','Native default reboot time appears on the protected page');
  assert.equal(d.querySelector('#test-reboot-enabled').checked,true,'Daily reboot protection defaults on');
@@ -135,6 +139,11 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  state.heatPumpTest.points[0].powerPercent=80;state.heatPumpTest.points[0].usable=false;state.heatPumpTest.points[0].stable=false;state.heatPumpTest.points[0].reviewNote='Excluded defrost-like transient';
  d.querySelector('#refresh').click();await settle();
  assert.ok(d.querySelector('#test-results').textContent.includes('reviewed / excluded'),'Reviewed excluded transient is never labelled usable');
+
+ state.heatPumpTest.points[0].electricalMethod='dedicated-heatpump-import-counter';
+ d.querySelector('#refresh').click();await settle();
+ assert.ok(d.querySelector('#test-results').textContent.includes('Dedicated HP circuit'),'Dedicated observations carry their own method label');
+ assert.equal(d.querySelector('#test-results tr').children.length,10,'Dedicated result aligns with all ten headings');
 
  // Delayed replies must not reopen or repopulate a closed chart.
  resolveHistory={};d.querySelector('#environment .sensor-value').click();await settle();d.querySelector('#chart-close').click();

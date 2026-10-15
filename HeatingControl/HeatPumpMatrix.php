@@ -36,7 +36,13 @@ final class HeatPumpMatrix
                 if(!is_numeric($v)||!is_finite((float)$v)||$v<$limits[0]||$v>$limits[1])throw new InvalidArgumentException('Invalid matrix '.$k);
             }
             if(!is_int($r['powerPercent'])||!is_int($r['fanSpeed']))throw new InvalidArgumentException('Matrix commands must be integer percentages');
-            if(($r['electricalMethod']??'')!=='house-counter-minus-pretest-baseline'||!is_bool($r['usable']??null)||!is_bool($r['stable']??null))throw new InvalidArgumentException('Matrix requires house-counter provenance and stability flags');
+            if(!in_array($r['electricalMethod']??'',['house-counter-minus-pretest-baseline','dedicated-heatpump-import-counter'],true)||!is_bool($r['usable']??null)||!is_bool($r['stable']??null))throw new InvalidArgumentException('Matrix requires verified electrical provenance and stability flags');
+            if($r['electricalMethod']==='dedicated-heatpump-import-counter') {
+                foreach(['counterID','powerMeterID','exportCounterID'] as $key)if(!is_int($r[$key]??null)||$r[$key]<=1)throw new InvalidArgumentException('Missing dedicated-meter provenance: '.$key);
+                foreach(['netElectricityKWh','exportElectricityKWh','measurementSeconds','counterScale'] as $key)if(!is_numeric($r[$key]??null)||!is_finite((float)$r[$key])||$r[$key]<0)throw new InvalidArgumentException('Invalid dedicated-meter energy provenance: '.$key);
+                if(($r['counterFinalized']??false)!==true||($r['baselineSubtracted']??null)!==false||$r['netElectricityKWh']<=0||$r['measurementSeconds']<=0||$r['counterScale']<=0||$r['counterScale']>1||$r['exportElectricityKWh']>0.001+1e-9
+                    ||abs($r['systemInputKW']-$r['netElectricityKWh']*3600/$r['measurementSeconds'])>0.001)throw new InvalidArgumentException('Dedicated-meter energy/provenance does not match input power');
+            }
             if(abs($r['estimatedHeatKW']-$r['estimatedSystemCOP']*$r['systemInputKW'])>0.01)throw new InvalidArgumentException('Matrix COP does not match heat and electrical input');
         }
         return $rows;
@@ -68,7 +74,7 @@ final class HeatPumpMatrix
     {
         if($outside < -20||$outside>24)return sprintf('Outside air %.1f°C is outside the supported operating range (−20 to 24°C)',$outside);
         $rows=array_values(array_filter(self::validate($rows),static fn($r)=>$r['usable']&&$r['stable']));
-        if(!$rows)return 'No stable, usable house-meter calibration points are available';
+        if(!$rows)return 'No stable, usable electricity-meter calibration points are available';
         $steps=[
             [static fn($r)=>$r['fanSpeed']===$fan,static fn($r)=>sprintf('Requested fan speed %d%% does not match the tested fan speed(s): %s%%',$fan,implode('%, ',array_unique(array_column($r,'fanSpeed'))))],
             [static fn($r)=>abs($r['airflowM3h']-$airflow)<=1,static fn($r)=>sprintf('Configured airflow %.0f m³/h does not match the tested airflow(s): %s m³/h',$airflow,implode(', ',array_unique(array_column($r,'airflowM3h'))))],
@@ -98,7 +104,10 @@ final class HeatPumpMatrix
         return ['breakEvenCt'=>$breakEven,'exitCt'=>$exit,'entryCt'=>$entry,'breakEvenEuro'=>$breakEven/100,'exitEuro'=>$exit/100,'entryEuro'=>$entry/100,
             'source'=>$price<($previous===1?$exit:$entry)?1:2,'gasPriceCt'=>$gasCt,'gasEfficiencyPercent'=>$gasEfficiency,
             'safetyMarginPercent'=>$safety,'hysteresisCt'=>$band,'currentPriceCt'=>$price,
-            'assumptions'=>'Estimated airflow; gas auxiliary electricity receives no credit; changing other house loads affects baseline subtraction.'];
+            'electricalMethod'=>$point['electricalMethod']??'unknown','meterScope'=>$point['meterScope']??'household increment above baseline',
+            'assumptions'=>($point['electricalMethod']??'')==='dedicated-heatpump-import-counter'
+                ?'Estimated airflow; dedicated circuit only, no household/standby subtraction; shared fan and other equipment outside this circuit are excluded; gas auxiliary electricity receives no credit.'
+                :'Estimated airflow; gas auxiliary electricity receives no credit; changing other house loads affects baseline subtraction.'];
     }
     public static function merge(array $existing,array $new): array
     {
@@ -129,6 +138,6 @@ final class HeatPumpMatrix
             }
             $previous=$r;
         }
-        throw new RuntimeException('House counter boundary missing, reset or gap exceeds 90 seconds');
+        throw new RuntimeException('Electricity counter boundary missing, reset or gap exceeds 90 seconds');
     }
 }

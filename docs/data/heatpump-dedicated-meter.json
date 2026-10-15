@@ -1,0 +1,55 @@
+{
+  "recorded_date": "2026-10-15",
+  "source": "Owner screenshot image(20261015-105648).png",
+  "instance_id": 27137,
+  "name": "Shelly Pro 3EM Heatpump",
+  "module_name": "ShellyPro3EM",
+  "phases": {
+    "A": {
+      "current_A": 45089,
+      "voltage_V": 23280,
+      "active_power_W": 48393,
+      "apparent_power_VA": 28371,
+      "power_factor": 42159,
+      "consumed_energy_kWh": 55711,
+      "returned_energy_kWh": 21566
+    },
+    "B": {
+      "current_A": 11109,
+      "voltage_V": 43165,
+      "active_power_W": 11685,
+      "apparent_power_VA": 29336,
+      "power_factor": 25980,
+      "consumed_energy_kWh": 30399,
+      "returned_energy_kWh": 41975
+    },
+    "C": {
+      "current_A": 17751,
+      "voltage_V": 57205,
+      "active_power_W": 34642,
+      "apparent_power_VA": 23734,
+      "power_factor": 23203,
+      "consumed_energy_kWh": 58063,
+      "returned_energy_kWh": 58650
+    }
+  },
+  "total": {
+    "current_A": 45363,
+    "active_power_W": 28681,
+    "apparent_power_VA": 10609,
+    "consumed_energy_kWh": 22365,
+    "returned_energy_kWh": 57639
+  },
+  "switch_output_id": 11103,
+  "reachable_id": 37456,
+  "calculation": {
+    "power_id": 28681,
+    "import_counter_id": 22365,
+    "export_guard_id": 57639,
+    "kWh_per_counter_unit": 1.0,
+    "method": "dedicated-heatpump-import-counter",
+    "baseline_subtraction": false,
+    "scope": "Only equipment physically supplied through this meter; an external fan is not assumed to be included."
+  },
+  "commissioning_note": "Lifetime export was 0.48 kWh and import 0.05 kWh in the screenshot. Historical totals alone do not establish present clamp orientation; reject new export growth during testing and check phase assignment/clamp direction. Switch output is only documented; Heating Control does not operate it."
+}
