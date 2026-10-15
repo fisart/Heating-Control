@@ -19,6 +19,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
    return {ok:!expired,status:expired?401:200,json:async()=>expired?{error:'Passkey session expired.'}:{name:'Outside temperature · Outdoor sensor',range:u.searchParams.get('range'),aggregation:u.searchParams.get('resolution')==='auto'?(u.searchParams.get('range')==='1h'?'recorded':'hourly'):u.searchParams.get('resolution'),from:stamp-86400,to:stamp+1,truncated:false,points:empty?[]:[{time:stamp-7200,value:19,min:18.8,max:19.2,duration:3600},{time:stamp-3600,value:20,min:19.8,max:20.2,duration:3600},{time:stamp,value:21,min:20.8,max:21.2,duration:3600}]}};
   }
   if(options.method==='POST'&&JSON.parse(options.body).control==='HeatPumpTestReboot'){const v=JSON.parse(options.body).value;state.heatPumpTest.rebootGuardEnabled=v.enabled;state.heatPumpTest.rebootTime=v.time;return {ok:true,status:200,json:async()=>({ok:true,confirmed:true,state})};}
+  if(options.method==='POST'&&JSON.parse(options.body).control==='HeatPumpCOPMethod'){state.heatPumpTest.copMethod.selected=JSON.parse(options.body).value;return {ok:true,status:200,json:async()=>({ok:true,confirmed:true,state})};}
   return {ok:true,status:200,json:async()=>state};
  };
  w.eval(d.querySelector('script').textContent);
@@ -29,6 +30,16 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.equal(d.querySelector('#matrix-results tr').children.length,8,'Matrix row aligns with the meter-basis column');
  assert.ok(d.querySelector('#matrix-results').textContent.includes('House above baseline'),'Historical matrix retains its original method label');
  assert.ok(d.querySelector('#test-requirements').textContent.includes('Same rule for occupied and holiday'));
+ assert.equal(d.querySelector('#cop-method').value,'measured','Measured points are the unchanged upgrade default');
+ d.querySelector('#cop-method').value='surface';d.querySelector('#cop-method-save').click();await settle();
+ assert.equal(state.heatPumpTest.copMethod.selected,'surface','Page persists selected surface mode');
+ assert.ok(d.querySelector('#cop-method-info').textContent.includes('5–16°C'),'Surface support is visible beside the selector');
+ assert.ok(d.querySelector('#cop-method-info').textContent.includes('Historical house-meter fit'),'Surface provenance is not relabelled as the dedicated meter');
+ const copPost=calls.find(c=>c.options.method==='POST'&&JSON.parse(c.options.body).control==='HeatPumpCOPMethod');
+ assert.deepEqual(JSON.parse(copPost.options.body),{control:'HeatPumpCOPMethod',value:'surface'},'Selector uses the authenticated typed control');
+ d.querySelector('#cop-method').value='measured';d.querySelector('#cop-method-save').click();await settle();
+ assert.ok(d.querySelector('#cop-method-info').textContent.includes('recorded COP is used unchanged'),'Measured-method explanation restored');
+
  assert.equal(d.querySelector('#test-reboot-time').value,'03:00','Native default reboot time appears on the protected page');
  assert.equal(d.querySelector('#test-reboot-enabled').checked,true,'Daily reboot protection defaults on');
  d.querySelector('#test-reboot-time').value='04:15';d.querySelector('#test-reboot-enabled').checked=false;
@@ -38,7 +49,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#test-reboot-info').textContent.includes('protection is off'));
  state.heatPumpTest.active=true;state.heatPumpTest.phase='reboot_wait';state.heatPumpTest.status='Waiting for the scheduled Symcon reboot; next step 50%; sources off';
  d.querySelector('#refresh').click();await settle();
- for(const id of ['#test-reboot-time','#test-reboot-enabled','#test-reboot-save','#test-minutes','#test-start'])assert.equal(d.querySelector(id).disabled,true,'Paused test locks '+id);
+ for(const id of ['#test-reboot-time','#test-reboot-enabled','#test-reboot-save','#test-minutes','#test-start','#cop-method','#cop-method-save'])assert.equal(d.querySelector(id).disabled,true,'Paused test locks '+id);
  assert.equal(d.querySelector('#test-cancel').disabled,false,'A paused test can still be cancelled');
  assert.ok(d.querySelector('#test-status').textContent.includes('next step 50%'));
  state.heatPumpTest.active=false;d.querySelector('#refresh').click();await settle();

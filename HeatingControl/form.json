@@ -49,8 +49,27 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Measured operating matrix and electricity break-even price",
+      "caption": "COP method, operating matrix and electricity break-even price",
       "items": [
+        {
+          "type": "Select",
+          "name": "HeatPumpCOPMethod",
+          "caption": "COP method for automatic gas / heat-pump threshold",
+          "options": [
+            {
+              "caption": "Measured COP points with configured temperature tolerance (default)",
+              "value": "measured"
+            },
+            {
+              "caption": "Calculated COP surface (5–16°C outside; provisional historical house-meter fit)",
+              "value": "surface"
+            }
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "Measured mode keeps the existing exact recorded COP and matching tolerance. Surface mode evaluates the fitted COP at 1% power increments within 5–16°C outside. Intake compatibility, tested fan/airflow/flap context and sufficient supply air remain required. Safety margin and price hysteresis apply once in either method. Outside surface support uses gas. Dedicated-meter tests do not automatically refit the frozen surface."
+        },
         {
           "type": "NumberSpinner",
           "name": "HeatPumpSupplyAboveTargetC",
@@ -78,7 +97,7 @@
         {
           "type": "NumberSpinner",
           "name": "HeatPumpMatrixTemperatureToleranceC",
-          "caption": "Maximum difference from tested outside AND intake temperature (°C)",
+          "caption": "Temperature tolerance (°C): measured point matching; surface intake / capacity-boundary checks",
           "minimum": 0,
           "maximum": 3,
           "digits": 1

@@ -1,0 +1,180 @@
+{
+  "version": "provisional-cop-surface-2026-10-15-v1",
+  "source_sha256": "75a46ebd72247dcb36c9f0062c27877e53113ab1cf67004b4f0f9a0b6254213b",
+  "status": "Bundled opt-in runtime COP surface; measured-point mode remains default",
+  "method": "Constrained natural cubic power spline plus nonnegative, power-dependent linear temperature term; penalized least squares; regularization chosen by leave-one-run-out RMSE",
+  "formula": "COP(T,P) = f(P) + ((T-12)/10) * [b0*(1-x)^2 + 2*b1*x*(1-x) + b2*x^2], x=(P-30)/70",
+  "baseline_knot_power_percent": [
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+  ],
+  "baseline_knot_cop_at_12C": [
+    2.7371291913085707,
+    3.3381723061814,
+    3.4899480878184344,
+    3.3356583227951044,
+    3.019085880075904,
+    2.6724666999394286,
+    2.431944141990378,
+    2.346418114142521
+  ],
+  "temperature_bernstein_coefficients_per_10C": [
+    0.4024083414195593,
+    0.21293648699939632,
+    0.0594979991023733
+  ],
+  "baseline_spline_coefficients": [
+    [
+      -0.00010128085180452231,
+      5.713692578681758e-05,
+      1.5934935232682774e-05,
+      2.2906202246945408e-05,
+      2.4676196058130982e-05,
+      1.453237312523087e-05,
+      -3.390578064528502e-05
+    ],
+    [
+      -2.168404344971009e-18,
+      -0.003038425554135675,
+      -0.001324317780531148,
+      -0.0008462697235506654,
+      -0.0001590836561423052,
+      0.0005812022256016236,
+      0.0010171734193585508
+    ],
+    [
+      0.07023239666773518,
+      0.03984814112637843,
+      -0.0037792922202897895,
+      -0.025485167261107916,
+      -0.0355387010580376,
+      -0.03131751536344441,
+      -0.015333758913842675
+    ],
+    [
+      2.7371291913085707,
+      3.3381723061814,
+      3.4899480878184344,
+      3.3356583227951044,
+      3.019085880075904,
+      2.6724666999394286,
+      2.431944141990378
+    ]
+  ],
+  "spline_coefficient_convention": "scipy CubicSpline.c: rows cubic, quadratic, linear, constant on each knot interval; evaluate with P-left_knot",
+  "constraints": [
+    "Temperature response nonnegative and weakens with power: b0>=b1>=b2>=0; this is an imposed modeling assumption",
+    "COP increases over power 30-39 and decreases over power 51-100 at grid endpoints 5C/16C; unimodality between 39-51 is inspected numerically"
+  ],
+  "domain": {
+    "outside_min_C": 5,
+    "outside_max_C": 16,
+    "power_min_percent": 30,
+    "power_max_percent": 100
+  },
+  "reference_basis": {
+    "airflow_m3h": 2000,
+    "fan_command": 90,
+    "fan_command_meaning": "full physical speed",
+    "electrical_method": "house-counter-minus-pretest-baseline",
+    "incoming_air_range_C": [
+      22.617125744289822,
+      25.160113920393645
+    ]
+  },
+  "metrics": {
+    "accepted_points": 20,
+    "excluded_points": 2,
+    "independent_runs": 3,
+    "training_rmse_cop": 0.07870435186707501,
+    "training_max_abs_error_cop": 0.17862287442456726,
+    "leave_one_run_out_rmse_cop": 0.21404430838641594,
+    "leave_one_run_out_by_run": {
+      "2026-10-14 afternoon": 0.16809742819445028,
+      "2026-10-14 morning": 0.1196712237043202,
+      "2026-10-15 night": 0.34351039100657477
+    },
+    "selected_regularization": 0.3,
+    "cells": 3195,
+    "interpolation_cells": 2361,
+    "extrapolation_cells": 834,
+    "minimum_cop": 2.30476951477086,
+    "maximum_cop": 3.61469162087921
+  },
+  "candidate_cross_validation": [
+    {
+      "regularization": 0,
+      "rmse": 0.23908944698782963,
+      "by_run_rmse": {
+        "2026-10-14 afternoon": 0.221891129869811,
+        "2026-10-14 morning": 0.13556665790212194,
+        "2026-10-15 night": 0.35234688985613494
+      }
+    },
+    {
+      "regularization": 0.01,
+      "rmse": 0.23334912277940423,
+      "by_run_rmse": {
+        "2026-10-14 afternoon": 0.20820670965465637,
+        "2026-10-14 morning": 0.13407037770590235,
+        "2026-10-15 night": 0.35111591454366725
+      }
+    },
+    {
+      "regularization": 0.03,
+      "rmse": 0.2269866288856206,
+      "by_run_rmse": {
+        "2026-10-14 afternoon": 0.19351136918233336,
+        "2026-10-14 morning": 0.13150503895503263,
+        "2026-10-15 night": 0.34923641475099526
+      }
+    },
+    {
+      "regularization": 0.1,
+      "rmse": 0.21815467971450214,
+      "by_run_rmse": {
+        "2026-10-14 afternoon": 0.17474920402793784,
+        "2026-10-14 morning": 0.12516174549769365,
+        "2026-10-15 night": 0.34579553883974606
+      }
+    },
+    {
+      "regularization": 0.3,
+      "rmse": 0.21404430838641594,
+      "by_run_rmse": {
+        "2026-10-14 afternoon": 0.16809742819445028,
+        "2026-10-14 morning": 0.1196712237043202,
+        "2026-10-15 night": 0.34351039100657477
+      }
+    },
+    {
+      "regularization": 1,
+      "rmse": 0.2181627428114716,
+      "by_run_rmse": {
+        "2026-10-14 afternoon": 0.17345512818688422,
+        "2026-10-14 morning": 0.12471541948565423,
+        "2026-10-15 night": 0.34708173217946214
+      }
+    }
+  ],
+  "limitations": [
+    "Not a manufacturer or seasonal COP curve",
+    "Inlet temperature and test-run effects are confounded with outdoor temperature; a monotonic temperature trend is an explicit smoothing assumption",
+    "Airflow is assumed, not measured; meter baseline and airflow systematic uncertainty are not included in fit error",
+    "Completed normal-heating steps only; no defrost-cycle energy penalty or restart recovery model",
+    "No projection below 5C, above 16C, below 30% or above 100%; version 1 intentionally refuses these",
+    "The 10C holiday inlet-air regime is untested",
+    "Grid density adds estimates, not independent observations; validation has only three runs",
+    "Leave-one-run-out spread is model sensitivity, not a confidence interval",
+    "Frozen house-meter fit: subsequent dedicated-meter tests do not automatically refit or relabel this surface."
+  ],
+  "schema": 1,
+  "excluded_flap_id": 40259,
+  "source_file": "heatpump-cop-surface-observations.json"
+}

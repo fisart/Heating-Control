@@ -7,7 +7,7 @@ trait LichtBlickMeasuredHeating
     private function measuredHeatingView(): array
     {
         $view=['connected'=>false,'instanceID'=>0,'path'=>'','automatic'=>false,'effectiveSource'=>0,'selectedPower'=>0,
-            'economics'=>null,'conditions'=>null,'points'=>[],'reason'=>'No Heating Control instance is connected to this price provider.'];
+            'copMethod'=>'measured','economics'=>null,'conditions'=>null,'points'=>[],'reason'=>'No Heating Control instance is connected to this price provider.'];
         if(!function_exists('IPS_GetInstanceListByModuleID')||!function_exists('IPS_GetObjectIDByIdent'))return $view;
         try {
             $ids=[];
@@ -17,6 +17,8 @@ trait LichtBlickMeasuredHeating
             $id=$ids[0];$view['connected']=true;$view['instanceID']=$id;
             $read=static function(string $ident,int $type)use($id){$variable=IPS_GetObjectIDByIdent($ident,$id);
                 if(!$variable||!IPS_VariableExists($variable)||IPS_GetVariable($variable)['VariableType']!==$type)throw new RuntimeException('Heating status unavailable: '.$ident);return GetValue($variable);};
+            $selected=(string)IPS_GetProperty($id,'HeatPumpCOPMethod');
+            $view['copMethod']=$selected===''?'measured':$selected;
             $view['automatic']=$read('AutomaticSourceSelection',0)===true;
             $view['effectiveSource']=(int)$read('EffectiveSource',1);$view['selectedPower']=(int)$read('SelectedHeatPumpPower',1);
             $raw=$read('HeatPumpEconomicsJSON',3);$e=strlen($raw)<1048576?json_decode($raw,true,32):null;$now=time();
@@ -26,7 +28,7 @@ trait LichtBlickMeasuredHeating
                 &&is_int($e['validUntil']??null)&&$e['validUntil']>$now&&in_array($e['source']??0,[1,2],true);
             foreach(['currentPriceCt','gasPriceCt','safetyMarginPercent','hysteresisCt','breakEvenCt','entryCt','exitCt'] as $k)
                 $valid=$valid&&is_numeric($e[$k]??null)&&is_finite((float)($e[$k]??NAN));
-            if($valid)$valid=abs($e['currentPriceCt']-(float)$this->GetValue('CurrentPriceCt'))<0.0001
+            if($valid)$valid=($e['copMethod']??'measured')===$view['copMethod']&&abs($e['currentPriceCt']-(float)$this->GetValue('CurrentPriceCt'))<0.0001
                 &&abs($e['gasPriceCt']-$this->ReadPropertyFloat('GasPriceCt'))<0.0001
                 &&abs($e['safetyMarginPercent']-$this->ReadPropertyFloat('SafetyMarginPercent'))<0.0001
                 &&abs($e['hysteresisCt']-$this->ReadPropertyFloat('HysteresisCt'))<0.0001
@@ -37,11 +39,12 @@ trait LichtBlickMeasuredHeating
             if($fresh){$conditions=['updatedAt'=>$e['updatedAt']];
                 foreach(['outside','incoming','target','targetMinusIncoming','fanSpeed','airflowM3h','temperatureToleranceC','requiredSupplyC','minimumAirRiseC','gasEfficiencyPercent'] as $key)
                     if(is_numeric($e[$key]??null)&&is_finite((float)$e[$key]))$conditions[$key]=(float)$e[$key];
+                foreach(['copMethod','surfaceVersion'] as $key)if(is_string($e[$key]??null))$conditions[$key]=$e[$key];
                 $view['conditions']=$conditions;
             }
             $view['economics']=$valid?$e:null;
             $view['reason']=$valid?(string)($e['reason']??'Measured heating comparison'):(string)($e['reason']??'Enable automatic source selection in Heating Control to evaluate the current measured comparison.');
-            if(!$valid&&($e['valid']??false))$view['reason']='Measured comparison expired or price/settings changed; waiting for Heating Control evaluation.';
+            if(!$valid&&($e['valid']??false))$view['reason']='Measured comparison expired or price/COP settings changed; waiting for Heating Control evaluation.';
             $model=$read('HeatPumpModelJSON',3);$m=strlen($model)<2097152?json_decode($model,true,64):null;
             if(($m['schema']??0)===2&&is_array($m['points']??null)&&count($m['points'])<=512)$view['points']=$m['points'];
             // Cross-page links require the same vault AND a registered route owned by that controller.

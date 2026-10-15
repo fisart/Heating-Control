@@ -735,10 +735,11 @@ class HeatingControl extends IPSModule
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
         $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS), array_keys(self::TEST_DEFAULTS),
-            ['HeatPumpGasEfficiencyPercent','HeatPumpMatrixTemperatureToleranceC','HeatPumpMeasuredMatrix','Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
+            ['HeatPumpCOPMethod','HeatPumpGasEfficiencyPercent','HeatPumpMatrixTemperatureToleranceC','HeatPumpMeasuredMatrix','Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
+        if(isset($incoming['HeatPumpCOPMethod'])&&(!is_string($incoming['HeatPumpCOPMethod'])||!in_array($incoming['HeatPumpCOPMethod'],['measured','surface'],true)))throw new InvalidArgumentException('Invalid COP method in backup');
         if(isset($incoming['HeatPumpMeasuredMatrix']))HeatPumpMatrix::validate(json_decode($incoming['HeatPumpMeasuredMatrix'],true,64,JSON_THROW_ON_ERROR));
         foreach(['HeatPumpGasEfficiencyPercent'=>[50,100],'HeatPumpMatrixTemperatureToleranceC'=>[0,3]] as $name=>$limits)if(isset($incoming[$name])&&(!is_numeric($incoming[$name])||!is_finite((float)$incoming[$name])||$incoming[$name]<$limits[0]||$incoming[$name]>$limits[1]))throw new InvalidArgumentException('Invalid economic property: '.$name);
         foreach (self::TEST_DEFAULTS as $name=>$default) if(array_key_exists($name,$incoming)) {

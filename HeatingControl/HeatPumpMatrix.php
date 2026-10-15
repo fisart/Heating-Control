@@ -105,9 +105,11 @@ final class HeatPumpMatrix
             'source'=>$price<($previous===1?$exit:$entry)?1:2,'gasPriceCt'=>$gasCt,'gasEfficiencyPercent'=>$gasEfficiency,
             'safetyMarginPercent'=>$safety,'hysteresisCt'=>$band,'currentPriceCt'=>$price,
             'electricalMethod'=>$point['electricalMethod']??'unknown','meterScope'=>$point['meterScope']??'household increment above baseline',
-            'assumptions'=>($point['electricalMethod']??'')==='dedicated-heatpump-import-counter'
+            'assumptions'=>($point['copMethod']??'')==='surface'
+                ?'Provisional modeled COP from frozen house-meter tests; full-step air-rise capacity interpolated from supporting observations; estimated airflow; gas auxiliary electricity receives no credit.'
+                :(($point['electricalMethod']??'')==='dedicated-heatpump-import-counter'
                 ?'Estimated airflow; dedicated circuit only, no household/standby subtraction; shared fan and other equipment outside this circuit are excluded; gas auxiliary electricity receives no credit.'
-                :'Estimated airflow; gas auxiliary electricity receives no credit; changing other house loads affects baseline subtraction.'];
+                :'Estimated airflow; gas auxiliary electricity receives no credit; changing other house loads affects baseline subtraction.')];
     }
     public static function merge(array $existing,array $new): array
     {
