@@ -1,11 +1,19 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.33, build 43** adds a selectable **COP method** for the gas /
+Version **0.3.34, build 44** bundles the latest dedicated-meter test and the
+reviewed **v2 COP surface**: 27 accepted observations across four runs. Both
+exact measured mode and surface mode can use the new calibration. Seven new
+normal-heating points are accepted; the 90% defrost-like transient stays
+excluded. The PHP surface reproduces the saved 3,195-cell matrix and uses
+current provider settings, including a configured 5% safety margin, without
+resetting them. See [COP surface selection](docs/heatpump-cop-surface.md).
+
+Version **0.3.33, build 43** added a selectable **COP method** for the gas /
 heat-pump price threshold. Keep **Measured points** (default, unchanged temperature
 tolerance) or choose the fitted **COP surface** in the form or protected heating
 page. The surface uses 1% power increments within 5–16°C outside; supply-air,
-intake, fan/airflow and price safeguards still apply. It remains the frozen
-historical house-meter fit until explicitly refitted. See
+intake, fan/airflow and price safeguards still apply. The reviewed v2 refit includes both dedicated-meter and historical
+household increments, with explicit provenance. See
 [COP surface selection](docs/heatpump-cop-surface.md).
 
 Version **0.3.32, build 42** adds the dedicated Shelly Pro 3EM heat-pump meter.

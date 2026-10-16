@@ -106,7 +106,7 @@ final class HeatPumpMatrix
             'safetyMarginPercent'=>$safety,'hysteresisCt'=>$band,'currentPriceCt'=>$price,
             'electricalMethod'=>$point['electricalMethod']??'unknown','meterScope'=>$point['meterScope']??'household increment above baseline',
             'assumptions'=>($point['copMethod']??'')==='surface'
-                ?'Provisional modeled COP from frozen house-meter tests; full-step air-rise capacity interpolated from supporting observations; estimated airflow; gas auxiliary electricity receives no credit.'
+                ?'Provisional modeled COP from 27 reviewed points including dedicated-meter and historical household increments; full-step heat/electric interpolation with observed capacity checks; estimated airflow; gas auxiliary electricity receives no credit.'
                 :(($point['electricalMethod']??'')==='dedicated-heatpump-import-counter'
                 ?'Estimated airflow; dedicated circuit only, no household/standby subtraction; shared fan and other equipment outside this circuit are excluded; gas auxiliary electricity receives no credit.'
                 :'Estimated airflow; gas auxiliary electricity receives no credit; changing other house loads affects baseline subtraction.')];

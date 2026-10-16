@@ -24,7 +24,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  };
  w.eval(d.querySelector('script').textContent);
  const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
- assert.equal(d.querySelectorAll('#matrix-results tr').length,22,'Reviewed matrix is rendered on the protected page');
+ assert.equal(d.querySelectorAll('#matrix-results tr').length,30,'Reviewed matrix is rendered on the protected page');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('Dedicated HP circuit'),'New-test basis identifies the dedicated circuit');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('28681')&&d.querySelector('#test-meter-basis').textContent.includes('22365'),'Configured meter IDs appear on the protected page');
  assert.equal(d.querySelector('#matrix-results tr').children.length,8,'Matrix row aligns with the meter-basis column');
@@ -34,7 +34,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  d.querySelector('#cop-method').value='surface';d.querySelector('#cop-method-save').click();await settle();
  assert.equal(state.heatPumpTest.copMethod.selected,'surface','Page persists selected surface mode');
  assert.ok(d.querySelector('#cop-method-info').textContent.includes('5–16°C'),'Surface support is visible beside the selector');
- assert.ok(d.querySelector('#cop-method-info').textContent.includes('Historical house-meter fit'),'Surface provenance is not relabelled as the dedicated meter');
+ assert.ok(d.querySelector('#cop-method-info').textContent.includes('dedicated-meter points'),'Surface provenance is not relabelled as the dedicated meter');
  const copPost=calls.find(c=>c.options.method==='POST'&&JSON.parse(c.options.body).control==='HeatPumpCOPMethod');
  assert.deepEqual(JSON.parse(copPost.options.body),{control:'HeatPumpCOPMethod',value:'surface'},'Selector uses the authenticated typed control');
  d.querySelector('#cop-method').value='measured';d.querySelector('#cop-method-save').click();await settle();

@@ -1,5 +1,41 @@
 # Dedicated heat-pump meter — 0.3.32, build 42
 
+## Latest dedicated-meter calibration — 0.3.34, build 44
+
+The completed 15–16 October run adds all eight recorded steps to the bundled
+measured matrix. Seven are stable/usable; the 90% defrost-like event remains
+excluded. There are 30 preserved rows in total: 27 accepted observations and
+three exclusions across four runs. Historical household-counter points are
+unchanged. Latest dedicated points retain counter 22365, power 28681, full-step
+energy and no household/standby subtraction.
+
+| Power | Outside °C | Inlet °C | Outlet °C | Electric kW | Estimated COP | Review |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 30% | 8.58 | 14.02 | 22.24 | 1.400 | 3.934 | Accepted |
+| 40% | 8.24 | 13.00 | 26.66 | 2.374 | 3.854 | Accepted |
+| 50% | 7.93 | 12.86 | 29.94 | 3.569 | 3.207 | Accepted |
+| 60% | 7.69 | 12.86 | 33.04 | 4.296 | 3.146 | Accepted |
+| 70% | 7.59 | 12.95 | 34.95 | 5.122 | 2.877 | Accepted |
+| 80% | 7.30 | 12.78 | 35.96 | 6.208 | 2.503 | Accepted |
+| 90% | 7.06 | 12.69 | 28.49 | 5.695 | 1.859 | Excluded: thermal transient |
+| 100% | 7.02 | 12.81 | 38.85 | 8.797 | 1.983 | Accepted |
+
+Temperatures/electrical input above cover the same full-step interval as COP.
+The owner used outside-air intake in this run and recirculated indoor air in
+earlier runs. Air origin alone does not require separate models: heat uses
+outlet minus inlet. Retain actual inlet temperature as a calibration condition.
+The 2,000 m³/h basis and existing matching tolerance remain unchanged.
+
+For the recorded 23°C target plus 5°C supply margin, exact measured mode first
+qualifies at 50%. With gas 10.48 ct/kWh, 100% gas efficiency, 5% safety margin and
+2 ct/kWh hysteresis, its illustrative entry is below 29.93 ct/kWh and exit at
+31.93 ct/kWh. Runtime reads these settings from the linked price provider;
+updating the module does not install these example assumptions. Surface mode
+may select intermediate powers (for example 45% at 8°C outside / 13°C inlet)
+after its additional observed-capacity checks. See
+[COP surface selection](heatpump-cop-surface.md).
+
+
 New tests default to **Dedicated heat-pump meter**, with the owner's Shelly Pro
 3EM defaults: total active power **28681** (W), total consumed energy **22365**
 (kWh), total returned energy **57639** (kWh), reachable **37456**. The instance
