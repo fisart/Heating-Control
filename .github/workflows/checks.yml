@@ -11,6 +11,7 @@ jobs:
         run: |
           php -l HeatingControl/module.php
           php -l HeatingControl/HeatPumpTest.php
+          php -l HeatingControl/HeatPumpTransient.php
           php -l HeatingControl/HeatPumpMeter.php
           php -l HeatingControl/HeatPumpTestReboot.php
           php -l HeatingControl/HeatPumpPerformance.php
@@ -52,6 +53,7 @@ jobs:
           php tests/lichtblick-webhook.php --no-auth-api
           php tests/heatpump-test.php
           php tests/heatpump-dedicated-meter.php
+          php tests/heatpump-transients.php
           php tests/heatpump-reboot.php
           php tests/heatpump-economics.php
           php tests/heatpump-surface.php

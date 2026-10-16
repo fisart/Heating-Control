@@ -1,5 +1,13 @@
 # HeatingControl for IP-Symcon
 
+Version **0.3.36, build 46** adds opt-out temperature-transient handling to new
+heat-pump calibration tests. Hold the same power through a suspected defrost-like
+drop, quarantine the drop and recovery brackets, then collect the missing clean
+measurement time. Counter energy and air-side heat cover identical retained
+intervals. Raw data and a separate unfiltered full-step COP remain available.
+See [transient detection and recovery](docs/heatpump-transient-tests.md).
+Normal-operation fan control and the bundled COP surface are unchanged.
+
 Version **0.3.35, build 45** corrects surface-mode eligibility: required rise is
 `max(minimum rise, target + supply margin − actual inlet)`. Absolute inlet no
 longer has to match a fitted reference. The existing COP surface, observed

@@ -88,9 +88,10 @@ trait HeatingControlHeatPumpMeter
         foreach($s['points'] as &$point) {
             if($point['counterFinalized']??false)continue;
             try {
-                $start=$point['stepStartedAt'];$end=$point['stepEndedAt'];$seconds=$end-$start;
+                $start=$point['stepStartedAt'];$end=$point['stepEndedAt'];
+                $intervals=HeatPumpTransient::measurementIntervals($point);$seconds=HeatPumpTransient::seconds($intervals);
                 if($seconds<=0)throw new RuntimeException('Invalid dedicated-meter measurement interval');
-                $energy=[];
+                $energy=[];$fullEnergy=[];
                 foreach(['import'=>'HeatPumpTestDedicatedCounterID','export'=>'HeatPumpTestDedicatedExportID'] as $kind=>$key) {
                     $records=AC_GetLoggedValues($s['settings']['HeatPumpTestArchiveID'],$s['settings'][$key],$start-90,min($end+75,$this->sourceClock()),0);
                     if(!is_array($records))throw new RuntimeException('Dedicated-meter history unavailable');
@@ -115,11 +116,14 @@ trait HeatingControlHeatPumpMeter
                     }
                     ksort($ordered);$previous=null;
                     foreach($ordered as $record){if($previous!==null&&$record['Value']<$previous)throw new RuntimeException('Dedicated-meter counter reset in measurement interval');$previous=$record['Value'];}
-                    $energy[$kind]=(HeatPumpMatrix::counterAt(array_values($ordered),$end)-HeatPumpMatrix::counterAt(array_values($ordered),$start))*$s['settings']['HeatPumpTestDedicatedCounterScale'];
+                    $scale=$s['settings']['HeatPumpTestDedicatedCounterScale'];
+                    $fullEnergy[$kind]=(HeatPumpMatrix::counterAt(array_values($ordered),$end)-HeatPumpMatrix::counterAt(array_values($ordered),$start))*$scale;
+                    $energy[$kind]=HeatPumpTransient::energy(array_values($ordered),$intervals,$scale);
                 }
-                if($energy['export']>0.001+1e-9)throw new RuntimeException('Dedicated meter exported energy; check clamp direction/phase assignment');
+                if($fullEnergy['export']>0.001+1e-9)throw new RuntimeException('Dedicated meter exported energy; check clamp direction/phase assignment');
                 if($energy['import']<=0)throw new RuntimeException('Dedicated-meter energy did not increase during the step');
                 $point=array_replace($point,$this->testElectricalProvenance($s));
+                if(isset($point['fullStepTemperatures']))$point['fullStep']=HeatPumpTransient::fullStep($point,$fullEnergy['import'],$fullEnergy['import'],$fullEnergy['export'],$s['settings']['HeatPumpTestAirflowM3h']);
                 $point['systemInputKW']=$energy['import']*3600/$seconds;
                 $point['estimatedHeatKW']=0.000335*$s['settings']['HeatPumpTestAirflowM3h']*$point['fullPeriodAirRise'];
                 $point['estimatedSystemCOP']=$point['estimatedHeatKW']/$point['systemInputKW'];

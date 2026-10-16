@@ -43,6 +43,13 @@ final class HeatPumpMatrix
                 if(($r['counterFinalized']??false)!==true||($r['baselineSubtracted']??null)!==false||$r['netElectricityKWh']<=0||$r['measurementSeconds']<=0||$r['counterScale']<=0||$r['counterScale']>1||$r['exportElectricityKWh']>0.001+1e-9
                     ||abs($r['systemInputKW']-$r['netElectricityKWh']*3600/$r['measurementSeconds'])>0.001)throw new InvalidArgumentException('Dedicated-meter energy/provenance does not match input power');
             }
+            if(isset($r['measurementIntervals'])) {
+                require_once __DIR__.'/HeatPumpTransient.php';
+                $seconds=HeatPumpTransient::seconds(HeatPumpTransient::measurementIntervals($r));
+                if(!is_numeric($r['measurementSeconds']??null)||abs($seconds-$r['measurementSeconds'])>1e-6
+                    ||!is_int($r['excludedSeconds']??null)||$r['excludedSeconds']!==$r['stepEndedAt']-$r['stepStartedAt']-$seconds)
+                    throw new InvalidArgumentException('Retained measurement duration does not match intervals');
+            }
             if(abs($r['estimatedHeatKW']-$r['estimatedSystemCOP']*$r['systemInputKW'])>0.01)throw new InvalidArgumentException('Matrix COP does not match heat and electrical input');
         }
         return $rows;

@@ -59,9 +59,14 @@ trait HeatingControlHeatPumpTestReboot
     private function testNeedsRebootPause(array $s,int $now): bool
     {
         if(!($s['settings']['HeatPumpTestRebootGuardEnabled']??false)||empty($s['nextRebootAt']))return false;
-        $elapsed=max(0,$now-($s['phaseSince']??$now));
+        $elapsed=$s['phase']==='step'?($s['cleanMeasurementSeconds']??max(0,$now-($s['phaseSince']??$now))):max(0,$now-($s['phaseSince']??$now));
+        $recovery=0;
+        if($s['phase']==='step'&&HeatPumpTransient::active($s['stepTransient']??[])) {
+            $event=end($s['stepTransient']['events']);$policy=HeatPumpTransient::policy();
+            $recovery=$event['releaseAt']!==null?max(0,$event['releaseAt']-$now):max(0,$policy['maximumRecoverySeconds']-($now-$event['detectedAt']))+$policy['postSeconds'];
+        }
         $duration=match($s['phase']) {
-            'step'=>max(0,$s['settings']['HeatPumpTestStepMinutes']*60-$elapsed),
+            'step'=>max(0,$s['settings']['HeatPumpTestStepMinutes']*60-$elapsed)+$recovery,
             'baseline'=>max(0,$this->testBaselineSeconds($s)-$elapsed),
             default=>$this->testBaselineSeconds($s)+max($this->ReadPropertyInteger('HeatPumpMinimumOffSeconds'),$this->ReadPropertyInteger('SourceTransferDelaySeconds')),
         };
@@ -73,11 +78,12 @@ trait HeatingControlHeatPumpTestReboot
     {
         $s['rebootPause']=['scheduledAt'=>$s['nextRebootAt'],'pausedAt'=>$this->sourceClock(),
             'kernelStartedAt'=>IPS_GetKernelStartTime(),'interruptedPhase'=>$s['phase'],
-            'repeatPowerPercent'=>$s['powers'][$s['index']]??0,'stopConfirmed'=>false];
+            'repeatPowerPercent'=>$s['powers'][$s['index']]??0,'stopConfirmed'=>false,'discardedTransient'=>$s['stepTransient']??null];
         $s['phase']='reboot_pausing';
         // Raw telemetry remains in the append-only readings. A partial window
         // cannot be joined to post-reboot samples or become a completed point.
         $s['window']=[];$s['fullWindow']=[];$s['readySince']=0;
+        unset($s['stepTransient'],$s['stepExtensionAllocated'],$s['cleanMeasurementSeconds']);
         $this->saveTestState($s);
         $this->testWrite($s,['kind'=>'reboot_pause','pause'=>$s['rebootPause']]);
     }
