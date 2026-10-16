@@ -125,7 +125,7 @@ stable nearby rows meeting supply >= highest room target + 5°C and air rise >=
 5°C (both margins editable). Room demand/hysteresis still determines whether it
 actually heats and which flaps open. Temperature lift is only locally corrected.
 Default support is ±3°C on BOTH outside and intake temperatures; the tolerance
-can be reduced. Requested fan speed and configured airflow must match.
+can be reduced. Requested fan speed must match. From 0.3.35 build 45, configured airflow and excluded-flap settings are calibration metadata and do not exclude normal operation in either COP mode; calibration procedures retain these settings.
 Measurements outside this support, including a warm-house test applied to a
 10°C holiday house, do not authorize a heat-pump choice: use gas until tested.
 No invented weather extrapolation/interpolation is used with one weather run.

@@ -20,12 +20,12 @@ check(abs(HeatPumpMatrix::economics($point,10.48,90,25,2,0,2)['breakEvenCt']-$e[
 check(HeatPumpMatrix::choose($seed,2,23,23,5,5,90,2000,3)===null,'No outside-temperature extrapolation');
 check(HeatPumpMatrix::choose($seed,12,10,10,5,5,90,2000,3)===null,'Warm-house calibration cannot invent holiday intake performance');
 check(HeatPumpMatrix::choose($seed,12,23,23,5,5,70,2000,3)===null,'Fan context must match');
-check(HeatPumpMatrix::choose($seed,12,23,23,5,5,90,1500,3)===null,'Changed airflow cannot silently reuse old COP');
+check(HeatPumpMatrix::choose($seed,12,23,23,5,5,90,1500,3,999)['pointID']===$point['pointID'],'Normal measured selection ignores airflow and excluded-flap matching');
 check(HeatPumpMatrix::choose($seed,-21,23,23,5,5,90,2000,3)===null,'Manufacturer lower boundary enforced');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,19,23,23,5,5,90,2000,3),'Outside air 19.0°C has no tested point within ±3.0°C'),'Outside mismatch states current temperature and tolerance');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,10,10,5,5,90,2000,3),'Intake air 10.0°C'),'Intake mismatch states the current intake');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,23,5,5,70,2000,3),'Requested fan speed 70%'),'Fan mismatch states requested and tested settings');
-check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,23,5,5,90,1500,3),'Configured airflow 1500'),'Airflow mismatch explains the rejected calibration');
+check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,60,5,5,90,1500,3,999),'air-supply requirement'),'Failure reason proceeds to supply rather than airflow or flap matching');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,50,5,5,90,2000,3),'required supply ≥55.0°C'),'Supply mismatch states the target-based requirement');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,-21,23,23,5,5,90,2000,3),'supported operating range'),'Operating boundary is distinguished from missing tests');
 $other=$seed[2];$other['pointID']='cold';$other['outside']=2;

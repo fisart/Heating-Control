@@ -31,10 +31,24 @@ $observed=HeatPumpSurface::observations();
 check(count($observed)===27&&count(array_filter($observed,static fn($p)=>$p['electricalMethod']==='dedicated-heatpump-import-counter'))===7,'Surface includes all seven accepted dedicated-meter points alongside twenty legacy points');
 check(!in_array('20261015-211706-139c48ad9dc5-90',array_column($observed,'pointID'),true),'The defrost-like 90% point never enters the fitted observations');
 check($candidate['electricalMethod']==='reviewed-house-increment-and-dedicated-heatpump-fit'&&count($candidate['electricalSourceMethods'])===2,'Mixed fitted provenance is explicit, not relabelled as a dedicated reading');
-foreach([[2,23,23,5,5,90,2000,3,40259],[17,23,23,5,5,90,2000,3,40259],[12,10,10,5,5,90,2000,3,40259],
-    [12,23,60,5,5,90,2000,3,40259],[12,23,23,5,5,80,2000,3,40259],[12,23,23,5,5,90,1500,3,40259],[12,23,23,5,5,90,2000,3,999],
-    [8,23,23,5,5,90,2000,3,40259]] as $args)
-    check(HeatPumpSurface::choose(...$args)===null,'Unsupported weather/intake/supply/fan/airflow/flap cannot authorize a threshold');
+foreach([[2,23,23,5,5,90,2000,3,40259],[17,23,23,5,5,90,2000,3,40259],[12,-20,23,5,5,90,2000,3,40259],
+    [12,23,60,5,5,90,2000,3,40259],[12,23,23,5,5,80,2000,3,40259]] as $args)
+    check(HeatPumpSurface::choose(...$args)===null,'Unsupported weather/supply/fan cannot authorize a threshold');
+
+// Airflow and excluded-flap settings are calibration metadata, not runtime gates.
+$changed=HeatPumpSurface::choose(12,23,23,5,5,90,1500,3,999);
+check($changed['powerPercent']===$candidate['powerPercent']&&$changed['estimatedSystemCOP']===$candidate['estimatedSystemCOP'],'Surface normal operation ignores airflow and flap mismatches without rescaling COP');
+check($changed['airflowM3h']===2000&&$changed['configuredAirflowM3h']===1500.0,'Surface preserves actual model airflow basis separately from configured test airflow');
+
+// Absolute inlet is not a gate in surface mode: equal required rise must
+// select the same power/COP, while a colder inlet at the same target needs more rise.
+$low=HeatPumpSurface::choose(12,10,10,5,5,90,2000,3,40259);
+check($low['powerPercent']===$candidate['powerPercent']&&$low['estimatedSystemCOP']===$candidate['estimatedSystemCOP'],'Equal target-minus-inlet gives identical surface choice across absolute inlet values');
+$colder=HeatPumpSurface::choose(12,10,23,5,5,90,2000,3,40259);
+check($colder['powerPercent']===58&&$colder['airRise']>=18&&$colder['capacityAirRise']>=18,'Colder inlet increases required rise without an absolute intake rejection');
+$snapshot=HeatPumpSurface::choose(8.6,20.7,23,5,5,90,2000,3,40259);
+check($snapshot['powerPercent']===34&&abs($snapshot['requiredAirRise']-7.3)<1e-10,'Reported production snapshot qualifies at 34 percent and requires 7.3C rise');
+check(abs($snapshot['estimatedSystemCOP']-4.014021947742053)<1e-10&&$snapshot['capacityAirRise']>=7.3,'Reported snapshot uses unchanged 2D fit and independently supported air rise');
 
 $m=fixture();check($m->properties['HeatPumpCOPMethod']==='measured','Upgrade default retains measured-point mode');
 $reason='';$fn=new ReflectionMethod(HeatingControl::class,'measuredEconomicChoice');
@@ -67,6 +81,28 @@ check($fn->invokeArgs($m,[&$reason])===45,'Updated surface can use a qualified i
 $newSurface=json_decode($m->values['HeatPumpEconomicsJSON'],true);
 check($newSurface['safetyMarginPercent']===5&&abs($newSurface['exitCt']-$newSurface['breakEvenCt']*.95)<1e-9,'Surface mode honors live 5% rather than assuming a default');
 $queue=[];check($sourceChoice->invokeArgs($m,[2,&$queue])===[1,45],'Actual automatic command path selects new surface power');
+
+// Reproduce the owner's page through the actual economic-selection method.
+$m=fixture();$m->properties['HeatPumpCOPMethod']='surface';
+$GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=8.6;
+$GLOBALS['variables'][$m->properties['IncomingAirTempID']]['value']=20.7;
+$q=json_decode($GLOBALS['variables'][82001]['value'],true);$q['priceCt']=46.98;$q['safetyMarginPercent']=5;$q['hysteresisCt']=1;
+$GLOBALS['variables'][82001]['value']=json_encode($q);
+check($fn->invokeArgs($m,[&$reason])===0,'Reported expensive quote selects gas');
+$reported=json_decode($m->values['HeatPumpEconomicsJSON'],true);
+check($reported['valid']&&$reported['powerPercent']===34&&$m->values['HeatPumpBreakEvenEuro']>0,'Gas selection retains visible thresholds for the reported conditions');
+check(abs($reported['breakEvenCt']-42.06695001233672)<1e-8&&abs($reported['entryCt']-38.96360251171988)<1e-8&&abs($reported['exitCt']-39.96360251171988)<1e-8,'Actual 5 percent safety and 1ct hysteresis are applied once');
+$q['priceCt']=30;$GLOBALS['variables'][82001]['value']=json_encode($q);
+check($fn->invokeArgs($m,[&$reason])===34,'A cheap verified quote permits the qualifying surface power');
+
+// Both methods use the same real selection path with different calibration settings.
+$m->properties['HeatPumpTestAirflowM3h']=1500.0;$m->properties['HeatPumpTestExcludedFlapID']=999;
+check($fn->invokeArgs($m,[&$reason])===34,'Surface economic path does not exclude changed airflow/flap settings');
+$m->properties['HeatPumpCOPMethod']='measured';
+$GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=12;
+$GLOBALS['variables'][$m->properties['IncomingAirTempID']]['value']=23;
+check($fn->invokeArgs($m,[&$reason])>0,'Measured economic path does not exclude changed airflow/flap settings');
+$m->properties['HeatPumpCOPMethod']='surface';
 
 $GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=4;
 check($fn->invokeArgs($m,[&$reason])===0&&str_contains($reason,'5–16°C'),'Surface falls back to gas outside its rectangular domain');

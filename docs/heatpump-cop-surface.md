@@ -1,4 +1,4 @@
-# Selectable COP method — 0.3.34, build 44
+# Selectable COP method — 0.3.35, build 45
 
 The bundled surface now uses the seven valid dedicated-meter measurements from
 15–16 October, together with the twenty accepted historical house-meter points.
@@ -15,8 +15,8 @@ Active/paused tests lock method changes; passkey/CSRF/read-only gates remain.
 
 | Method | COP used | Qualification |
 | --- | --- | --- |
-| Measured points (default) | Exact recorded COP; latest dedicated points are bundled alongside historical points | Existing outside AND inlet tolerance; stable/usable flags; fan, airflow, flap and supply checks |
-| Calculated COP surface | Reviewed v2 heat/electric interpolation, evaluated at actual outdoor temperature and 1% power steps from 30–100% | 5–16°C domain; matching modeled and observed reference inlet; observed within-run capacity brackets; sufficient modeled AND observed supply |
+| Measured points (default) | Exact recorded COP; latest dedicated points are bundled alongside historical points | Existing outside AND inlet tolerance; stable/usable flags; fan and supply checks |
+| Calculated COP surface | Reviewed heat/electric interpolation, evaluated at actual outdoor temperature and 1% power steps from 30–100% | 5–16°C domain; observed within-run capacity brackets; modeled AND observed air rise must meet target + supply margin − actual inlet and minimum rise |
 
 Both methods use the current verified LichtBlick quote and its actual safety
 margin and hysteresis, without substituting factory defaults:
@@ -26,16 +26,16 @@ margin and hysteresis, without substituting factory defaults:
     heat-pump entry = exit ceiling − price hysteresis
 
 For a provider configured at 5%, the multiplier is 0.95, applied once. At the
-recorded dedicated 50% point, gas 10.48 ct/kWh, 100% efficiency and 2 ct/kWh
-hysteresis give entry below 29.93 ct/kWh and exit at 31.93 ct/kWh. These are
+recorded dedicated 50% point, gas 10.48 ct/kWh, 100% efficiency and 1 ct/kWh
+hysteresis give entry below 30.93 ct/kWh and exit at 31.93 ct/kWh. These are
 examples; module updates do not change live settings. Invalid/expired quotes
 clear thresholds and select gas. Unsupported surface conditions select gas with
 an explanation, without silently switching to measured mode.
 
 ## Mathematical surface
 
-Version **provisional-heatpump-surface-2026-10-16-v2** reproduces the updated saved
-analysis surface. Coefficients and diagnostics:
+Version **provisional-heatpump-surface-2026-10-16-v3** corrects runtime eligibility.
+The v2 fitted coefficients, observations, charts and saved analysis matrix are unchanged. Coefficients and diagnostics:
 [data/heatpump-cop-surface.json](data/heatpump-cop-surface.json). Exact input rows
 and exclusion flags:
 [data/heatpump-cop-surface-observations.json](data/heatpump-cop-surface-observations.json).
@@ -69,33 +69,53 @@ power 28681 with no household/standby subtraction. A modeled candidate is labell
 
 ## Capacity and operating safeguards
 
-Air origin alone is not a separate model selector: calculated heat uses outlet
-minus inlet. Actual inlet conditions remain relevant. The fitted surface pools
-roughly 12.7–25.2°C inlet conditions and cannot independently identify a weather
-or inlet-temperature effect from these four runs.
+Air origin alone is not a separate selector: heat uses outlet minus inlet.
+For surface eligibility, actual inlet determines the **required rise**, rather
+than having to match an absolute fitted reference inlet:
 
-A candidate must match the surface's descriptive reference inlet within the
-existing configured tolerance (maximum 3°C). Independently, the controller
-interpolates full-period air rise and reference inlet **within each accepted
-run's measured power bracket**, then between weather runs. It never extends a
-run beyond its measured power range. Outside the available weather bracket,
-only a nearest endpoint within the same configured tolerance is permitted.
-The current inlet must match that observed-capacity reference too. Both the
-modeled and observed-capacity rises must meet minimum rise and current room
-target plus the supply margin. Fan command 90 (full physical fan speed),
-2,000 m³/h airflow basis and excluded master-bedroom flap 40259 must match.
+    required rise = max(configured minimum rise, room target + supply margin − actual inlet)
 
-The rectangular analysis grid has 2,632 cells inside the accepted temperature/
-power hull and 563 extrapolation cells. Runtime snapshots label that geometry;
-extrapolation alone cannot bypass the independent capacity/intake checks.
-Colder-inlet points can now qualify under the same tolerance when supported;
-there is no unconditional holiday override.
+Both modeled rise and the independent observed-capacity rise must meet this
+requirement. The old two absolute-inlet matching gates are removed. The fitted
+reference inlet and observed reference inlet remain descriptive diagnostics;
+they cannot reject a surface candidate. Exact measured mode retains its existing
+outside AND inlet tolerance unchanged. This is a control-model assumption;
+these four runs cannot independently establish inlet-temperature effects.
 
-For example, at 8°C outside / 13°C inlet / 23°C target plus 5°C supply margin,
-exact mode selects the measured 50% point. Surface mode can select **45%**, whose
-modeled and observed capacity both meet the requirement. Candidates are marked
-`modeled: true`, `copMethod: surface`, version, source point IDs and separate
-capacity-source IDs. They never acquire measured quality flags or enter history.
+The controller interpolates full-period rise within each accepted run's measured
+power bracket, then between weather runs. It never extends a run beyond its
+measured power range. Outside an available weather bracket, a nearest endpoint
+must be within the configured tolerance, at most 3°C. Both modeled and observed
+capacity must meet the required rise. Fan command 90 remains required.
+Configured airflow and excluded-flap matching are **not normal-operation
+exclusion criteria in either COP mode**. Calibration procedures and records
+retain airflow and flap context. The surface keeps its 2,000 m³/h heat/COP basis;
+changing a test-airflow setting does not rescale the existing model. Runtime
+candidates report the model airflow and configured test airflow separately.
+
+
+The runtime domain remains 5–16°C outside and 30–100% power. The analysis grid has
+2,632 cells inside the two-dimensional observation hull and 563 extrapolation
+cells. A cell's geometry label alone does not authorize operation: observed
+capacity coverage and all other requirements must also pass. Nonfinite results,
+nonpositive air rise, electrical input at or below 0.05 kW, and COP outside
+0.5–10 are rejected. Invalid sensor inputs or an enabled sensor-age limit can
+also prevent evaluation. Quotes must be enabled, valid, at most 180 seconds old,
+and not expired. Invalid conditions clear the threshold and select gas.
+
+For the reported page snapshot (8.6°C outside, 20.7°C intake, 23°C target,
+5°C supply margin and 5°C minimum rise), required rise is **7.3°C**. Surface
+mode selects **34%**, COP approximately **4.014**, modeled rise **10.563°C**.
+At gas 10.48 ct/kWh, assumed gas efficiency 100%, actual safety 5% and hysteresis
+1 ct/kWh, break-even is **42.07 ct/kWh**, entry **38.96**, exit **39.96**.
+At electricity 46.98 ct/kWh the decision is gas, with visible thresholds.
+These estimates use the rounded snapshot, not live readings. No demand may
+keep equipment off independently of the economic comparison.
+
+At 8°C outside / 13°C intake / 23°C target plus 5°C supply margin, exact mode
+still selects the measured 50% point; surface mode can select 45%. Candidates
+retain modeled status, version, source IDs and capacity-source IDs. They never
+acquire measured quality flags or enter measured history.
 
 Future tests retain their raw reports and extend measured history normally.
 They do not silently refit the saved runtime coefficients. A reviewed update

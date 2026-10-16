@@ -38,7 +38,7 @@ trait HeatingControlHeatPumpEconomics
             'powerStepPercent'=>1,'electricalMethod'=>$m['reference_basis']['electrical_method'],
             'validationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],'acceptedPointCount'=>$m['metrics']['accepted_points'],
             'dedicatedPointCount'=>$m['metrics']['dedicated_meter_points'],'legacyPointCount'=>$m['metrics']['legacy_house_meter_points'],
-            'note'=>'Reviewed 27-point surface including 7 dedicated-meter measurements; 20 legacy house-meter points retain provenance. Air-supply and intake compatibility are required in both methods.'];
+            'note'=>'Reviewed 27-point surface including 7 dedicated-meter measurements; 20 legacy house-meter points retain provenance. Surface mode qualifies air rise against target plus supply margin minus intake; absolute intake matching is retained only in measured mode.'];
     }
     private function measuredMatrix(): array
     {
@@ -87,7 +87,7 @@ trait HeatingControlHeatPumpEconomics
             $flap=$this->ReadPropertyInteger('HeatPumpTestExcludedFlapID');$matrix=$copMethod==='measured'?$this->measuredMatrix():[];
             $conditions=['copMethod'=>$copMethod,'outside'=>$outside,'incoming'=>$incoming,'target'=>$req['target'],'targetMinusIncoming'=>$req['target']-$incoming,
                 'fanSpeed'=>$fan,'airflowM3h'=>$airflow,'temperatureToleranceC'=>$tolerance,'requiredSupplyC'=>$req['target']+$margin,
-                'minimumAirRiseC'=>$minRise,'gasEfficiencyPercent'=>$this->ReadPropertyFloat('HeatPumpGasEfficiencyPercent')];
+                'requiredAirRiseC'=>max($minRise,$req['target']+$margin-$incoming),'minimumAirRiseC'=>$minRise,'gasEfficiencyPercent'=>$this->ReadPropertyFloat('HeatPumpGasEfficiencyPercent')];
             if($copMethod==='surface') {
                 $point=HeatPumpSurface::choose($outside,$incoming,$req['target'],$margin,$minRise,$fan,$airflow,$tolerance,$flap);
                 $conditions['surfaceVersion']=HeatPumpSurface::definition()['version'];

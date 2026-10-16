@@ -68,7 +68,7 @@
         },
         {
           "type": "Label",
-          "caption": "Measured mode keeps the existing exact recorded COP and matching tolerance. Surface mode evaluates the fitted COP at 1% power increments within 5–16°C outside. Intake compatibility, tested fan/airflow/flap context and sufficient supply air remain required. Safety margin and price hysteresis apply once in either method. Outside surface support uses gas. The bundled surface includes seven valid dedicated-meter points from 15–16 October; future tests require a reviewed refit."
+          "caption": "Measured mode keeps the existing exact recorded COP and matching tolerance. Surface mode evaluates the fitted COP at 1% power increments within 5–16°C outside. Surface capacity uses required air rise: target plus supply margin minus intake, alongside minimum rise. Absolute intake matching applies only to measured mode. Tested fan command remains required. Airflow and excluded-flap settings do not exclude normal operation; COP retains its recorded calibration basis. Safety margin and price hysteresis apply once in either method. Outside surface support uses gas. The bundled surface includes seven valid dedicated-meter points from 15–16 October; future tests require a reviewed refit."
         },
         {
           "type": "NumberSpinner",
@@ -97,7 +97,7 @@
         {
           "type": "NumberSpinner",
           "name": "HeatPumpMatrixTemperatureToleranceC",
-          "caption": "Temperature tolerance (°C): measured point matching; surface intake / capacity-boundary checks",
+          "caption": "Temperature tolerance (°C): measured point matching; surface weather capacity-boundary checks",
           "minimum": 0,
           "maximum": 3,
           "digits": 1
