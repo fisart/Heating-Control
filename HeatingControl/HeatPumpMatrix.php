@@ -52,7 +52,7 @@ final class HeatPumpMatrix
         if($outside < -20||$outside>24)return null;
         $nearest=[];
         foreach(self::validate($rows) as $r) {
-            if(!$r['usable']||!$r['stable']||($excludedFlap>0&&isset($r['excludedFlapID'])&&$r['excludedFlapID']!==$excludedFlap)||$r['fanSpeed']!==$fan||abs($r['airflowM3h']-$airflow)>1
+            if(!$r['usable']||!$r['stable']||$r['fanSpeed']!==$fan
                 ||abs($r['outside']-$outside)>$tolerance||abs($r['incoming']-$incoming)>$tolerance)continue;
             $r['distance']=abs($r['outside']-$outside)+abs($r['incoming']-$incoming);
             $key=$r['powerPercent'];
@@ -77,10 +77,8 @@ final class HeatPumpMatrix
         if(!$rows)return 'No stable, usable electricity-meter calibration points are available';
         $steps=[
             [static fn($r)=>$r['fanSpeed']===$fan,static fn($r)=>sprintf('Requested fan speed %d%% does not match the tested fan speed(s): %s%%',$fan,implode('%, ',array_unique(array_column($r,'fanSpeed'))))],
-            [static fn($r)=>abs($r['airflowM3h']-$airflow)<=1,static fn($r)=>sprintf('Configured airflow %.0f m³/h does not match the tested airflow(s): %s m³/h',$airflow,implode(', ',array_unique(array_column($r,'airflowM3h'))))],
             [static fn($r)=>abs($r['outside']-$outside)<=$tolerance,static fn($r)=>sprintf('Outside air %.1f°C has no tested point within ±%.1f°C; tested outside temperatures %.1f–%.1f°C',$outside,$tolerance,min(array_column($r,'outside')),max(array_column($r,'outside')))],
             [static fn($r)=>abs($r['incoming']-$incoming)<=$tolerance,static fn($r)=>sprintf('Intake air %.1f°C has no matching tested point within ±%.1f°C at this outside temperature; tested intake temperatures %.1f–%.1f°C',$incoming,$tolerance,min(array_column($r,'incoming')),max(array_column($r,'incoming')))],
-            [static fn($r)=>!($excludedFlap>0&&isset($r['excludedFlapID'])&&$r['excludedFlapID']!==$excludedFlap),static fn($r)=>'The excluded room flap differs from the tested calibration configuration'],
         ];
         foreach($steps as [$accept,$explain]) {
             $matched=array_values(array_filter($rows,$accept));

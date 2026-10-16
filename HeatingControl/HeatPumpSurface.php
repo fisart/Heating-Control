@@ -107,7 +107,7 @@ final class HeatPumpSurface
         $m=self::definition();$d=$m['domain'];$basis=$m['reference_basis'];
         foreach([$outside,$incoming,$target,$margin,$minRise,$airflow,$tolerance] as $v)if(!is_finite($v))throw new InvalidArgumentException('Nonfinite surface input');
         if($outside<$d['outside_min_C']||$outside>$d['outside_max_C']||$fan!==$basis['fan_command']
-            ||abs($airflow-$basis['airflow_m3h'])>1||$excludedFlap!==$m['excluded_flap_id']||$tolerance<0||$tolerance>3)return null;
+            ||$tolerance<0||$tolerance>3)return null;
         $observations=self::observations();$best=null;
         for($power=30;$power<=100;$power++) {
             $surface=self::evaluate($outside,$power);
@@ -116,7 +116,7 @@ final class HeatPumpSurface
             if(!$capacity||$capacity['airRise']<$minRise||$incoming+$capacity['airRise']<$target+$margin)continue;
             if($best!==null&&$surface['estimatedSystemCOP']<=$best['estimatedSystemCOP'])continue;
             $best=$surface+['powerPercent'=>$power,'outside'=>$outside,'incoming'=>$incoming,'predictedOutgoing'=>$incoming+$surface['airRise'],
-                'requiredAirRise'=>max($minRise,$target+$margin-$incoming),'airflowM3h'=>$airflow,'fanSpeed'=>$fan,'modeled'=>true,'copMethod'=>'surface','surfaceVersion'=>$m['version'],
+                'requiredAirRise'=>max($minRise,$target+$margin-$incoming),'airflowM3h'=>$basis['airflow_m3h'],'configuredAirflowM3h'=>$airflow,'fanSpeed'=>$fan,'modeled'=>true,'copMethod'=>'surface','surfaceVersion'=>$m['version'],
                 'electricalMethod'=>$basis['electrical_method'],'electricalSourceMethods'=>$basis['electrical_source_methods'],
                 'meterScope'=>'reviewed fit: 20 historical house-baseline points and 7 dedicated heat-pump import points; modeled input, not a meter reading',
                 'modelValidationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],
@@ -130,8 +130,6 @@ final class HeatPumpSurface
         $m=self::definition();
         if($outside<5||$outside>16)return sprintf('COP surface supports 5–16°C outside; current outside air %.1f°C',$outside);
         if($fan!==90)return 'COP surface requires tested fan command 90% (full physical speed)';
-        if(abs($airflow-2000)>1)return 'COP surface requires its 2,000 m³/h airflow basis';
-        if($flap!==$m['excluded_flap_id'])return 'COP surface requires the tested excluded master-bedroom flap';
         return sprintf('No supported surface candidate meets modeled and observed air-rise requirements at %.1f°C intake, target %.1f°C + %.1f°C supply margin',$incoming,$target,$margin);
     }
 }

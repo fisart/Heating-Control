@@ -15,7 +15,7 @@ Active/paused tests lock method changes; passkey/CSRF/read-only gates remain.
 
 | Method | COP used | Qualification |
 | --- | --- | --- |
-| Measured points (default) | Exact recorded COP; latest dedicated points are bundled alongside historical points | Existing outside AND inlet tolerance; stable/usable flags; fan, airflow, flap and supply checks |
+| Measured points (default) | Exact recorded COP; latest dedicated points are bundled alongside historical points | Existing outside AND inlet tolerance; stable/usable flags; fan and supply checks |
 | Calculated COP surface | Reviewed heat/electric interpolation, evaluated at actual outdoor temperature and 1% power steps from 30–100% | 5–16°C domain; observed within-run capacity brackets; modeled AND observed air rise must meet target + supply margin − actual inlet and minimum rise |
 
 Both methods use the current verified LichtBlick quote and its actual safety
@@ -86,10 +86,13 @@ The controller interpolates full-period rise within each accepted run's measured
 power bracket, then between weather runs. It never extends a run beyond its
 measured power range. Outside an available weather bracket, a nearest endpoint
 must be within the configured tolerance, at most 3°C. Both modeled and observed
-capacity must meet the required rise. Fan command 90, configured airflow
-2,000 m³/h (within 1 m³/h), and excluded-flap setting 40259 must match the
-calibration settings. These are configuration checks, not physical airflow or
-flap-position verification.
+capacity must meet the required rise. Fan command 90 remains required.
+Configured airflow and excluded-flap matching are **not normal-operation
+exclusion criteria in either COP mode**. Calibration procedures and records
+retain airflow and flap context. The surface keeps its 2,000 m³/h heat/COP basis;
+changing a test-airflow setting does not rescale the existing model. Runtime
+candidates report the model airflow and configured test airflow separately.
+
 
 The runtime domain remains 5–16°C outside and 30–100% power. The analysis grid has
 2,632 cells inside the two-dimensional observation hull and 563 extrapolation
