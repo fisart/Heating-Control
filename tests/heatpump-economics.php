@@ -4,7 +4,7 @@ require __DIR__.'/webhook-fixture.php';
 class EconomicHeating extends HeatingControl {public int $clock=1791962400;protected function sourceClock():int{return $this->clock;}}
 $checks=0;function check($ok,$why){global $checks;if(!$ok)throw new RuntimeException($why);$checks++;}
 $seed=HeatPumpMatrix::validate(HeatPumpMatrix::seed());
-check(count($seed)===22,'All reviewed steps retained');
+check(count($seed)===30,'All reviewed steps retained');
 $point=HeatPumpMatrix::choose($seed,12,23,23,5,5,90,2000,3);
 check($point['powerPercent']===50,'50% is highest COP among stable supported points');
 check(abs($point['estimatedSystemCOP']-3.6123684283)<.00001,'House-counter matched full-period COP reproduced');
@@ -29,7 +29,7 @@ check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,23,5,5,90,1500,
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,12,23,50,5,5,90,2000,3),'required supply ≥55.0°C'),'Supply mismatch states the target-based requirement');
 check(str_contains(HeatPumpMatrix::unavailableReason($seed,-21,23,23,5,5,90,2000,3),'supported operating range'),'Operating boundary is distinguished from missing tests');
 $other=$seed[2];$other['pointID']='cold';$other['outside']=2;
-check(count(HeatPumpMatrix::merge($seed,[$other]))===23,'New temperature point preserves existing measurements');
+check(count(HeatPumpMatrix::merge($seed,[$other]))===31,'New temperature point preserves existing measurements');
 $legacy=$seed;$legacy[0]['electricalMethod']='old-hp-circuit';
 try{HeatPumpMatrix::validate($legacy);check(false,'Legacy circuit provenance rejected');}catch(InvalidArgumentException $e){check(true,'Legacy circuit provenance rejected');}
 try{HeatPumpMatrix::counterAt([['TimeStamp'=>0,'Value'=>100],['TimeStamp'=>60,'Value'=>99]],30);check(false,'Counter reset rejected');}catch(RuntimeException $e){check(true,'Counter reset rejected');}
@@ -62,10 +62,10 @@ check($fallback['outside']===2&&$fallback['incoming']===23&&$fallback['fanSpeed'
 check(str_contains($fallback['reason'],'Outside air 2.0°C')&&str_contains($fallback['reason'],'±3.0°C'),'Fallback snapshot names the failed matching criterion');
 check(!isset($fallback['point'])&&!isset($fallback['breakEvenCt']),'Unsupported conditions never expose a made-up threshold or COP');
 $m=fixture();$m->attributes['HeatPumpPerformanceModel']=json_encode(['schema'=>1,'points'=>[['powerPercent'=>100,'estimatedSystemCOP'=>9]]]);
-check(count(webInvoke($m,'measuredMatrix'))===22,'Existing wrong-circuit model does not overwrite house-meter calibration');
-$m=fixture();$m->GetConfigurationForm();$m->ExportConfig();check(count(webInvoke($m,'measuredMatrix'))===22,'Form and backup retain populated matrix');
+check(count(webInvoke($m,'measuredMatrix'))===30,'Existing wrong-circuit model does not overwrite house-meter calibration');
+$m=fixture();$m->GetConfigurationForm();$m->ExportConfig();check(count(webInvoke($m,'measuredMatrix'))===30,'Form and backup retain populated matrix');
 $GLOBALS['authenticated']=true;$state=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
-check(count($state['heatPumpTest']['matrixPoints'])===22,'Protected dashboard exposes full matrix');
+check(count($state['heatPumpTest']['matrixPoints'])===30,'Protected dashboard exposes full matrix');
 $afternoon=HeatPumpMatrix::choose($seed,15.6,23.7,23,5,5,90,2000,3);
 check($afternoon['powerPercent']===40&&abs($afternoon['estimatedSystemCOP']-3.5682758776)<0.00001,'Explicitly reviewed afternoon 40% point is the best matching COP');
 $prices=HeatPumpMatrix::economics($afternoon,10.48,100,5,1,30,2);
@@ -91,7 +91,7 @@ check($night['powerPercent']===50&&abs($night['estimatedSystemCOP']-3.2380217954
 $prices=HeatPumpMatrix::economics($night,10.48,100,5,1,30,2);
 check(abs($prices['entryCt']-31.2377449951)<0.00001&&abs($prices['exitCt']-32.2377449951)<0.00001,'Cold 50% thresholds reproduced');
 $nightOriginals=[];
-foreach(array_slice($seed,-6) as $row){$row['pointID']=$row['reviewedSourcePointID'];$row['runID']=substr($row['pointID'],0,strrpos($row['pointID'],'-'));$row['stable']=$row['originalStable'];$row['usable']=$row['originalUsable'];$row['stability']=$row['reviewedStability'];unset($row['reviewNote'],$row['reviewedPartialRunReason']);$nightOriginals[]=$row;}
+foreach(array_slice($seed,16,6) as $row){$row['pointID']=$row['reviewedSourcePointID'];$row['runID']=substr($row['pointID'],0,strrpos($row['pointID'],'-'));$row['stable']=$row['originalStable'];$row['usable']=$row['originalUsable'];$row['stability']=$row['reviewedStability'];unset($row['reviewNote'],$row['reviewedPartialRunReason']);$nightOriginals[]=$row;}
 check(HeatPumpMatrix::applyPointReview($nightOriginals[2])['usable']===true,'Cold 50% exact measurement has a reviewed drift acceptance');
 check(HeatPumpMatrix::applyPointReview($nightOriginals[5])['usable']===false,'Defrost-like 80% transient remains excluded');
 $bad=$nightOriginals[2];$bad['stability']['powerHalfWindowFraction']=0.8;
@@ -105,5 +105,7 @@ foreach([['reason'=>'Cancelled by user'],['runID'=>'another-run'],['schema'=>2]]
 $m->attributes['HeatPumpTestLastReport']=$rawNight;
 $GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=5.1;$GLOBALS['variables'][$m->properties['IncomingAirTempID']]['value']=23.4;
 $queue=[];$choice=$method->invokeArgs($m,[2,&$queue]);check($choice===[1,50],'Actual automatic selection uses the cold reviewed point');
-check(HeatPumpMatrix::choose($seed,5.1,10,10,5,5,90,2000,3)===null,'Cold outside measurements do not invent a cold-intake holiday COP');
+check(HeatPumpMatrix::choose(array_slice($seed,0,22),5.1,10,10,5,5,90,2000,3)===null,'Historical warm-intake points alone cannot qualify a cold intake');
+$colder=HeatPumpMatrix::choose($seed,5.1,10,10,5,5,90,2000,3);
+check($colder!==null&&$colder['electricalMethod']==='dedicated-heatpump-import-counter'&&abs($colder['incoming']-10)<=3&&abs($colder['outside']-5.1)<=3,'New colder-inlet measurements qualify only within the unchanged three-degree tolerance');
 echo "PASS: $checks measured economics / integration checks\n";

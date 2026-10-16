@@ -111,7 +111,7 @@ function renderHeatPumpTest(s){
  const t=s.heatPumpTest||{};const method=t.copMethod||{selected:'measured',measuredToleranceC:3};
  document.querySelector('#cop-method').value=method.selected;
  for(const id of ['#cop-method','#cop-method-save'])document.querySelector(id).disabled=!!t.active||!s.editable;
- document.querySelector('#cop-method-info').textContent=method.selected==='surface'?'Active: calculated COP surface · '+method.outsideMinC+'–'+method.outsideMaxC+'°C outside · 1% power increments · '+method.surfaceVersion+'. Historical house-meter fit; dedicated-meter results need a refit. Intake/capacity checks use ±'+fmt(method.measuredToleranceC)+'°C; supply-air requirements still apply.':'Active: measured COP points · outside AND intake must match within ±'+fmt(method.measuredToleranceC)+'°C. The recorded COP is used unchanged.';
+ document.querySelector('#cop-method-info').textContent=method.selected==='surface'?'Active: calculated COP surface · '+method.outsideMinC+'–'+method.outsideMaxC+'°C outside · 1% power increments · '+method.surfaceVersion+'. Reviewed fit: '+(method.acceptedPointCount||27)+' points, including '+(method.dedicatedPointCount||7)+' dedicated-meter points. Intake/capacity checks use ±'+fmt(method.measuredToleranceC)+'°C; supply-air requirements still apply.':'Active: measured COP points · outside AND intake must match within ±'+fmt(method.measuredToleranceC)+'°C. The recorded COP is used unchanged.';
  document.querySelector('#test-status').textContent=t.status||'No test has run yet.';
  document.querySelector('#test-minutes').value=t.stepMinutes||15;
  document.querySelector('#test-reboot-enabled').checked=t.rebootGuardEnabled!==false;

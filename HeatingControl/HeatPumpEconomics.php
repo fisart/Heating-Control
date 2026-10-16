@@ -36,8 +36,9 @@ trait HeatingControlHeatPumpEconomics
         return ['selected'=>$this->ReadPropertyString('HeatPumpCOPMethod'),'measuredToleranceC'=>$this->ReadPropertyFloat('HeatPumpMatrixTemperatureToleranceC'),
             'surfaceVersion'=>$m['version'],'outsideMinC'=>$m['domain']['outside_min_C'],'outsideMaxC'=>$m['domain']['outside_max_C'],
             'powerStepPercent'=>1,'electricalMethod'=>$m['reference_basis']['electrical_method'],
-            'validationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_cop'],
-            'note'=>'Frozen historical house-meter fit. Dedicated-meter tests remain separate until an explicit refit. Air-supply and intake compatibility are required in both methods.'];
+            'validationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],'acceptedPointCount'=>$m['metrics']['accepted_points'],
+            'dedicatedPointCount'=>$m['metrics']['dedicated_meter_points'],'legacyPointCount'=>$m['metrics']['legacy_house_meter_points'],
+            'note'=>'Reviewed 27-point surface including 7 dedicated-meter measurements; 20 legacy house-meter points retain provenance. Air-supply and intake compatibility are required in both methods.'];
     }
     private function measuredMatrix(): array
     {
