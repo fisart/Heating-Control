@@ -1,5 +1,11 @@
 # HeatingControl for IP-Symcon
 
+Version **0.3.35, build 45** corrects surface-mode eligibility: required rise is
+`max(minimum rise, target + supply margin − actual inlet)`. Absolute inlet no
+longer has to match a fitted reference. The existing COP surface, observed
+capacity checks and exact measured mode remain. The reported 8.6°C outside /
+20.7°C inlet case now produces a threshold. See [rules and worked example](docs/heatpump-cop-surface.md).
+
 Version **0.3.34, build 44** bundles the latest dedicated-meter test and the
 reviewed **v2 COP surface**: 27 accepted observations across four runs. Both
 exact measured mode and surface mode can use the new calibration. Seven new

@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "version": "provisional-heatpump-surface-2026-10-16-v2",
-  "status": "Bundled opt-in runtime v2 surface; measured-point mode remains default",
+  "version": "provisional-heatpump-surface-2026-10-16-v3",
+  "status": "Bundled opt-in runtime v3 eligibility correction; v2 coefficients and analysis matrix unchanged; measured-point mode remains default",
   "method": "Minimum-curvature thin-plate radial-basis interpolation with affine trend; zero smoothing; equal point weights.",
   "formula": "q=(Tout-10.5)/5.5, r=(power-65)/35; F(q,r)=sum(w_i*d_i^2*ln(d_i))+a0+a1*q+a2*r; phi(0)=0. Interpolate full-period air rise, electrical kW and descriptive inlet C. Heat kW=0.67*airRise; COP=heat/electrical kW.",
   "coefficient_order": "first n rows radial weights at normalized centers; final 3 rows constant, normalized outside, normalized power; columns airRiseC, electricKW, descriptiveInletC",

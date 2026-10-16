@@ -62,9 +62,10 @@ final class HeatPumpSurface
     {
         return self::evaluate($outside,$power)['estimatedSystemCOP'];
     }
-    /** Qualify capacity from observed within-run power brackets, then weather.
+    /** Qualify air rise from observed within-run power brackets, then weather.
+     * Absolute observed inlet is descriptive; current inlet determines required rise.
      * A nearest weather endpoint requires the existing temperature tolerance. */
-    private static function capacity(int $power,float $outside,float $incoming,float $tolerance): ?array
+    private static function capacity(int $power,float $outside,float $tolerance): ?array
     {
         $runs=[];foreach(self::observations() as $p)$runs[$p['runID']][]=$p;
         $slices=[];
@@ -96,7 +97,6 @@ final class HeatPumpSurface
         }
         $f=$after['outside']===$before['outside']?0:($outside-$before['outside'])/($after['outside']-$before['outside']);
         $reference=$before['incoming']+$f*($after['incoming']-$before['incoming']);
-        if(abs($incoming-$reference)>$tolerance)return null;
         return ['airRise'=>$before['airRise']+$f*($after['airRise']-$before['airRise']),
             'referenceIncoming'=>$reference,'thermalSupport'=>$support,
             'sourcePointIDs'=>array_values(array_unique(array_merge($before['sourcePointIDs'],$after['sourcePointIDs'])))];
@@ -111,12 +111,12 @@ final class HeatPumpSurface
         $observations=self::observations();$best=null;
         for($power=30;$power<=100;$power++) {
             $surface=self::evaluate($outside,$power);
-            if(abs($incoming-$surface['referenceIncoming'])>$tolerance||$surface['airRise']<$minRise||$incoming+$surface['airRise']<$target+$margin)continue;
-            $capacity=self::capacity($power,$outside,$incoming,$tolerance);
+            if($surface['airRise']<$minRise||$incoming+$surface['airRise']<$target+$margin)continue;
+            $capacity=self::capacity($power,$outside,$tolerance);
             if(!$capacity||$capacity['airRise']<$minRise||$incoming+$capacity['airRise']<$target+$margin)continue;
             if($best!==null&&$surface['estimatedSystemCOP']<=$best['estimatedSystemCOP'])continue;
             $best=$surface+['powerPercent'=>$power,'outside'=>$outside,'incoming'=>$incoming,'predictedOutgoing'=>$incoming+$surface['airRise'],
-                'airflowM3h'=>$airflow,'fanSpeed'=>$fan,'modeled'=>true,'copMethod'=>'surface','surfaceVersion'=>$m['version'],
+                'requiredAirRise'=>max($minRise,$target+$margin-$incoming),'airflowM3h'=>$airflow,'fanSpeed'=>$fan,'modeled'=>true,'copMethod'=>'surface','surfaceVersion'=>$m['version'],
                 'electricalMethod'=>$basis['electrical_method'],'electricalSourceMethods'=>$basis['electrical_source_methods'],
                 'meterScope'=>'reviewed fit: 20 historical house-baseline points and 7 dedicated heat-pump import points; modeled input, not a meter reading',
                 'modelValidationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],
@@ -132,6 +132,6 @@ final class HeatPumpSurface
         if($fan!==90)return 'COP surface requires tested fan command 90% (full physical speed)';
         if(abs($airflow-2000)>1)return 'COP surface requires its 2,000 m³/h airflow basis';
         if($flap!==$m['excluded_flap_id'])return 'COP surface requires the tested excluded master-bedroom flap';
-        return sprintf('No supported surface candidate meets modeled/reference intake, observed capacity and air-supply requirements at %.1f°C intake, target %.1f°C + %.1f°C; match current intake within the configured temperature tolerance',$incoming,$target,$margin);
+        return sprintf('No supported surface candidate meets modeled and observed air-rise requirements at %.1f°C intake, target %.1f°C + %.1f°C supply margin',$incoming,$target,$margin);
     }
 }
