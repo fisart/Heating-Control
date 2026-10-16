@@ -655,6 +655,15 @@
         },
         {
           "type": "CheckBox",
+          "name": "HeatPumpTestTransientGuardEnabled",
+          "caption": "New tests: detect temperature transients and extend clean measurement time (default on)"
+        },
+        {
+          "type": "Label",
+          "caption": "Suspected defrost-like drops are detected from air-rise, supply and exchanger temperature together. Hold the same power; exclude 60 seconds before the last healthy reference, wait for 2 minutes of stable recovery, then exclude another 2 minutes. Heat and counter energy use the same retained intervals. Preserve raw data and separate full-step COP. Recovery timeout: 20 minutes; maximum extension: 30 minutes per step. This does not confirm a hardware defrost state or alter normal fan control."
+        },
+        {
+          "type": "CheckBox",
           "name": "HeatPumpTestRebootGuardEnabled",
           "caption": "Pause and automatically resume around the daily Symcon reboot"
         },
@@ -806,7 +815,7 @@
         },
         {
           "type": "Label",
-          "caption": "30 → 100% in 10% steps; master bedroom closed; fixed fan. The selected meter basis is frozen for the whole run. Heat and electricity cover each FULL step; final five-minute stability determines eligibility. Prior temperature runs are retained. 15 min × 8 = 2 hours plus baseline/transfer/archive wait."
+          "caption": "30 → 100% in 10% steps; master bedroom closed; fixed fan. The meter basis is frozen for the run. Heat and electricity use identical retained intervals; unfiltered full-step COP is also reported. Final stability still determines eligibility. 15 min × 8 = 2 hours plus baseline, transfer, archive wait and any transient extension."
         }
       ]
     },

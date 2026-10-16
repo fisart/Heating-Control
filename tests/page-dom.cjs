@@ -154,7 +154,15 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  state.heatPumpTest.points[0].electricalMethod='dedicated-heatpump-import-counter';
  d.querySelector('#refresh').click();await settle();
  assert.ok(d.querySelector('#test-results').textContent.includes('Dedicated HP circuit'),'Dedicated observations carry their own method label');
- assert.equal(d.querySelector('#test-results tr').children.length,10,'Dedicated result aligns with all ten headings');
+ assert.equal(d.querySelector('#test-results tr').children.length,12,'Dedicated result aligns with all twelve headings');
+
+ state.heatPumpTest.transientGuardEnabled=true;
+ state.heatPumpTest.points[0].fullStep={estimatedSystemCOP:2.51};state.heatPumpTest.points[0].excludedSeconds=420;
+ d.querySelector('#refresh').click();await settle();
+ const resultCells=d.querySelector('#test-results tr').children;
+ assert.equal(resultCells[8].textContent,'2.51','Inclusive full-step COP is a separate column');
+ assert.equal(resultCells[9].textContent,'420','Excluded duration is visible');
+ assert.ok(d.querySelector('#test-transient-info').textContent.includes('hold power'),'Transient policy is explained on the protected page');
 
  // Delayed replies must not reopen or repopulate a closed chart.
  resolveHistory={};d.querySelector('#environment .sensor-value').click();await settle();d.querySelector('#chart-close').click();

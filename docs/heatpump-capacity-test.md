@@ -1,5 +1,17 @@
 # Dedicated heat-pump meter — 0.3.32, build 42
 
+## Temperature-transient recovery - 0.3.36, build 46
+
+New tests can quarantine a suspected defrost-like temperature collapse while
+keeping the heat pump at the same commanded power, then extend the step until
+the configured amount of clean measurement time has been collected. The guard
+is enabled by default in the form. All raw readings remain; both calibration
+COP and an unfiltered full-step COP are reported. See
+[the detection, safety brackets and accounting rules](heatpump-transient-tests.md).
+Normal-operation fan protection is separate; this test feature does not change
+normal fan control or prove that a drop was a hardware defrost cycle.
+
+
 ## Latest dedicated-meter calibration — 0.3.34, build 44
 
 The completed 15–16 October run adds all eight recorded steps to the bundled

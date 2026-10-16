@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/HeatPumpPerformance.php';
 require_once __DIR__.'/HeatPumpTestReboot.php';
 require_once __DIR__.'/HeatPumpMeter.php';
+require_once __DIR__.'/HeatPumpTransient.php';
 
 trait HeatingControlHeatPumpTest
 {
@@ -10,7 +11,7 @@ trait HeatingControlHeatPumpTest
     use HeatingControlHeatPumpMeter;
 
     private const TEST_DEFAULTS = [
-        'HeatPumpTestStepMinutes'=>15,'HeatPumpTestFanSpeed'=>90,'HeatPumpTestExcludedFlapID'=>40259,'HeatPumpTestArchiveID'=>14817,
+        'HeatPumpTestStepMinutes'=>15,'HeatPumpTestTransientGuardEnabled'=>true,'HeatPumpTestFanSpeed'=>90,'HeatPumpTestExcludedFlapID'=>40259,'HeatPumpTestArchiveID'=>14817,
         'HeatPumpTestRebootGuardEnabled'=>true,'HeatPumpTestRebootTime'=>'{"hour":3,"minute":0,"second":0}',
         'HeatPumpTestPowerMeterID'=>35702,'HeatPumpTestFanMeterID'=>47831, // Inert legacy properties.
         'HeatPumpTestMeterSource'=>'dedicated','HeatPumpTestDedicatedPowerID'=>28681,'HeatPumpTestDedicatedCounterID'=>22365,
@@ -136,7 +137,7 @@ trait HeatingControlHeatPumpTest
                 'originalFlaps'=>$flaps,'originalMode'=>$this->intValue('OperatingModeID'),'mixerClosed'=>$this->ReadPropertyInteger('MixerClosed'),'powers'=>[30,40,50,60,70,80,90,100],
                 'index'=>0,'points'=>[],'window'=>[],'lastTick'=>0,'baseline'=>null,'baselines'=>[],'rebootHistory'=>[],'readySince'=>0,
                 'configurationHash'=>$this->testConfigurationHash(),'nextRebootAt'=>$settings['HeatPumpTestRebootGuardEnabled']?$this->testNextReboot($settings,$now):0,
-                'averageSeconds'=>min(300,$settings['HeatPumpTestStepMinutes']*20)];
+                'transientPolicy'=>HeatPumpTransient::policy(),'transientLog'=>[],'averageSeconds'=>min(300,$settings['HeatPumpTestStepMinutes']*20)];
             $this->testWrite($s,['kind'=>'header','test'=>$s,'airflowIsMeasured'=>false]);
             $this->saveTestState($s);$this->SetValue('HeatPumpTestActive',true);
             $this->SetValue('HeatPumpTestStatus','Preparing test; master bedroom closed; normal heating decisions suspended');
@@ -222,6 +223,8 @@ trait HeatingControlHeatPumpTest
             'airflowM3h'=>$s['settings']['HeatPumpTestAirflowM3h'],'airflowIsMeasured'=>false,'fanSpeed'=>$s['settings']['HeatPumpTestFanSpeed'],
             'excludedFlapID'=>$s['settings']['HeatPumpTestExcludedFlapID'],'rooms'=>$s['rooms'],'baseline'=>$s['baselines'][0]??$s['baseline'],
             'baselines'=>$s['baselines']??[],'rebootHistory'=>$s['rebootHistory']??[],'pendingRebootPause'=>$s['rebootPause']??null,
+            'transientGuardEnabled'=>$s['settings']['HeatPumpTestTransientGuardEnabled']??false,
+            'transientPolicy'=>$s['transientPolicy']??HeatPumpTransient::policy(),'transientLog'=>$s['transientLog']??[],'pendingTransient'=>$s['stepTransient']??null,
             'temperatureMaxAgeSeconds'=>$s['settings']['MaxSensorAgeSeconds']??0,'electricalProvenance'=>$this->testElectricalProvenance($s),
             'electricalMethod'=>$this->testElectricalMethod($s),
             'points'=>$s['points'],'relationships'=>$relationships,'modelQualified'=>$qualified];
@@ -284,7 +287,7 @@ trait HeatingControlHeatPumpTest
             if($now>$s['deadline'])throw new RuntimeException('Maximum test duration reached');
             if($s['lastTick']&&$now-$s['lastTick']>90)throw new RuntimeException('Test timer interruption; measurements would be unreliable');
             if($this->testNeedsRebootPause($s,$now)){$this->beginTestRebootPause($s);$this->processTestRebootPause($s);return true;}
-            $row=$this->testSample($s);$q=[];$log=[];
+            $row=$this->testSample($s);$q=[];$log=[];$sampleLogged=false;
             if($this->testDedicatedMeter($s)) {
                 $s['meterSegmentExportStart']??=$row['meterExportCounter'];
                 $s['lastMeterSample']=$row;
@@ -335,39 +338,78 @@ trait HeatingControlHeatPumpTest
                         $this->testMeterFresh($s);
                     }
                     $row['powerPercent']=$power;
+                    $this->testWrite($s,['kind'=>'sample','phase'=>'step','sample'=>$row]);$sampleLogged=true;
                     $s['fullWindow'][]=$row;
-                    $s['window'][]=$row;$s['window']=array_values(array_filter($s['window'],static fn($r)=>$r['timestamp']>=$now-$s['averageSeconds']));
-                    if($now-$s['phaseSince']>=$s['settings']['HeatPumpTestStepMinutes']*60) {
+                    $intervals=$this->testMeasurementProgress($s,$now);
+                    $lastCleanStart=$intervals&&end($intervals)['endedAt']===$now?end($intervals)['startedAt']:$now+1;
+                    $s['window']=array_values(array_filter($s['fullWindow'],static fn($r)=>$r['timestamp']>=max($lastCleanStart,$now-$s['averageSeconds'])));
+                    $requiredSeconds=$s['settings']['HeatPumpTestStepMinutes']*60;
+                    if($s['cleanMeasurementSeconds']>=$requiredSeconds&&!HeatPumpTransient::active($s['stepTransient']??[])
+                        &&$now-$lastCleanStart>=$s['averageSeconds']) {
                         $point=HeatPumpPerformance::point($s['window'],$s['baseline'],$s['settings']['HeatPumpTestAirflowM3h'],$power,$s['averageSeconds']);
                         $point['stepStartedAt']=$s['phaseSince'];$point['stepEndedAt']=$now;
                         $point['pointID']=$s['runID'].'-'.$power;$point['runID']=$s['runID'];$point['measuredAt']=$s['phaseSince'];
                         $point['baselineIndex']=$s['baselineIndex']??0;
                         $point['steadyIncoming']=$point['incoming'];$point['steadyOutgoing']=$point['outgoing'];
-                        foreach(['outside','incoming','outgoing','coil','target'] as $key)$point[$key]=HeatPumpMatrix::mean($s['fullWindow'],$key,$s['phaseSince'],$now);
+                        foreach(['outside','incoming','outgoing','coil','target'] as $key) {
+                            $point['fullStepTemperatures'][$key]=HeatPumpMatrix::mean($s['fullWindow'],$key,$s['phaseSince'],$now);
+                            $point[$key]=HeatPumpTransient::mean($s['fullWindow'],$key,$intervals);
+                        }
+                        $point['measurementIntervals']=$intervals;$point['excludedIntervals']=$s['stepTransient']['events']??[];
+                        $point['excludedSeconds']=$now-$s['phaseSince']-$s['cleanMeasurementSeconds'];
+                        $point['measurementBasis']=$point['excludedSeconds']>0?'transient-excluded-normal-heating':'full-step';
                         $point['fullPeriodAirRise']=$point['outgoing']-$point['incoming'];
                         $point['fanSpeed']=$s['settings']['HeatPumpTestFanSpeed'];$point['airflowM3h']=$s['settings']['HeatPumpTestAirflowM3h'];
                         $point['airflowIsMeasured']=false;$point['excludedFlapID']=$s['settings']['HeatPumpTestExcludedFlapID'];
                         $point=array_replace($point,$this->testElectricalProvenance($s));
-                        if($this->testDedicatedMeter($s))$point['meterBoundaries']=array_map(static fn($r)=>array_intersect_key($r,array_flip(['meterCounter','meterExportCounter','importUpdated','exportUpdated'])),array_values(array_filter($s['fullWindow'],static fn($r)=>$r['timestamp']<=$point['stepStartedAt']+90||$r['timestamp']>=$point['stepEndedAt']-90)));
+                        if($this->testDedicatedMeter($s)) {
+                            $boundaries=[$point['stepStartedAt'],$point['stepEndedAt']];
+                            foreach($intervals as $interval)$boundaries=array_merge($boundaries,array_values($interval));
+                            $point['meterBoundaries']=array_map(static fn($r)=>array_intersect_key($r,array_flip(['meterCounter','meterExportCounter','importUpdated','exportUpdated'])),
+                                array_values(array_filter($s['fullWindow'],static function($r)use($boundaries){foreach($boundaries as $at)if(abs($r['timestamp']-$at)<=90)return true;return false;})));
+                        }
                         $point['usable']=false;$point['systemInputKW']=null;$point['estimatedSystemCOP']=null; // Finalized after stop.
 
                         $s['points'][]=$point;$this->testWrite($s,['kind'=>'point','point'=>$point]);
                         $s['index']++;$s['window']=[];$s['fullWindow']=[$row];$s['phaseSince']=$now;
+                        unset($s['stepTransient'],$s['stepExtensionAllocated'],$s['cleanMeasurementSeconds']);
                         if($s['index']>=count($s['powers'])){$this->beginTestFinish($s,'All eight power steps measured',true);$this->finishTestTick($s);return true;}
                         if($this->testNeedsRebootPause($s,$now)) {
-                            $this->testWrite($s,['kind'=>'sample','phase'=>'step','sample'=>$row]);
                             $this->beginTestRebootPause($s);$this->processTestRebootPause($s);return true;
                         }
                         $this->queueHeatSource($q,$this->ReadPropertyInteger('HeatPumpModeValue'),$s['powers'][$s['index']]);$this->dispatch($q,$log);
                     }
                 }
             }
-            $s['lastTick']=$now;$this->testWrite($s,['kind'=>'sample','phase'=>$s['phase'],'sample'=>$row]);$this->saveTestState($s);
-            $this->SetValue('HeatPumpTestStatus',$s['phase']==='step' ? sprintf('Step %d/8: %d%%; %d/%d seconds; master bedroom closed',$s['index']+1,$s['powers'][$s['index']],$now-$s['phaseSince'],$s['settings']['HeatPumpTestStepMinutes']*60) : 'Test '.$s['phase'].'; master bedroom closed');
+            $s['lastTick']=$now;if(!$sampleLogged)$this->testWrite($s,['kind'=>'sample','phase'=>$s['phase'],'sample'=>$row]);$this->saveTestState($s);
+            $this->SetValue('HeatPumpTestStatus',$s['phase']==='step' ? $this->testMeasurementStatus($s,$now) : 'Test '.$s['phase'].'; master bedroom closed');
             $this->publish((string)$this->GetValue('HeatPumpTestStatus'),$log);
         } catch(Throwable $e){$this->beginTestFinish($s,$e->getMessage(),false);$this->finishTestTick($s);}
         return true;
     }
+    private function testMeasurementProgress(array &$s,int $now): array
+    {
+        $enabled=$s['settings']['HeatPumpTestTransientGuardEnabled']??false;
+        $s['stepTransient']??=['events'=>[]];
+        if($enabled)foreach(HeatPumpTransient::observe($s['stepTransient'],$s['fullWindow'],$s['phaseSince'],$now) as $event) {
+            $event['powerPercent']=$s['powers'][$s['index']];$event['stepStartedAt']=$s['phaseSince'];
+            $s['transientLog'][]=$event;$this->testWrite($s,$event);
+        }
+        $intervals=HeatPumpTransient::intervals($s['stepTransient'],$s['phaseSince'],$now);
+        $s['cleanMeasurementSeconds']=HeatPumpTransient::seconds($intervals);
+        $extension=max(0,$now-$s['phaseSince']-min($s['cleanMeasurementSeconds'],$s['settings']['HeatPumpTestStepMinutes']*60));
+        if($extension>HeatPumpTransient::policy()['maximumStepExtensionSeconds'])throw new RuntimeException('Temperature-transient step extension exceeded 30 minutes');
+        $s['deadline']+=max(0,$extension-($s['stepExtensionAllocated']??0));$s['stepExtensionAllocated']=$extension;
+        return $intervals;
+    }
+    private function testMeasurementStatus(array $s,int $now): string
+    {
+        $clean=$s['cleanMeasurementSeconds']??max(0,$now-$s['phaseSince']);$elapsed=max(0,$now-$s['phaseSince']);
+        $label=HeatPumpTransient::active($s['stepTransient']??[])?'temperature transient: holding power; waiting for stable recovery / safety bracket':'measuring';
+        return sprintf('Step %d/8: %d%%; %s; clean %d/%d seconds; excluded %d seconds; master bedroom closed',
+            $s['index']+1,$s['powers'][$s['index']],$label,$clean,$s['settings']['HeatPumpTestStepMinutes']*60,$elapsed-$clean);
+    }
+
     private function finalizeHouseCounterPoints(array &$s): void
     {
         $baselines=$s['baselines']??[];
@@ -393,8 +435,13 @@ trait HeatingControlHeatPumpTest
                 foreach($s['points'] as &$p) {
                     if(($p['baselineIndex']??0)!==$index||($p['counterFinalized']??false))continue;
                     try {
-                        $seconds=$p['stepEndedAt']-$p['stepStartedAt'];
-                        $gross=(HeatPumpMatrix::counterAt($records,$p['stepEndedAt'])-HeatPumpMatrix::counterAt($records,$p['stepStartedAt']))*$scale;
+                        $intervals=HeatPumpTransient::measurementIntervals($p);$seconds=HeatPumpTransient::seconds($intervals);
+                        $gross=HeatPumpTransient::energy($records,$intervals,$scale);
+                        if(isset($p['fullStepTemperatures'])) {
+                            $wallSeconds=$p['stepEndedAt']-$p['stepStartedAt'];
+                            $fullGross=(HeatPumpMatrix::counterAt($records,$p['stepEndedAt'])-HeatPumpMatrix::counterAt($records,$p['stepStartedAt']))*$scale;
+                            $p['fullStep']=HeatPumpTransient::fullStep($p,$fullGross,$fullGross-$baseKW*$wallSeconds/3600,0.0,$s['settings']['HeatPumpTestAirflowM3h']);
+                        }
                         $net=$gross-$baseKW*$seconds/3600;
                         $p['systemInputKW']=$net*3600/$seconds;
                         $p['estimatedHeatKW']=0.000335*$s['settings']['HeatPumpTestAirflowM3h']*$p['fullPeriodAirRise'];
@@ -432,6 +479,9 @@ trait HeatingControlHeatPumpTest
             'rebootGuardEnabled'=>$s['settings']['HeatPumpTestRebootGuardEnabled']??$this->ReadPropertyBoolean('HeatPumpTestRebootGuardEnabled'),
             'rebootTime'=>sprintf('%02d:%02d',$rebootTime['hour'],$rebootTime['minute']),
             'rebootTimezone'=>$s['settings']['rebootTimezone']??date_default_timezone_get(),'nextRebootAt'=>$s['nextRebootAt']??0,
+            'transientGuardEnabled'=>$s['settings']['HeatPumpTestTransientGuardEnabled']??$this->ReadPropertyBoolean('HeatPumpTestTransientGuardEnabled'),
+            'transientPolicy'=>HeatPumpTransient::policy(),'transientActive'=>HeatPumpTransient::active($s['stepTransient']??[]),
+            'cleanMeasurementSeconds'=>$s['cleanMeasurementSeconds']??0,'currentTransient'=>$s['stepTransient']??null,
             'active'=>(bool)$s,'phase'=>$s['phase']??'idle','stepMinutes'=>$s['settings']['HeatPumpTestStepMinutes']??$this->ReadPropertyInteger('HeatPumpTestStepMinutes'),
             'status'=>$this->GetValue('HeatPumpTestStatus'),'powerPercent'=>($s['phase']??'')==='step' ? ($s['powers'][$s['index']]??0):0,
             'report'=>$report,'points'=>$viewPoints,'performanceStatus'=>$this->GetValue('HeatPumpPerformanceStatus'),

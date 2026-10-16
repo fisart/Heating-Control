@@ -1,0 +1,5416 @@
+{
+  "sourceSha256": "caef69bd5cb36de1a701134c74945c1ce216886b2c0fa48bc5d368e31470c210",
+  "sourceRunID": "20261015-211706-139c48ad9dc5",
+  "steps": [
+    {
+      "powerPercent": 30,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 18.001989364624023,
+          "outgoing": 22.283748626708984,
+          "coil": 18.94
+        },
+        {
+          "timestamp": 8,
+          "incoming": 18.001989364624023,
+          "outgoing": 22.283748626708984,
+          "coil": 18.88
+        },
+        {
+          "timestamp": 16,
+          "incoming": 17.765113830566406,
+          "outgoing": 22.02471351623535,
+          "coil": 18.69
+        },
+        {
+          "timestamp": 24,
+          "incoming": 17.472639083862305,
+          "outgoing": 21.635631561279297,
+          "coil": 18.13
+        },
+        {
+          "timestamp": 32,
+          "incoming": 17.1921443939209,
+          "outgoing": 21.199018478393555,
+          "coil": 17.81
+        },
+        {
+          "timestamp": 41,
+          "incoming": 16.935338973999023,
+          "outgoing": 20.74883460998535,
+          "coil": 17.31
+        },
+        {
+          "timestamp": 49,
+          "incoming": 16.689342498779297,
+          "outgoing": 20.31801414489746,
+          "coil": 16.94
+        },
+        {
+          "timestamp": 57,
+          "incoming": 16.416667938232422,
+          "outgoing": 19.81612777709961,
+          "coil": 16.63
+        },
+        {
+          "timestamp": 65,
+          "incoming": 16.264219284057617,
+          "outgoing": 19.62542152404785,
+          "coil": 16.38
+        },
+        {
+          "timestamp": 73,
+          "incoming": 16.12158203125,
+          "outgoing": 19.18231964111328,
+          "coil": 16.19
+        },
+        {
+          "timestamp": 81,
+          "incoming": 15.86154842376709,
+          "outgoing": 18.878984451293945,
+          "coil": 16.19
+        },
+        {
+          "timestamp": 89,
+          "incoming": 15.740870475769043,
+          "outgoing": 18.635637283325195,
+          "coil": 16.38
+        },
+        {
+          "timestamp": 97,
+          "incoming": 15.629572868347168,
+          "outgoing": 18.635637283325195,
+          "coil": 16.63
+        },
+        {
+          "timestamp": 105,
+          "incoming": 15.520087242126465,
+          "outgoing": 18.635637283325195,
+          "coil": 16.94
+        },
+        {
+          "timestamp": 113,
+          "incoming": 15.356646537780762,
+          "outgoing": 18.635637283325195,
+          "coil": 17.31
+        },
+        {
+          "timestamp": 121,
+          "incoming": 15.229736328125,
+          "outgoing": 18.635637283325195,
+          "coil": 17.69
+        },
+        {
+          "timestamp": 129,
+          "incoming": 15.084200859069824,
+          "outgoing": 18.924962997436523,
+          "coil": 18.06
+        },
+        {
+          "timestamp": 137,
+          "incoming": 14.977889060974121,
+          "outgoing": 19.058454513549805,
+          "coil": 18.38
+        },
+        {
+          "timestamp": 145,
+          "incoming": 14.874093055725098,
+          "outgoing": 19.194835662841797,
+          "coil": 18.69
+        },
+        {
+          "timestamp": 153,
+          "incoming": 14.773208618164062,
+          "outgoing": 19.43874168395996,
+          "coil": 19
+        },
+        {
+          "timestamp": 161,
+          "incoming": 14.661636352539062,
+          "outgoing": 19.585844039916992,
+          "coil": 19.25
+        },
+        {
+          "timestamp": 169,
+          "incoming": 14.661636352539062,
+          "outgoing": 19.723289489746094,
+          "coil": 19.44
+        },
+        {
+          "timestamp": 177,
+          "incoming": 14.559688568115234,
+          "outgoing": 19.99236488342285,
+          "coil": 19.75
+        },
+        {
+          "timestamp": 185,
+          "incoming": 14.449563026428223,
+          "outgoing": 20.154003143310547,
+          "coil": 19.94
+        },
+        {
+          "timestamp": 193,
+          "incoming": 14.449563026428223,
+          "outgoing": 20.27345848083496,
+          "coil": 20.13
+        },
+        {
+          "timestamp": 201,
+          "incoming": 14.34088134765625,
+          "outgoing": 20.50262451171875,
+          "coil": 20.25
+        },
+        {
+          "timestamp": 209,
+          "incoming": 14.228864669799805,
+          "outgoing": 20.654865264892578,
+          "coil": 20.5
+        },
+        {
+          "timestamp": 217,
+          "incoming": 14.228864669799805,
+          "outgoing": 20.76055908203125,
+          "coil": 20.69
+        },
+        {
+          "timestamp": 225,
+          "incoming": 14.121383666992188,
+          "outgoing": 20.872577667236328,
+          "coil": 20.81
+        },
+        {
+          "timestamp": 233,
+          "incoming": 14.121383666992188,
+          "outgoing": 20.9763126373291,
+          "coil": 20.94
+        },
+        {
+          "timestamp": 241,
+          "incoming": 14.019695281982422,
+          "outgoing": 21.187786102294922,
+          "coil": 21.06
+        },
+        {
+          "timestamp": 250,
+          "incoming": 14.019695281982422,
+          "outgoing": 21.288921356201172,
+          "coil": 21.25
+        },
+        {
+          "timestamp": 258,
+          "incoming": 14.019695281982422,
+          "outgoing": 21.424222946166992,
+          "coil": 21.38
+        },
+        {
+          "timestamp": 266,
+          "incoming": 13.915040016174316,
+          "outgoing": 21.544551849365234,
+          "coil": 21.5
+        },
+        {
+          "timestamp": 274,
+          "incoming": 13.915040016174316,
+          "outgoing": 21.670412063598633,
+          "coil": 21.63
+        },
+        {
+          "timestamp": 282,
+          "incoming": 13.915040016174316,
+          "outgoing": 21.780710220336914,
+          "coil": 21.69
+        },
+        {
+          "timestamp": 290,
+          "incoming": 13.814461708068848,
+          "outgoing": 21.895620346069336,
+          "coil": 21.75
+        },
+        {
+          "timestamp": 298,
+          "incoming": 13.814461708068848,
+          "outgoing": 22.02336311340332,
+          "coil": 21.81
+        },
+        {
+          "timestamp": 306,
+          "incoming": 13.814461708068848,
+          "outgoing": 22.142391204833984,
+          "coil": 21.88
+        },
+        {
+          "timestamp": 314,
+          "incoming": 13.700685501098633,
+          "outgoing": 22.2490234375,
+          "coil": 21.94
+        },
+        {
+          "timestamp": 322,
+          "incoming": 13.700685501098633,
+          "outgoing": 22.2490234375,
+          "coil": 22
+        },
+        {
+          "timestamp": 330,
+          "incoming": 13.700685501098633,
+          "outgoing": 22.34954833984375,
+          "coil": 22.06
+        },
+        {
+          "timestamp": 338,
+          "incoming": 13.700685501098633,
+          "outgoing": 22.462663650512695,
+          "coil": 22.13
+        },
+        {
+          "timestamp": 346,
+          "incoming": 13.588627815246582,
+          "outgoing": 22.462663650512695,
+          "coil": 22.13
+        },
+        {
+          "timestamp": 354,
+          "incoming": 13.588627815246582,
+          "outgoing": 22.58094024658203,
+          "coil": 22.19
+        },
+        {
+          "timestamp": 362,
+          "incoming": 13.588627815246582,
+          "outgoing": 22.58094024658203,
+          "coil": 22.19
+        },
+        {
+          "timestamp": 370,
+          "incoming": 13.588627815246582,
+          "outgoing": 22.686601638793945,
+          "coil": 22.25
+        },
+        {
+          "timestamp": 378,
+          "incoming": 13.588627815246582,
+          "outgoing": 22.686601638793945,
+          "coil": 22.25
+        },
+        {
+          "timestamp": 386,
+          "incoming": 13.478075981140137,
+          "outgoing": 22.798776626586914,
+          "coil": 22.31
+        },
+        {
+          "timestamp": 394,
+          "incoming": 13.478075981140137,
+          "outgoing": 22.798776626586914,
+          "coil": 22.31
+        },
+        {
+          "timestamp": 402,
+          "incoming": 13.478075981140137,
+          "outgoing": 22.798776626586914,
+          "coil": 22.31
+        },
+        {
+          "timestamp": 410,
+          "incoming": 13.478075981140137,
+          "outgoing": 22.900299072265625,
+          "coil": 22.31
+        },
+        {
+          "timestamp": 418,
+          "incoming": 13.478075981140137,
+          "outgoing": 22.900299072265625,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 426,
+          "incoming": 13.36538314819336,
+          "outgoing": 22.900299072265625,
+          "coil": 22.31
+        },
+        {
+          "timestamp": 435,
+          "incoming": 13.36538314819336,
+          "outgoing": 22.900299072265625,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 443,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.005109786987305,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 451,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.005109786987305,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 459,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.005109786987305,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 467,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.005109786987305,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 475,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.005109786987305,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 483,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.005109786987305,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 491,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.005109786987305,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 499,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.110477447509766,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 507,
+          "incoming": 13.36538314819336,
+          "outgoing": 23.110477447509766,
+          "coil": 22.38
+        },
+        {
+          "timestamp": 515,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.110477447509766,
+          "coil": 22.44
+        },
+        {
+          "timestamp": 525,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.110477447509766,
+          "coil": 22.44
+        },
+        {
+          "timestamp": 534,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.110477447509766,
+          "coil": 22.44
+        },
+        {
+          "timestamp": 542,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.110477447509766,
+          "coil": 22.44
+        },
+        {
+          "timestamp": 550,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.110477447509766,
+          "coil": 22.5
+        },
+        {
+          "timestamp": 558,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.110477447509766,
+          "coil": 22.5
+        },
+        {
+          "timestamp": 566,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.21286964416504,
+          "coil": 22.5
+        },
+        {
+          "timestamp": 574,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.21286964416504,
+          "coil": 22.5
+        },
+        {
+          "timestamp": 582,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.21286964416504,
+          "coil": 22.5
+        },
+        {
+          "timestamp": 590,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.21286964416504,
+          "coil": 22.5
+        },
+        {
+          "timestamp": 598,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.21286964416504,
+          "coil": 22.5
+        },
+        {
+          "timestamp": 606,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.21286964416504,
+          "coil": 22.56
+        },
+        {
+          "timestamp": 614,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.21286964416504,
+          "coil": 22.56
+        },
+        {
+          "timestamp": 622,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.31667709350586,
+          "coil": 22.63
+        },
+        {
+          "timestamp": 630,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.31667709350586,
+          "coil": 22.63
+        },
+        {
+          "timestamp": 638,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.31667709350586,
+          "coil": 22.63
+        },
+        {
+          "timestamp": 646,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.31667709350586,
+          "coil": 22.63
+        },
+        {
+          "timestamp": 654,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.31667709350586,
+          "coil": 22.63
+        },
+        {
+          "timestamp": 662,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.31667709350586,
+          "coil": 22.69
+        },
+        {
+          "timestamp": 670,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.421716690063477,
+          "coil": 22.69
+        },
+        {
+          "timestamp": 679,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.421716690063477,
+          "coil": 22.69
+        },
+        {
+          "timestamp": 687,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.421716690063477,
+          "coil": 22.69
+        },
+        {
+          "timestamp": 695,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.421716690063477,
+          "coil": 22.75
+        },
+        {
+          "timestamp": 703,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.421716690063477,
+          "coil": 22.75
+        },
+        {
+          "timestamp": 711,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.421716690063477,
+          "coil": 22.81
+        },
+        {
+          "timestamp": 719,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.525009155273438,
+          "coil": 22.88
+        },
+        {
+          "timestamp": 727,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.525009155273438,
+          "coil": 22.81
+        },
+        {
+          "timestamp": 735,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.525009155273438,
+          "coil": 22.88
+        },
+        {
+          "timestamp": 743,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.525009155273438,
+          "coil": 22.88
+        },
+        {
+          "timestamp": 751,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.525009155273438,
+          "coil": 22.88
+        },
+        {
+          "timestamp": 759,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.62575340270996,
+          "coil": 22.94
+        },
+        {
+          "timestamp": 767,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.62575340270996,
+          "coil": 22.94
+        },
+        {
+          "timestamp": 775,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.62575340270996,
+          "coil": 22.94
+        },
+        {
+          "timestamp": 783,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.62575340270996,
+          "coil": 23
+        },
+        {
+          "timestamp": 791,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.62575340270996,
+          "coil": 23
+        },
+        {
+          "timestamp": 799,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.62575340270996,
+          "coil": 23.06
+        },
+        {
+          "timestamp": 807,
+          "incoming": 13.259766578674316,
+          "outgoing": 23.62575340270996,
+          "coil": 23.06
+        },
+        {
+          "timestamp": 815,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.06
+        },
+        {
+          "timestamp": 823,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.06
+        },
+        {
+          "timestamp": 831,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.06
+        },
+        {
+          "timestamp": 839,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.06
+        },
+        {
+          "timestamp": 847,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.06
+        },
+        {
+          "timestamp": 855,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.13
+        },
+        {
+          "timestamp": 863,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.13
+        },
+        {
+          "timestamp": 872,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.728899002075195,
+          "coil": 23.13
+        },
+        {
+          "timestamp": 880,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.83069610595703,
+          "coil": 23.13
+        },
+        {
+          "timestamp": 888,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.83069610595703,
+          "coil": 23.19
+        },
+        {
+          "timestamp": 896,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.83069610595703,
+          "coil": 23.19
+        }
+      ]
+    },
+    {
+      "powerPercent": 40,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.83069610595703,
+          "coil": 23.25
+        },
+        {
+          "timestamp": 8,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.83069610595703,
+          "coil": 23.31
+        },
+        {
+          "timestamp": 16,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.83069610595703,
+          "coil": 23.44
+        },
+        {
+          "timestamp": 24,
+          "incoming": 13.1591157913208,
+          "outgoing": 23.930898666381836,
+          "coil": 23.56
+        },
+        {
+          "timestamp": 32,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.073341369628906,
+          "coil": 23.69
+        },
+        {
+          "timestamp": 40,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.073341369628906,
+          "coil": 23.94
+        },
+        {
+          "timestamp": 48,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.189247131347656,
+          "coil": 24.13
+        },
+        {
+          "timestamp": 56,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.312562942504883,
+          "coil": 24.31
+        },
+        {
+          "timestamp": 64,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.544092178344727,
+          "coil": 24.5
+        },
+        {
+          "timestamp": 72,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.645328521728516,
+          "coil": 24.69
+        },
+        {
+          "timestamp": 80,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.772594451904297,
+          "coil": 24.81
+        },
+        {
+          "timestamp": 88,
+          "incoming": 13.1591157913208,
+          "outgoing": 24.900753021240234,
+          "coil": 24.88
+        },
+        {
+          "timestamp": 96,
+          "incoming": 13.1591157913208,
+          "outgoing": 25.019487380981445,
+          "coil": 25.06
+        },
+        {
+          "timestamp": 104,
+          "incoming": 13.1591157913208,
+          "outgoing": 25.159732818603516,
+          "coil": 25.19
+        },
+        {
+          "timestamp": 112,
+          "incoming": 13.1591157913208,
+          "outgoing": 25.27155876159668,
+          "coil": 25.31
+        },
+        {
+          "timestamp": 120,
+          "incoming": 13.1591157913208,
+          "outgoing": 25.393564224243164,
+          "coil": 25.38
+        },
+        {
+          "timestamp": 128,
+          "incoming": 13.1591157913208,
+          "outgoing": 25.393564224243164,
+          "coil": 25.44
+        },
+        {
+          "timestamp": 136,
+          "incoming": 13.1591157913208,
+          "outgoing": 25.51938247680664,
+          "coil": 25.5
+        },
+        {
+          "timestamp": 144,
+          "incoming": 13.057609558105469,
+          "outgoing": 25.624982833862305,
+          "coil": 25.56
+        },
+        {
+          "timestamp": 153,
+          "incoming": 13.057609558105469,
+          "outgoing": 25.624982833862305,
+          "coil": 25.69
+        },
+        {
+          "timestamp": 161,
+          "incoming": 13.057609558105469,
+          "outgoing": 25.744874954223633,
+          "coil": 25.75
+        },
+        {
+          "timestamp": 169,
+          "incoming": 13.057609558105469,
+          "outgoing": 25.853403091430664,
+          "coil": 25.81
+        },
+        {
+          "timestamp": 177,
+          "incoming": 13.057609558105469,
+          "outgoing": 25.853403091430664,
+          "coil": 25.88
+        },
+        {
+          "timestamp": 185,
+          "incoming": 13.057609558105469,
+          "outgoing": 25.95431137084961,
+          "coil": 25.94
+        },
+        {
+          "timestamp": 193,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.063642501831055,
+          "coil": 26
+        },
+        {
+          "timestamp": 201,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.063642501831055,
+          "coil": 26.06
+        },
+        {
+          "timestamp": 209,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.173656463623047,
+          "coil": 26.06
+        },
+        {
+          "timestamp": 217,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.173656463623047,
+          "coil": 26.13
+        },
+        {
+          "timestamp": 225,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.300731658935547,
+          "coil": 26.13
+        },
+        {
+          "timestamp": 233,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.300731658935547,
+          "coil": 26.19
+        },
+        {
+          "timestamp": 241,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.300731658935547,
+          "coil": 26.25
+        },
+        {
+          "timestamp": 249,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.409061431884766,
+          "coil": 26.25
+        },
+        {
+          "timestamp": 257,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.409061431884766,
+          "coil": 26.31
+        },
+        {
+          "timestamp": 265,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.512351989746094,
+          "coil": 26.38
+        },
+        {
+          "timestamp": 273,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.512351989746094,
+          "coil": 26.38
+        },
+        {
+          "timestamp": 281,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.624040603637695,
+          "coil": 26.44
+        },
+        {
+          "timestamp": 289,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.624040603637695,
+          "coil": 26.44
+        },
+        {
+          "timestamp": 297,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.624040603637695,
+          "coil": 26.44
+        },
+        {
+          "timestamp": 305,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.736286163330078,
+          "coil": 26.44
+        },
+        {
+          "timestamp": 313,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.736286163330078,
+          "coil": 26.44
+        },
+        {
+          "timestamp": 322,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.736286163330078,
+          "coil": 26.5
+        },
+        {
+          "timestamp": 330,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.736286163330078,
+          "coil": 26.5
+        },
+        {
+          "timestamp": 338,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.845121383666992,
+          "coil": 26.56
+        },
+        {
+          "timestamp": 346,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.845121383666992,
+          "coil": 26.56
+        },
+        {
+          "timestamp": 354,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.845121383666992,
+          "coil": 26.56
+        },
+        {
+          "timestamp": 362,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.845121383666992,
+          "coil": 26.63
+        },
+        {
+          "timestamp": 370,
+          "incoming": 13.057609558105469,
+          "outgoing": 26.958356857299805,
+          "coil": 26.63
+        },
+        {
+          "timestamp": 378,
+          "incoming": 12.956013679504395,
+          "outgoing": 26.958356857299805,
+          "coil": 26.63
+        },
+        {
+          "timestamp": 386,
+          "incoming": 12.956013679504395,
+          "outgoing": 26.958356857299805,
+          "coil": 26.69
+        },
+        {
+          "timestamp": 394,
+          "incoming": 12.956013679504395,
+          "outgoing": 26.958356857299805,
+          "coil": 26.69
+        },
+        {
+          "timestamp": 402,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.059850692749023,
+          "coil": 26.75
+        },
+        {
+          "timestamp": 410,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.059850692749023,
+          "coil": 26.75
+        },
+        {
+          "timestamp": 418,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.059850692749023,
+          "coil": 26.81
+        },
+        {
+          "timestamp": 426,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.059850692749023,
+          "coil": 26.81
+        },
+        {
+          "timestamp": 434,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.059850692749023,
+          "coil": 26.81
+        },
+        {
+          "timestamp": 442,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.16349983215332,
+          "coil": 26.88
+        },
+        {
+          "timestamp": 450,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.16349983215332,
+          "coil": 26.94
+        },
+        {
+          "timestamp": 458,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.16349983215332,
+          "coil": 26.94
+        },
+        {
+          "timestamp": 466,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.16349983215332,
+          "coil": 27
+        },
+        {
+          "timestamp": 474,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.269243240356445,
+          "coil": 27
+        },
+        {
+          "timestamp": 482,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.269243240356445,
+          "coil": 27.06
+        },
+        {
+          "timestamp": 490,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.269243240356445,
+          "coil": 27.06
+        },
+        {
+          "timestamp": 498,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.269243240356445,
+          "coil": 27.13
+        },
+        {
+          "timestamp": 506,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.370624542236328,
+          "coil": 27.19
+        },
+        {
+          "timestamp": 514,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.370624542236328,
+          "coil": 27.25
+        },
+        {
+          "timestamp": 523,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.370624542236328,
+          "coil": 27.31
+        },
+        {
+          "timestamp": 531,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.370624542236328,
+          "coil": 27.38
+        },
+        {
+          "timestamp": 539,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.370624542236328,
+          "coil": 27.44
+        },
+        {
+          "timestamp": 547,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.370624542236328,
+          "coil": 27.56
+        },
+        {
+          "timestamp": 555,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 27.63
+        },
+        {
+          "timestamp": 563,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 27.75
+        },
+        {
+          "timestamp": 571,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 27.81
+        },
+        {
+          "timestamp": 579,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 27.88
+        },
+        {
+          "timestamp": 587,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 27.94
+        },
+        {
+          "timestamp": 595,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.06
+        },
+        {
+          "timestamp": 603,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.06
+        },
+        {
+          "timestamp": 611,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.19
+        },
+        {
+          "timestamp": 619,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.25
+        },
+        {
+          "timestamp": 627,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.31
+        },
+        {
+          "timestamp": 635,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.44
+        },
+        {
+          "timestamp": 643,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.5
+        },
+        {
+          "timestamp": 651,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.56
+        },
+        {
+          "timestamp": 659,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.63
+        },
+        {
+          "timestamp": 667,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.75
+        },
+        {
+          "timestamp": 675,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.81
+        },
+        {
+          "timestamp": 683,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.88
+        },
+        {
+          "timestamp": 692,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 28.94
+        },
+        {
+          "timestamp": 700,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 29
+        },
+        {
+          "timestamp": 708,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 29.06
+        },
+        {
+          "timestamp": 716,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 29.06
+        },
+        {
+          "timestamp": 724,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 29.13
+        },
+        {
+          "timestamp": 732,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 29.19
+        },
+        {
+          "timestamp": 740,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.470869064331055,
+          "coil": 29.25
+        },
+        {
+          "timestamp": 748,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.57200813293457,
+          "coil": 29.25
+        },
+        {
+          "timestamp": 756,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.57200813293457,
+          "coil": 29.31
+        },
+        {
+          "timestamp": 764,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.57200813293457,
+          "coil": 29.31
+        },
+        {
+          "timestamp": 772,
+          "incoming": 12.956013679504395,
+          "outgoing": 27.57200813293457,
+          "coil": 29.31
+        },
+        {
+          "timestamp": 780,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.57200813293457,
+          "coil": 29.31
+        },
+        {
+          "timestamp": 788,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.57200813293457,
+          "coil": 29.31
+        },
+        {
+          "timestamp": 796,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.57200813293457,
+          "coil": 29.38
+        },
+        {
+          "timestamp": 804,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.57200813293457,
+          "coil": 29.38
+        },
+        {
+          "timestamp": 812,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.57200813293457,
+          "coil": 29.44
+        },
+        {
+          "timestamp": 820,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.57200813293457,
+          "coil": 29.44
+        },
+        {
+          "timestamp": 828,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.57200813293457,
+          "coil": 29.44
+        },
+        {
+          "timestamp": 836,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.44
+        },
+        {
+          "timestamp": 844,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.5
+        },
+        {
+          "timestamp": 852,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.5
+        },
+        {
+          "timestamp": 860,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.5
+        },
+        {
+          "timestamp": 868,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.5
+        },
+        {
+          "timestamp": 877,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.5
+        },
+        {
+          "timestamp": 885,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.56
+        },
+        {
+          "timestamp": 893,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.56
+        }
+      ]
+    },
+    {
+      "powerPercent": 50,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.56
+        },
+        {
+          "timestamp": 8,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.56
+        },
+        {
+          "timestamp": 16,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.68692970275879,
+          "coil": 29.56
+        },
+        {
+          "timestamp": 24,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.79004669189453,
+          "coil": 29.63
+        },
+        {
+          "timestamp": 32,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.79004669189453,
+          "coil": 29.69
+        },
+        {
+          "timestamp": 40,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.79004669189453,
+          "coil": 29.81
+        },
+        {
+          "timestamp": 48,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.79004669189453,
+          "coil": 29.88
+        },
+        {
+          "timestamp": 56,
+          "incoming": 12.855984687805176,
+          "outgoing": 27.899375915527344,
+          "coil": 29.94
+        },
+        {
+          "timestamp": 64,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.030792236328125,
+          "coil": 30.06
+        },
+        {
+          "timestamp": 72,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.030792236328125,
+          "coil": 30.13
+        },
+        {
+          "timestamp": 80,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.13625717163086,
+          "coil": 30.31
+        },
+        {
+          "timestamp": 88,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.252182006835938,
+          "coil": 30.44
+        },
+        {
+          "timestamp": 96,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.372753143310547,
+          "coil": 30.56
+        },
+        {
+          "timestamp": 104,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.477027893066406,
+          "coil": 30.63
+        },
+        {
+          "timestamp": 112,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.61178970336914,
+          "coil": 30.69
+        },
+        {
+          "timestamp": 120,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.729055404663086,
+          "coil": 30.81
+        },
+        {
+          "timestamp": 128,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.849857330322266,
+          "coil": 30.94
+        },
+        {
+          "timestamp": 136,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.849857330322266,
+          "coil": 31
+        },
+        {
+          "timestamp": 145,
+          "incoming": 12.855984687805176,
+          "outgoing": 28.9782657623291,
+          "coil": 31.13
+        },
+        {
+          "timestamp": 153,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.082067489624023,
+          "coil": 31.25
+        },
+        {
+          "timestamp": 161,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.082067489624023,
+          "coil": 31.31
+        },
+        {
+          "timestamp": 169,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.196701049804688,
+          "coil": 31.38
+        },
+        {
+          "timestamp": 177,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.196701049804688,
+          "coil": 31.5
+        },
+        {
+          "timestamp": 185,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.3033390045166,
+          "coil": 31.56
+        },
+        {
+          "timestamp": 193,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.3033390045166,
+          "coil": 31.63
+        },
+        {
+          "timestamp": 201,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.419456481933594,
+          "coil": 31.69
+        },
+        {
+          "timestamp": 209,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.419456481933594,
+          "coil": 31.75
+        },
+        {
+          "timestamp": 217,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.419456481933594,
+          "coil": 31.81
+        },
+        {
+          "timestamp": 225,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.54133415222168,
+          "coil": 31.88
+        },
+        {
+          "timestamp": 233,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.54133415222168,
+          "coil": 31.94
+        },
+        {
+          "timestamp": 241,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.54133415222168,
+          "coil": 31.94
+        },
+        {
+          "timestamp": 249,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.649892807006836,
+          "coil": 32
+        },
+        {
+          "timestamp": 257,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.649892807006836,
+          "coil": 32.06
+        },
+        {
+          "timestamp": 265,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.751127243041992,
+          "coil": 32.13
+        },
+        {
+          "timestamp": 273,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.751127243041992,
+          "coil": 32.13
+        },
+        {
+          "timestamp": 281,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.751127243041992,
+          "coil": 32.19
+        },
+        {
+          "timestamp": 289,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.85396957397461,
+          "coil": 32.19
+        },
+        {
+          "timestamp": 297,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.85396957397461,
+          "coil": 32.25
+        },
+        {
+          "timestamp": 305,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.85396957397461,
+          "coil": 32.25
+        },
+        {
+          "timestamp": 313,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.955827713012695,
+          "coil": 32.25
+        },
+        {
+          "timestamp": 322,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.955827713012695,
+          "coil": 32.31
+        },
+        {
+          "timestamp": 330,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.955827713012695,
+          "coil": 32.31
+        },
+        {
+          "timestamp": 338,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.955827713012695,
+          "coil": 32.38
+        },
+        {
+          "timestamp": 346,
+          "incoming": 12.855984687805176,
+          "outgoing": 29.955827713012695,
+          "coil": 32.38
+        },
+        {
+          "timestamp": 354,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.057165145874023,
+          "coil": 32.44
+        },
+        {
+          "timestamp": 362,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.057165145874023,
+          "coil": 32.44
+        },
+        {
+          "timestamp": 370,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.057165145874023,
+          "coil": 32.44
+        },
+        {
+          "timestamp": 378,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.057165145874023,
+          "coil": 32.44
+        },
+        {
+          "timestamp": 386,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.161705017089844,
+          "coil": 32.5
+        },
+        {
+          "timestamp": 394,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.161705017089844,
+          "coil": 32.5
+        },
+        {
+          "timestamp": 402,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.161705017089844,
+          "coil": 32.5
+        },
+        {
+          "timestamp": 410,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.161705017089844,
+          "coil": 32.56
+        },
+        {
+          "timestamp": 418,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.266036987304688,
+          "coil": 32.63
+        },
+        {
+          "timestamp": 426,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.266036987304688,
+          "coil": 32.63
+        },
+        {
+          "timestamp": 434,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.266036987304688,
+          "coil": 32.63
+        },
+        {
+          "timestamp": 442,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.266036987304688,
+          "coil": 32.69
+        },
+        {
+          "timestamp": 450,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.266036987304688,
+          "coil": 32.69
+        },
+        {
+          "timestamp": 458,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.36664390563965,
+          "coil": 32.75
+        },
+        {
+          "timestamp": 466,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.36664390563965,
+          "coil": 32.75
+        },
+        {
+          "timestamp": 474,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.36664390563965,
+          "coil": 32.81
+        },
+        {
+          "timestamp": 482,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.36664390563965,
+          "coil": 32.81
+        },
+        {
+          "timestamp": 491,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.36664390563965,
+          "coil": 32.88
+        },
+        {
+          "timestamp": 499,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.472396850585938,
+          "coil": 32.88
+        },
+        {
+          "timestamp": 507,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.472396850585938,
+          "coil": 32.88
+        },
+        {
+          "timestamp": 515,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.472396850585938,
+          "coil": 32.88
+        },
+        {
+          "timestamp": 523,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.472396850585938,
+          "coil": 32.88
+        },
+        {
+          "timestamp": 531,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.472396850585938,
+          "coil": 32.94
+        },
+        {
+          "timestamp": 539,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 32.94
+        },
+        {
+          "timestamp": 547,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 32.94
+        },
+        {
+          "timestamp": 555,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 32.94
+        },
+        {
+          "timestamp": 563,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 33
+        },
+        {
+          "timestamp": 571,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 32.94
+        },
+        {
+          "timestamp": 579,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 32.94
+        },
+        {
+          "timestamp": 587,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 32.94
+        },
+        {
+          "timestamp": 595,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.5782470703125,
+          "coil": 33
+        },
+        {
+          "timestamp": 603,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33
+        },
+        {
+          "timestamp": 611,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33
+        },
+        {
+          "timestamp": 619,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33
+        },
+        {
+          "timestamp": 627,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33
+        },
+        {
+          "timestamp": 635,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33.06
+        },
+        {
+          "timestamp": 643,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33
+        },
+        {
+          "timestamp": 651,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33
+        },
+        {
+          "timestamp": 659,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33
+        },
+        {
+          "timestamp": 668,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33.06
+        },
+        {
+          "timestamp": 676,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33.06
+        },
+        {
+          "timestamp": 684,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33.06
+        },
+        {
+          "timestamp": 692,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33.06
+        },
+        {
+          "timestamp": 700,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.679758071899414,
+          "coil": 33.06
+        },
+        {
+          "timestamp": 708,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 716,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 724,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 732,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 740,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 748,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 756,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 764,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.13
+        },
+        {
+          "timestamp": 772,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.19
+        },
+        {
+          "timestamp": 780,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.78508758544922,
+          "coil": 33.19
+        },
+        {
+          "timestamp": 788,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.19
+        },
+        {
+          "timestamp": 796,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 804,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 812,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 820,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 828,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 837,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 845,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 853,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.88675880432129,
+          "coil": 33.31
+        },
+        {
+          "timestamp": 861,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.31
+        },
+        {
+          "timestamp": 869,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.38
+        },
+        {
+          "timestamp": 877,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.38
+        },
+        {
+          "timestamp": 885,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.38
+        },
+        {
+          "timestamp": 893,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.38
+        }
+      ]
+    },
+    {
+      "powerPercent": 60,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.38
+        },
+        {
+          "timestamp": 8,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.38
+        },
+        {
+          "timestamp": 16,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.38
+        },
+        {
+          "timestamp": 24,
+          "incoming": 12.855984687805176,
+          "outgoing": 30.995328903198242,
+          "coil": 33.44
+        },
+        {
+          "timestamp": 32,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.0987606048584,
+          "coil": 33.44
+        },
+        {
+          "timestamp": 40,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.0987606048584,
+          "coil": 33.5
+        },
+        {
+          "timestamp": 48,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.0987606048584,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 56,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.210044860839844,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 64,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.210044860839844,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 72,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.313854217529297,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 80,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.4312744140625,
+          "coil": 33.81
+        },
+        {
+          "timestamp": 88,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.539337158203125,
+          "coil": 33.88
+        },
+        {
+          "timestamp": 96,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.662153244018555,
+          "coil": 33.94
+        },
+        {
+          "timestamp": 105,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.662153244018555,
+          "coil": 34
+        },
+        {
+          "timestamp": 113,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.79587173461914,
+          "coil": 34.06
+        },
+        {
+          "timestamp": 121,
+          "incoming": 12.855984687805176,
+          "outgoing": 31.908658981323242,
+          "coil": 34.13
+        },
+        {
+          "timestamp": 129,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.02653121948242,
+          "coil": 34.19
+        },
+        {
+          "timestamp": 137,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.164791107177734,
+          "coil": 34.25
+        },
+        {
+          "timestamp": 145,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.30222702026367,
+          "coil": 34.31
+        },
+        {
+          "timestamp": 153,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.30222702026367,
+          "coil": 34.31
+        },
+        {
+          "timestamp": 161,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.42888641357422,
+          "coil": 34.31
+        },
+        {
+          "timestamp": 169,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.42888641357422,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 177,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.55044174194336,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 185,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.65601348876953,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 193,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.65601348876953,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 201,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.65601348876953,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 209,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.77375793457031,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 219,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.77375793457031,
+          "coil": 34.44
+        },
+        {
+          "timestamp": 228,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.88617706298828,
+          "coil": 34.44
+        },
+        {
+          "timestamp": 236,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.88617706298828,
+          "coil": 34.44
+        },
+        {
+          "timestamp": 244,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.88617706298828,
+          "coil": 34.5
+        },
+        {
+          "timestamp": 252,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.99875259399414,
+          "coil": 34.5
+        },
+        {
+          "timestamp": 260,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.99875259399414,
+          "coil": 34.5
+        },
+        {
+          "timestamp": 268,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.99875259399414,
+          "coil": 34.5
+        },
+        {
+          "timestamp": 276,
+          "incoming": 12.855984687805176,
+          "outgoing": 32.99875259399414,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 284,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.10187911987305,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 292,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.10187911987305,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 300,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.10187911987305,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 308,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.10187911987305,
+          "coil": 34.63
+        },
+        {
+          "timestamp": 316,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.20396041870117,
+          "coil": 34.63
+        },
+        {
+          "timestamp": 324,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.20396041870117,
+          "coil": 34.63
+        },
+        {
+          "timestamp": 333,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.20396041870117,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 341,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.20396041870117,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 349,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.20396041870117,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 357,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.3061637878418,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 365,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.3061637878418,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 373,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.3061637878418,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 381,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.3061637878418,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 389,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.41083908081055,
+          "coil": 34.5
+        },
+        {
+          "timestamp": 397,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.41083908081055,
+          "coil": 34.5
+        },
+        {
+          "timestamp": 405,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.41083908081055,
+          "coil": 34.5
+        },
+        {
+          "timestamp": 413,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.41083908081055,
+          "coil": 34.44
+        },
+        {
+          "timestamp": 421,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.41083908081055,
+          "coil": 34.44
+        },
+        {
+          "timestamp": 429,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.44
+        },
+        {
+          "timestamp": 437,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 445,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 453,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 461,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 469,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 477,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.31
+        },
+        {
+          "timestamp": 485,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.51616287231445,
+          "coil": 34.31
+        },
+        {
+          "timestamp": 493,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34.25
+        },
+        {
+          "timestamp": 501,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34.25
+        },
+        {
+          "timestamp": 509,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34.19
+        },
+        {
+          "timestamp": 518,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34.13
+        },
+        {
+          "timestamp": 526,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34.06
+        },
+        {
+          "timestamp": 534,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34
+        },
+        {
+          "timestamp": 542,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34
+        },
+        {
+          "timestamp": 550,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34
+        },
+        {
+          "timestamp": 558,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 34
+        },
+        {
+          "timestamp": 566,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.94
+        },
+        {
+          "timestamp": 574,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.94
+        },
+        {
+          "timestamp": 582,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.94
+        },
+        {
+          "timestamp": 590,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.88
+        },
+        {
+          "timestamp": 598,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.88
+        },
+        {
+          "timestamp": 606,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.88
+        },
+        {
+          "timestamp": 614,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.81
+        },
+        {
+          "timestamp": 622,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.81
+        },
+        {
+          "timestamp": 630,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.81
+        },
+        {
+          "timestamp": 638,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.81
+        },
+        {
+          "timestamp": 646,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.81
+        },
+        {
+          "timestamp": 654,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.81
+        },
+        {
+          "timestamp": 662,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.75
+        },
+        {
+          "timestamp": 671,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.75
+        },
+        {
+          "timestamp": 679,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.75
+        },
+        {
+          "timestamp": 687,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.75
+        },
+        {
+          "timestamp": 695,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.75
+        },
+        {
+          "timestamp": 703,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.75
+        },
+        {
+          "timestamp": 711,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 719,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 727,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 735,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 743,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 751,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 759,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 767,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 775,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 783,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 791,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 799,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 807,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 815,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 823,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 831,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 839,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 848,
+          "incoming": 12.855984687805176,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 856,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 864,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 872,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 880,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 888,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 896,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        }
+      ]
+    },
+    {
+      "powerPercent": 70,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.5
+        },
+        {
+          "timestamp": 8,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.5
+        },
+        {
+          "timestamp": 16,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 24,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 32,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.56
+        },
+        {
+          "timestamp": 40,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 48,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.63
+        },
+        {
+          "timestamp": 56,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.617393493652344,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 64,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.721492767333984,
+          "coil": 33.75
+        },
+        {
+          "timestamp": 72,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.721492767333984,
+          "coil": 33.88
+        },
+        {
+          "timestamp": 80,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.83301544189453,
+          "coil": 33.94
+        },
+        {
+          "timestamp": 88,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.83301544189453,
+          "coil": 34
+        },
+        {
+          "timestamp": 96,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.94839859008789,
+          "coil": 34.13
+        },
+        {
+          "timestamp": 104,
+          "incoming": 12.956013679504395,
+          "outgoing": 33.94839859008789,
+          "coil": 34.31
+        },
+        {
+          "timestamp": 112,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.08575439453125,
+          "coil": 34.38
+        },
+        {
+          "timestamp": 121,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.20807647705078,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 129,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.32263946533203,
+          "coil": 34.69
+        },
+        {
+          "timestamp": 137,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.32263946533203,
+          "coil": 34.81
+        },
+        {
+          "timestamp": 145,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.436279296875,
+          "coil": 34.88
+        },
+        {
+          "timestamp": 153,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.55195999145508,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 161,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.65411376953125,
+          "coil": 35
+        },
+        {
+          "timestamp": 169,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.65411376953125,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 177,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.778892517089844,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 185,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.87889862060547,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 193,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.87889862060547,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 201,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.87889862060547,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 209,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.99530029296875,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 217,
+          "incoming": 12.956013679504395,
+          "outgoing": 34.99530029296875,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 225,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.09975051879883,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 233,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.09975051879883,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 241,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.09975051879883,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 249,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.09975051879883,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 257,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.09975051879883,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 265,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 273,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 282,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 290,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 298,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 306,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 314,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 322,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 330,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 338,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 346,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 354,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 362,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 370,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 378,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 386,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 394,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 402,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 410,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 418,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 426,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 434,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 442,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 451,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 459,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 467,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 475,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 483,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.20635986328125,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 491,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 499,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 507,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.38
+        },
+        {
+          "timestamp": 515,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 523,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 531,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 539,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 547,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 555,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 563,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 571,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 579,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 587,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 595,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 603,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 611,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 620,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 628,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 636,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 644,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 652,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 660,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 668,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 676,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 684,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 692,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 700,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.30976867675781,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 708,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 716,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 724,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 732,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 740,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 748,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 756,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 764,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 772,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 780,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 788,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 797,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 805,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 813,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35
+        },
+        {
+          "timestamp": 821,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35
+        },
+        {
+          "timestamp": 829,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.205650329589844,
+          "coil": 35
+        },
+        {
+          "timestamp": 837,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.103511810302734,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 845,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.103511810302734,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 853,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.103511810302734,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 861,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.103511810302734,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 869,
+          "incoming": 12.956013679504395,
+          "outgoing": 35.103511810302734,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 877,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.103511810302734,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 885,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.103511810302734,
+          "coil": 34.88
+        },
+        {
+          "timestamp": 893,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.103511810302734,
+          "coil": 34.88
+        }
+      ]
+    },
+    {
+      "powerPercent": 80,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.103511810302734,
+          "coil": 34.81
+        },
+        {
+          "timestamp": 8,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.103511810302734,
+          "coil": 34.81
+        },
+        {
+          "timestamp": 16,
+          "incoming": 12.854759216308594,
+          "outgoing": 34.998291015625,
+          "coil": 34.88
+        },
+        {
+          "timestamp": 24,
+          "incoming": 12.854759216308594,
+          "outgoing": 34.998291015625,
+          "coil": 34.88
+        },
+        {
+          "timestamp": 32,
+          "incoming": 12.854759216308594,
+          "outgoing": 34.998291015625,
+          "coil": 34.88
+        },
+        {
+          "timestamp": 40,
+          "incoming": 12.854759216308594,
+          "outgoing": 34.998291015625,
+          "coil": 34.94
+        },
+        {
+          "timestamp": 48,
+          "incoming": 12.854759216308594,
+          "outgoing": 34.998291015625,
+          "coil": 35
+        },
+        {
+          "timestamp": 56,
+          "incoming": 12.854759216308594,
+          "outgoing": 34.998291015625,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 65,
+          "incoming": 12.854759216308594,
+          "outgoing": 34.998291015625,
+          "coil": 35.13
+        },
+        {
+          "timestamp": 73,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.11454391479492,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 81,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.11454391479492,
+          "coil": 35.31
+        },
+        {
+          "timestamp": 89,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.253116607666016,
+          "coil": 35.44
+        },
+        {
+          "timestamp": 97,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.253116607666016,
+          "coil": 35.5
+        },
+        {
+          "timestamp": 105,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.36201477050781,
+          "coil": 35.63
+        },
+        {
+          "timestamp": 113,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.46662902832031,
+          "coil": 35.75
+        },
+        {
+          "timestamp": 121,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.46662902832031,
+          "coil": 35.81
+        },
+        {
+          "timestamp": 129,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.5787353515625,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 137,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.69460678100586,
+          "coil": 36
+        },
+        {
+          "timestamp": 145,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.69460678100586,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 153,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.800960540771484,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 161,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.800960540771484,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 169,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.90867233276367,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 177,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.90867233276367,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 185,
+          "incoming": 12.854759216308594,
+          "outgoing": 35.90867233276367,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 193,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.015647888183594,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 201,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.015647888183594,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 209,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.015647888183594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 217,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.015647888183594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 226,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.127620697021484,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 234,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.127620697021484,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 242,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.127620697021484,
+          "coil": 36.38
+        },
+        {
+          "timestamp": 250,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.127620697021484,
+          "coil": 36.38
+        },
+        {
+          "timestamp": 258,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.127620697021484,
+          "coil": 36.38
+        },
+        {
+          "timestamp": 266,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 274,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.232688903808594,
+          "coil": 36.38
+        },
+        {
+          "timestamp": 282,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.232688903808594,
+          "coil": 36.38
+        },
+        {
+          "timestamp": 290,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 298,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 306,
+          "incoming": 12.854759216308594,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 314,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 322,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 330,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 338,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 346,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 354,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 362,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 370,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 378,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 386,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 395,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 403,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 411,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 419,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 427,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 435,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 443,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 451,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 459,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 467,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 475,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 483,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 491,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 499,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 507,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 515,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 523,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 531,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 539,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 547,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 555,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 564,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 572,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 580,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.232688903808594,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 588,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 596,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 604,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 612,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 620,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 628,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 636,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 644,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 652,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 660,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 668,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 676,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 684,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 692,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36
+        },
+        {
+          "timestamp": 700,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36
+        },
+        {
+          "timestamp": 708,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 716,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36
+        },
+        {
+          "timestamp": 725,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 36
+        },
+        {
+          "timestamp": 733,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 741,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 749,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 757,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 765,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.12956237792969,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 773,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.028011322021484,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 781,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.028011322021484,
+          "coil": 35.88
+        },
+        {
+          "timestamp": 789,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.028011322021484,
+          "coil": 35.88
+        },
+        {
+          "timestamp": 797,
+          "incoming": 12.746557235717773,
+          "outgoing": 36.028011322021484,
+          "coil": 35.88
+        },
+        {
+          "timestamp": 805,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.028011322021484,
+          "coil": 35.81
+        },
+        {
+          "timestamp": 813,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.028011322021484,
+          "coil": 35.81
+        },
+        {
+          "timestamp": 821,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.028011322021484,
+          "coil": 35.81
+        },
+        {
+          "timestamp": 829,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.927940368652344,
+          "coil": 35.81
+        },
+        {
+          "timestamp": 837,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.927940368652344,
+          "coil": 35.75
+        },
+        {
+          "timestamp": 845,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.927940368652344,
+          "coil": 35.75
+        },
+        {
+          "timestamp": 853,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.927940368652344,
+          "coil": 35.69
+        },
+        {
+          "timestamp": 861,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.927940368652344,
+          "coil": 35.69
+        },
+        {
+          "timestamp": 869,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.927940368652344,
+          "coil": 35.63
+        },
+        {
+          "timestamp": 877,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.822509765625,
+          "coil": 35.63
+        },
+        {
+          "timestamp": 885,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.822509765625,
+          "coil": 35.63
+        },
+        {
+          "timestamp": 893,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.822509765625,
+          "coil": 35.56
+        }
+      ]
+    },
+    {
+      "powerPercent": 90,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.822509765625,
+          "coil": 35.56
+        },
+        {
+          "timestamp": 8,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.822509765625,
+          "coil": 35.5
+        },
+        {
+          "timestamp": 16,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.822509765625,
+          "coil": 35.56
+        },
+        {
+          "timestamp": 24,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.56
+        },
+        {
+          "timestamp": 32,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.56
+        },
+        {
+          "timestamp": 40,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.56
+        },
+        {
+          "timestamp": 48,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.56
+        },
+        {
+          "timestamp": 56,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.63
+        },
+        {
+          "timestamp": 64,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.69
+        },
+        {
+          "timestamp": 72,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.75
+        },
+        {
+          "timestamp": 80,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.81
+        },
+        {
+          "timestamp": 88,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.72216796875,
+          "coil": 35.88
+        },
+        {
+          "timestamp": 96,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.83773422241211,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 104,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.83773422241211,
+          "coil": 36
+        },
+        {
+          "timestamp": 112,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.83773422241211,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 120,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.9591064453125,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 128,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.9591064453125,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 136,
+          "incoming": 12.645891189575195,
+          "outgoing": 35.9591064453125,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 144,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.07070541381836,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 152,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.07070541381836,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 160,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.07070541381836,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 169,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.17654800415039,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 177,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.17654800415039,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 185,
+          "incoming": 12.645891189575195,
+          "outgoing": 36.17654800415039,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 193,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 201,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 209,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 217,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.25
+        },
+        {
+          "timestamp": 225,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 233,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 241,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 249,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 257,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.13
+        },
+        {
+          "timestamp": 265,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 273,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 281,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.17654800415039,
+          "coil": 35.94
+        },
+        {
+          "timestamp": 289,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.07292556762695,
+          "coil": 35.81
+        },
+        {
+          "timestamp": 297,
+          "incoming": 12.745976448059082,
+          "outgoing": 36.07292556762695,
+          "coil": 35.19
+        },
+        {
+          "timestamp": 305,
+          "incoming": 12.745976448059082,
+          "outgoing": 35.78138732910156,
+          "coil": 34.69
+        },
+        {
+          "timestamp": 313,
+          "incoming": 12.745976448059082,
+          "outgoing": 35.443756103515625,
+          "coil": 33.5
+        },
+        {
+          "timestamp": 321,
+          "incoming": 12.745976448059082,
+          "outgoing": 34.98849105834961,
+          "coil": 32.88
+        },
+        {
+          "timestamp": 329,
+          "incoming": 12.745976448059082,
+          "outgoing": 34.4633674621582,
+          "coil": 31.31
+        },
+        {
+          "timestamp": 337,
+          "incoming": 12.745976448059082,
+          "outgoing": 33.753379821777344,
+          "coil": 29.75
+        },
+        {
+          "timestamp": 345,
+          "incoming": 12.745976448059082,
+          "outgoing": 32.615116119384766,
+          "coil": 26.88
+        },
+        {
+          "timestamp": 354,
+          "incoming": 12.745976448059082,
+          "outgoing": 31.09722137451172,
+          "coil": 23.13
+        },
+        {
+          "timestamp": 362,
+          "incoming": 12.745976448059082,
+          "outgoing": 28.979867935180664,
+          "coil": 21.06
+        },
+        {
+          "timestamp": 370,
+          "incoming": 12.745976448059082,
+          "outgoing": 27.734228134155273,
+          "coil": 19
+        },
+        {
+          "timestamp": 378,
+          "incoming": 12.745976448059082,
+          "outgoing": 25.694902420043945,
+          "coil": 16.06
+        },
+        {
+          "timestamp": 386,
+          "incoming": 12.745976448059082,
+          "outgoing": 24.007080078125,
+          "coil": 13.38
+        },
+        {
+          "timestamp": 394,
+          "incoming": 12.745976448059082,
+          "outgoing": 22.28746223449707,
+          "coil": 11.31
+        },
+        {
+          "timestamp": 402,
+          "incoming": 12.745976448059082,
+          "outgoing": 20.55669403076172,
+          "coil": 9.75
+        },
+        {
+          "timestamp": 410,
+          "incoming": 12.745976448059082,
+          "outgoing": 19.32042121887207,
+          "coil": 8.56
+        },
+        {
+          "timestamp": 418,
+          "incoming": 12.745976448059082,
+          "outgoing": 17.841094970703125,
+          "coil": 7.69
+        },
+        {
+          "timestamp": 426,
+          "incoming": 12.745976448059082,
+          "outgoing": 16.560697555541992,
+          "coil": 7
+        },
+        {
+          "timestamp": 434,
+          "incoming": 12.745976448059082,
+          "outgoing": 15.202007293701172,
+          "coil": 6.5
+        },
+        {
+          "timestamp": 442,
+          "incoming": 12.745976448059082,
+          "outgoing": 14.277260780334473,
+          "coil": 6.06
+        },
+        {
+          "timestamp": 450,
+          "incoming": 12.745976448059082,
+          "outgoing": 13.648836135864258,
+          "coil": 5.63
+        },
+        {
+          "timestamp": 458,
+          "incoming": 12.745976448059082,
+          "outgoing": 12.890460014343262,
+          "coil": 5.44
+        },
+        {
+          "timestamp": 466,
+          "incoming": 12.745976448059082,
+          "outgoing": 12.086612701416016,
+          "coil": 5.13
+        },
+        {
+          "timestamp": 474,
+          "incoming": 12.745976448059082,
+          "outgoing": 11.55019760131836,
+          "coil": 5.06
+        },
+        {
+          "timestamp": 482,
+          "incoming": 12.745976448059082,
+          "outgoing": 11.127185821533203,
+          "coil": 5
+        },
+        {
+          "timestamp": 490,
+          "incoming": 12.745976448059082,
+          "outgoing": 10.865607261657715,
+          "coil": 5.06
+        },
+        {
+          "timestamp": 498,
+          "incoming": 12.745976448059082,
+          "outgoing": 10.57375717163086,
+          "coil": 5.06
+        },
+        {
+          "timestamp": 506,
+          "incoming": 12.745976448059082,
+          "outgoing": 10.338044166564941,
+          "coil": 5
+        },
+        {
+          "timestamp": 514,
+          "incoming": 12.745976448059082,
+          "outgoing": 10.084572792053223,
+          "coil": 5.13
+        },
+        {
+          "timestamp": 522,
+          "incoming": 12.745976448059082,
+          "outgoing": 9.978936195373535,
+          "coil": 5.44
+        },
+        {
+          "timestamp": 530,
+          "incoming": 12.745976448059082,
+          "outgoing": 9.978936195373535,
+          "coil": 7.19
+        },
+        {
+          "timestamp": 538,
+          "incoming": 12.745976448059082,
+          "outgoing": 10.595542907714844,
+          "coil": 10.88
+        },
+        {
+          "timestamp": 547,
+          "incoming": 12.745976448059082,
+          "outgoing": 12.303406715393066,
+          "coil": 13.63
+        },
+        {
+          "timestamp": 555,
+          "incoming": 12.745976448059082,
+          "outgoing": 13.950844764709473,
+          "coil": 14.94
+        },
+        {
+          "timestamp": 563,
+          "incoming": 12.745976448059082,
+          "outgoing": 15.232126235961914,
+          "coil": 16.75
+        },
+        {
+          "timestamp": 571,
+          "incoming": 12.745976448059082,
+          "outgoing": 15.94606876373291,
+          "coil": 17.56
+        },
+        {
+          "timestamp": 579,
+          "incoming": 12.745976448059082,
+          "outgoing": 16.420530319213867,
+          "coil": 17
+        },
+        {
+          "timestamp": 587,
+          "incoming": 12.643533706665039,
+          "outgoing": 16.29823875427246,
+          "coil": 16.56
+        },
+        {
+          "timestamp": 595,
+          "incoming": 12.643533706665039,
+          "outgoing": 15.985234260559082,
+          "coil": 17.81
+        },
+        {
+          "timestamp": 603,
+          "incoming": 12.643533706665039,
+          "outgoing": 16.724103927612305,
+          "coil": 19.88
+        },
+        {
+          "timestamp": 611,
+          "incoming": 12.643533706665039,
+          "outgoing": 17.953723907470703,
+          "coil": 21.75
+        },
+        {
+          "timestamp": 619,
+          "incoming": 12.643533706665039,
+          "outgoing": 19.277965545654297,
+          "coil": 23.44
+        },
+        {
+          "timestamp": 627,
+          "incoming": 12.643533706665039,
+          "outgoing": 20.567035675048828,
+          "coil": 24.44
+        },
+        {
+          "timestamp": 635,
+          "incoming": 12.643533706665039,
+          "outgoing": 21.79759407043457,
+          "coil": 26.19
+        },
+        {
+          "timestamp": 643,
+          "incoming": 12.643533706665039,
+          "outgoing": 22.96177864074707,
+          "coil": 26.94
+        },
+        {
+          "timestamp": 651,
+          "incoming": 12.643533706665039,
+          "outgoing": 24.277816772460938,
+          "coil": 28
+        },
+        {
+          "timestamp": 659,
+          "incoming": 12.643533706665039,
+          "outgoing": 25.012542724609375,
+          "coil": 29.19
+        },
+        {
+          "timestamp": 667,
+          "incoming": 12.643533706665039,
+          "outgoing": 25.93279457092285,
+          "coil": 29.75
+        },
+        {
+          "timestamp": 675,
+          "incoming": 12.643533706665039,
+          "outgoing": 26.787750244140625,
+          "coil": 30.75
+        },
+        {
+          "timestamp": 683,
+          "incoming": 12.643533706665039,
+          "outgoing": 27.765750885009766,
+          "coil": 31.13
+        },
+        {
+          "timestamp": 691,
+          "incoming": 12.643533706665039,
+          "outgoing": 28.489240646362305,
+          "coil": 31.75
+        },
+        {
+          "timestamp": 699,
+          "incoming": 12.643533706665039,
+          "outgoing": 28.991527557373047,
+          "coil": 32.31
+        },
+        {
+          "timestamp": 707,
+          "incoming": 12.643533706665039,
+          "outgoing": 29.4606876373291,
+          "coil": 32.81
+        },
+        {
+          "timestamp": 715,
+          "incoming": 12.643533706665039,
+          "outgoing": 30.31826400756836,
+          "coil": 33.25
+        },
+        {
+          "timestamp": 724,
+          "incoming": 12.643533706665039,
+          "outgoing": 30.826488494873047,
+          "coil": 33.69
+        },
+        {
+          "timestamp": 732,
+          "incoming": 12.643533706665039,
+          "outgoing": 31.293258666992188,
+          "coil": 34
+        },
+        {
+          "timestamp": 740,
+          "incoming": 12.643533706665039,
+          "outgoing": 31.715755462646484,
+          "coil": 34.31
+        },
+        {
+          "timestamp": 749,
+          "incoming": 12.643533706665039,
+          "outgoing": 32.10000228881836,
+          "coil": 34.56
+        },
+        {
+          "timestamp": 757,
+          "incoming": 12.643533706665039,
+          "outgoing": 32.28707504272461,
+          "coil": 34.81
+        },
+        {
+          "timestamp": 765,
+          "incoming": 12.643533706665039,
+          "outgoing": 32.719520568847656,
+          "coil": 35.06
+        },
+        {
+          "timestamp": 774,
+          "incoming": 12.643533706665039,
+          "outgoing": 33.02102279663086,
+          "coil": 35.25
+        },
+        {
+          "timestamp": 783,
+          "incoming": 12.643533706665039,
+          "outgoing": 33.31294250488281,
+          "coil": 35.5
+        },
+        {
+          "timestamp": 791,
+          "incoming": 12.643533706665039,
+          "outgoing": 33.641822814941406,
+          "coil": 35.69
+        },
+        {
+          "timestamp": 799,
+          "incoming": 12.643533706665039,
+          "outgoing": 33.880001068115234,
+          "coil": 35.88
+        },
+        {
+          "timestamp": 807,
+          "incoming": 12.643533706665039,
+          "outgoing": 34.0986328125,
+          "coil": 36
+        },
+        {
+          "timestamp": 815,
+          "incoming": 12.643533706665039,
+          "outgoing": 34.34966278076172,
+          "coil": 36.06
+        },
+        {
+          "timestamp": 823,
+          "incoming": 12.643533706665039,
+          "outgoing": 34.49134826660156,
+          "coil": 36.19
+        },
+        {
+          "timestamp": 831,
+          "incoming": 12.643533706665039,
+          "outgoing": 34.71883010864258,
+          "coil": 36.31
+        },
+        {
+          "timestamp": 839,
+          "incoming": 12.643533706665039,
+          "outgoing": 34.84089660644531,
+          "coil": 36.44
+        },
+        {
+          "timestamp": 847,
+          "incoming": 12.643533706665039,
+          "outgoing": 34.95591354370117,
+          "coil": 36.5
+        },
+        {
+          "timestamp": 855,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.2142219543457,
+          "coil": 36.56
+        },
+        {
+          "timestamp": 863,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.2142219543457,
+          "coil": 36.69
+        },
+        {
+          "timestamp": 871,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.45121383666992,
+          "coil": 36.69
+        },
+        {
+          "timestamp": 879,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.45121383666992,
+          "coil": 36.81
+        },
+        {
+          "timestamp": 887,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.5654182434082,
+          "coil": 36.81
+        },
+        {
+          "timestamp": 895,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.673892974853516,
+          "coil": 36.88
+        }
+      ]
+    },
+    {
+      "powerPercent": 100,
+      "samples": [
+        {
+          "timestamp": 0,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.788414001464844,
+          "coil": 36.94
+        },
+        {
+          "timestamp": 8,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.895416259765625,
+          "coil": 37
+        },
+        {
+          "timestamp": 16,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.99977111816406,
+          "coil": 37.06
+        },
+        {
+          "timestamp": 24,
+          "incoming": 12.643533706665039,
+          "outgoing": 35.99977111816406,
+          "coil": 37.13
+        },
+        {
+          "timestamp": 32,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.104095458984375,
+          "coil": 37.19
+        },
+        {
+          "timestamp": 40,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.21280288696289,
+          "coil": 37.31
+        },
+        {
+          "timestamp": 49,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.32663345336914,
+          "coil": 37.44
+        },
+        {
+          "timestamp": 57,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.445091247558594,
+          "coil": 37.56
+        },
+        {
+          "timestamp": 65,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.552852630615234,
+          "coil": 37.69
+        },
+        {
+          "timestamp": 73,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.65642547607422,
+          "coil": 37.81
+        },
+        {
+          "timestamp": 81,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.781585693359375,
+          "coil": 38
+        },
+        {
+          "timestamp": 89,
+          "incoming": 12.643533706665039,
+          "outgoing": 36.89574432373047,
+          "coil": 38.19
+        },
+        {
+          "timestamp": 97,
+          "incoming": 12.643533706665039,
+          "outgoing": 37.02381134033203,
+          "coil": 38.31
+        },
+        {
+          "timestamp": 105,
+          "incoming": 12.643533706665039,
+          "outgoing": 37.15827178955078,
+          "coil": 38.5
+        },
+        {
+          "timestamp": 113,
+          "incoming": 12.643533706665039,
+          "outgoing": 37.28687286376953,
+          "coil": 38.56
+        },
+        {
+          "timestamp": 121,
+          "incoming": 12.643533706665039,
+          "outgoing": 37.41261291503906,
+          "coil": 38.69
+        },
+        {
+          "timestamp": 129,
+          "incoming": 12.643533706665039,
+          "outgoing": 37.53030776977539,
+          "coil": 38.75
+        },
+        {
+          "timestamp": 137,
+          "incoming": 12.74468994140625,
+          "outgoing": 37.631935119628906,
+          "coil": 38.88
+        },
+        {
+          "timestamp": 145,
+          "incoming": 12.74468994140625,
+          "outgoing": 37.73572540283203,
+          "coil": 38.94
+        },
+        {
+          "timestamp": 153,
+          "incoming": 12.74468994140625,
+          "outgoing": 37.84026336669922,
+          "coil": 38.94
+        },
+        {
+          "timestamp": 161,
+          "incoming": 12.74468994140625,
+          "outgoing": 37.84026336669922,
+          "coil": 39.06
+        },
+        {
+          "timestamp": 169,
+          "incoming": 12.74468994140625,
+          "outgoing": 37.94976806640625,
+          "coil": 39.13
+        },
+        {
+          "timestamp": 177,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.07133483886719,
+          "coil": 39.19
+        },
+        {
+          "timestamp": 185,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.07133483886719,
+          "coil": 39.19
+        },
+        {
+          "timestamp": 193,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.181278228759766,
+          "coil": 39.25
+        },
+        {
+          "timestamp": 201,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.30449295043945,
+          "coil": 39.38
+        },
+        {
+          "timestamp": 210,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.30449295043945,
+          "coil": 39.38
+        },
+        {
+          "timestamp": 218,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.41095733642578,
+          "coil": 39.44
+        },
+        {
+          "timestamp": 226,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.41095733642578,
+          "coil": 39.5
+        },
+        {
+          "timestamp": 234,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.51569747924805,
+          "coil": 39.5
+        },
+        {
+          "timestamp": 242,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.51569747924805,
+          "coil": 39.56
+        },
+        {
+          "timestamp": 250,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.6259651184082,
+          "coil": 39.56
+        },
+        {
+          "timestamp": 258,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.6259651184082,
+          "coil": 39.63
+        },
+        {
+          "timestamp": 266,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.73219299316406,
+          "coil": 39.63
+        },
+        {
+          "timestamp": 274,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.73219299316406,
+          "coil": 39.69
+        },
+        {
+          "timestamp": 282,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.83966064453125,
+          "coil": 39.69
+        },
+        {
+          "timestamp": 290,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.83966064453125,
+          "coil": 39.81
+        },
+        {
+          "timestamp": 298,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.83966064453125,
+          "coil": 39.81
+        },
+        {
+          "timestamp": 306,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.942684173583984,
+          "coil": 39.81
+        },
+        {
+          "timestamp": 314,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.942684173583984,
+          "coil": 39.88
+        },
+        {
+          "timestamp": 322,
+          "incoming": 12.74468994140625,
+          "outgoing": 38.942684173583984,
+          "coil": 39.88
+        },
+        {
+          "timestamp": 330,
+          "incoming": 12.74468994140625,
+          "outgoing": 39.04370880126953,
+          "coil": 39.94
+        },
+        {
+          "timestamp": 338,
+          "incoming": 12.74468994140625,
+          "outgoing": 39.04370880126953,
+          "coil": 39.94
+        },
+        {
+          "timestamp": 346,
+          "incoming": 12.74468994140625,
+          "outgoing": 39.04370880126953,
+          "coil": 39.94
+        },
+        {
+          "timestamp": 354,
+          "incoming": 12.74468994140625,
+          "outgoing": 39.14603042602539,
+          "coil": 40
+        },
+        {
+          "timestamp": 362,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.14603042602539,
+          "coil": 40
+        },
+        {
+          "timestamp": 370,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.14603042602539,
+          "coil": 40.06
+        },
+        {
+          "timestamp": 379,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.14603042602539,
+          "coil": 40.06
+        },
+        {
+          "timestamp": 387,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.25082778930664,
+          "coil": 40.06
+        },
+        {
+          "timestamp": 395,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.25082778930664,
+          "coil": 40.06
+        },
+        {
+          "timestamp": 403,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.25082778930664,
+          "coil": 40.06
+        },
+        {
+          "timestamp": 411,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.25082778930664,
+          "coil": 40.13
+        },
+        {
+          "timestamp": 419,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.36111831665039,
+          "coil": 40.13
+        },
+        {
+          "timestamp": 427,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.36111831665039,
+          "coil": 40.13
+        },
+        {
+          "timestamp": 435,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.36111831665039,
+          "coil": 40.13
+        },
+        {
+          "timestamp": 443,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.36111831665039,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 451,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.36111831665039,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 459,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.36111831665039,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 467,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.462894439697266,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 475,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.462894439697266,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 483,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.462894439697266,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 491,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.462894439697266,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 499,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.462894439697266,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 507,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.462894439697266,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 515,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 523,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 531,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 540,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.19
+        },
+        {
+          "timestamp": 548,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 556,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 564,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 572,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 580,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 588,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.569549560546875,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 596,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 604,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 612,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.25
+        },
+        {
+          "timestamp": 620,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 628,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 636,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 644,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 652,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.675376892089844,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 660,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.776824951171875,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 668,
+          "incoming": 12.847686767578125,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 676,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 684,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 692,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.31
+        },
+        {
+          "timestamp": 701,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 709,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 717,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 725,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 733,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 741,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 749,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 757,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 765,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 773,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.776824951171875,
+          "coil": 40.44
+        },
+        {
+          "timestamp": 781,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 789,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 797,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 805,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 813,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 821,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 829,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.44
+        },
+        {
+          "timestamp": 837,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.44
+        },
+        {
+          "timestamp": 845,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 853,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.44
+        },
+        {
+          "timestamp": 861,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.44
+        },
+        {
+          "timestamp": 869,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.44
+        },
+        {
+          "timestamp": 878,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.38
+        },
+        {
+          "timestamp": 886,
+          "incoming": 12.94839096069336,
+          "outgoing": 39.879600524902344,
+          "coil": 40.44
+        }
+      ]
+    }
+  ]
+}
