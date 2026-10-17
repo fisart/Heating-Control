@@ -1,5 +1,13 @@
 # HeatingControl for IP-Symcon
 
+Version **0.3.37, build 47** adds configurable fan run-on during residual heat
+recovery (recuperation). The default is 60 seconds after a stop threshold is
+crossed; the recovering room flaps remain open. A warm recovery cancels the
+countdown. Manual recovery off, shutdown and air at or below the current room
+temperature stop the run-on immediately. Configure **Recovery fan run-on** under
+**Residual heat recovery** in the instance form (0–600 seconds; 0 disables it).
+The dedicated timer ends the delay independently of the regular polling interval.
+
 Version **0.3.36, build 46** adds opt-out temperature-transient handling to new
 heat-pump calibration tests. Hold the same power through a suspected defrost-like
 drop, quarantine the drop and recovery brackets, then collect the missing clean
@@ -186,13 +194,18 @@ Version **0.3.15**, build 25 adds **Total consumption** with one selectable date
   default object 58771) from version 0.2.4. Each eligible room remembers its
   recovery state. With hysteresis `h`, recovery starts when outgoing air is at
   least `ResidualMinOutgoingTemp + h` and strictly above `target + delta + h`.
-  Once active, it stops when outgoing air falls below
+  Once active, it begins the fan run-on when outgoing air falls below
   `ResidualMinOutgoingTemp - h` or reaches/breaches `target + delta - h`.
   Between the start/stop thresholds it retains its state, keeping the fan and
   recovering room flaps stable. Example: target 23 °C, delta 2 °C, hysteresis
   0.5 °C gives a start above 25.5 °C and a stop at/below 24.5 °C, provided the
   minimum outgoing temperature also permits recovery. Hysteresis 0 preserves
-  the former threshold comparisons. No additional setting or ID is needed.
+  the former threshold comparisons; set `RecoveryRunOnSeconds` to 0 as well
+  for immediate switching. With the default 60 seconds, continuously low readings
+  do not extend the deadline, and useful warmth cancels it. Each recovering room
+  keeps its flap open until its own deadline. Air at or below that room’s current
+  average temperature bypasses the delay to avoid cooling it. The run-on setting
+  is included in backups; pending runtime countdowns are cleared on restore.
   Recovery memory is cleared by manual recovery off, normal heating, night/cooling
   shutdown, summer/master bypass, and disabling/restoring the instance. Bypass
   still leaves external devices untouched. The mixer positions are explicitly

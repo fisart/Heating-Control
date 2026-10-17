@@ -85,7 +85,9 @@
       "Enable passkey-protected heating web page": "Enable passkey-protected heating web page",
       "Authentication SecretsManager (none = automatic)": "Authentication SecretsManager (none = automatic)",
       "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only.": "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only.",
-      "Register / repair heating webhook": "Register / repair heating webhook"
+      "Register / repair heating webhook": "Register / repair heating webhook",
+      "Recovery fan run-on (seconds; 0 = off)": "Recovery fan run-on (seconds; 0 = off)",
+      "Default 60 seconds. After a temperature stop threshold is crossed, keep the fan and recovering room flaps active. Warm recovery cancels the countdown. Air at or below the room temperature, recovery off and heating shutdown take priority.": "Default 60 seconds. After a temperature stop threshold is crossed, keep the fan and recovering room flaps active. Warm recovery cancels the countdown. Air at or below the room temperature, recovery off and heating shutdown take priority."
     },
     "de": {
       "Replace configuration and leave controller disabled?": "Konfiguration ersetzen und Regler deaktiviert lassen?",
@@ -172,7 +174,9 @@
       "Enable passkey-protected heating web page": "Passkey-geschützte Heizungs-Webseite aktivieren",
       "Authentication SecretsManager (none = automatic)": "SecretsManager zur Anmeldung (keine Auswahl = automatisch)",
       "Open /hook/heating_<instance ID> on your SecretsManager HTTPS origin. The portal discovers this page. Disabled controller or dry run = read-only.": "/hook/heating_<Instanz-ID> über die HTTPS-Adresse des SecretsManager öffnen. Das Portal erkennt die Seite. Steuerung deaktiviert oder Testbetrieb = nur Lesen.",
-      "Register / repair heating webhook": "Heizungs-Webhook registrieren / reparieren"
+      "Register / repair heating webhook": "Heizungs-Webhook registrieren / reparieren",
+      "Recovery fan run-on (seconds; 0 = off)": "Ventilator-Nachlauf bei Rekuperation (Sekunden; 0 = aus)",
+      "Default 60 seconds. After a temperature stop threshold is crossed, keep the fan and recovering room flaps active. Warm recovery cancels the countdown. Air at or below the room temperature, recovery off and heating shutdown take priority.": "Standard: 60 Sekunden. Nach Unterschreiten einer Abschaltschwelle bleiben Ventilator und betroffene Raumklappen aktiv. Erholt sich die Temperatur, entfällt die Abschaltung. Luft auf oder unter Raumtemperatur, gesperrte Restwärmenutzung und Heizungsabschaltung haben Vorrang."
     }
   }
 }

@@ -87,6 +87,7 @@ class HeatingControl extends IPSModule
         $this->RegisterPropertyInteger('IntervalSeconds', 60);
         $this->RegisterPropertyInteger('MaxSensorAgeSeconds', 0); // 0 retains legacy behavior
         $this->RegisterPropertyFloat('ResidualMinOutgoingTemp', 22.0);
+        $this->RegisterPropertyInteger('RecoveryRunOnSeconds', 60);
         $this->RegisterPropertyInteger('MixerOpen', 0);
         $this->RegisterPropertyInteger('MixerClosed', 100);
         $this->RegisterPropertyInteger('CoolingModeValue', 0);
@@ -94,12 +95,14 @@ class HeatingControl extends IPSModule
         $this->RegisterPropertyInteger('GasModeValue', 2);
         $this->RegisterAttributeString('DemandLatch', '{}');
         $this->RegisterAttributeString('RecoveryLatch', '{}');
+        $this->RegisterAttributeString('RecoveryBelowSince', '{}');
         $this->RegisterAttributeString('LastDemandRoom', '');
         $this->RegisterAttributeString('WatchIDs', '[]');
         $this->RegisterVariableString('DecisionStatus', 'Heating decision', '~TextBox', 10);
         $this->RegisterVariableString('ActionLog', 'Heating action log', '~TextBox', 20);
         $this->RegisterVariableBoolean('ResidualHeating', 'Residual heating', '', 30);
         $this->RegisterVariableString('DebugLog', 'Heating debug log', '~TextBox', 40);
+        $this->RegisterTimer('RecoveryRunOnTimer', 0, 'HC_ProcessHeating($_IPS[\'TARGET\']);');
         $this->RegisterTimer('HeatingTimer', 0, 'HC_ProcessHeating($_IPS[\'TARGET\']);');
     }
 
@@ -148,13 +151,14 @@ class HeatingControl extends IPSModule
             $this->WriteAttributeString('SourceTransfer', '{"target":0,"since":0}');
         }
         if (!$this->ReadPropertyBoolean('Enabled')) {
-            $this->WriteAttributeString('RecoveryLatch', '{}');
+            $this->clearRecovery();
             $this->SetValue('LearningSourceMode', 0);
         }
         $this->replaceWatchers();
         // Defer cross-instance changes until after the current ApplyChanges lifecycle.
         $this->SetTimerInterval('HookSetup', IPS_GetKernelRunlevel() === KR_READY ? 1000 : 0);
         $active = $this->ReadPropertyBoolean('Enabled') && IPS_GetKernelRunlevel() === KR_READY;
+        $this->SetTimerInterval('RecoveryRunOnTimer', $active && $this->ReadAttributeString('RecoveryBelowSince') !== '{}' ? 1000 : 0);
         $this->SetTimerInterval('HeatingTimer', $active ? max(5, $this->ReadPropertyInteger('IntervalSeconds')) * 1000 : 0);
     }
 
@@ -173,7 +177,8 @@ class HeatingControl extends IPSModule
         $lock = 'HeatingControl.' . $this->InstanceID;
         if (!IPS_SemaphoreEnter($lock, 1000)) return;
         try {
-            if ($this->processHeatPumpTest()) return;
+            $this->SetTimerInterval('RecoveryRunOnTimer', 0);
+            if ($this->processHeatPumpTest()) { $this->clearRecovery(); return; }
             $this->debug('Evaluation started');
             $this->evaluate();
         } catch (\Throwable $e) {
@@ -200,7 +205,7 @@ class HeatingControl extends IPSModule
                 $this->WriteAttributeString('SourceTransfer', '{"target":0,"since":0}');
             }
             $this->SetValue('SourceSelectionStatus', $disabled ? 'Master bypass: existing device states retained' : 'Summer bypass: existing device states retained');
-            $this->WriteAttributeString('RecoveryLatch', '{}');
+            $this->clearRecovery();
             $this->debug($disabled ? 'Master disabled; no commands' : 'Summer; no commands');
             $this->SetValue('DecisionStatus', ($this->ReadPropertyBoolean('DryRun') ? '[DRY RUN] ' : '') .
                 ($disabled ? 'Master disabled: no devices controlled' : 'Summer: no devices controlled'));
@@ -217,7 +222,7 @@ class HeatingControl extends IPSModule
             $this->sourceIdle(($night && !$holiday) ? 'Night shutdown' : 'Cooling shutdown');
             $this->queueOff($queue);
             $this->dispatch($queue, $log);
-            $this->WriteAttributeString('RecoveryLatch', '{}');
+            $this->clearRecovery();
             $this->SetValue('ResidualHeating', false);
             $decision = ($night && !$holiday) ? 'Night shutdown' : 'Cooling mode: heating shutdown';
             $this->publish($decision, $log);
@@ -236,10 +241,12 @@ class HeatingControl extends IPSModule
         $nextLatch = [];
         $demandRooms = [];
         $cutoffRooms = [];
+        $roomTemperatures = [];
         foreach ($rooms as $room) {
             $temps = [];
             foreach ($room['sensors'] as $id) $temps[] = $this->temperature((int)$id);
             $actual = array_sum($temps) / count($temps);
+            $roomTemperatures[$room['name']] = $actual;
             $target = $this->temperature((int)$room['targetID'], false);
             $name = $room['name'];
             $previous = (bool)($oldLatch[$name] ?? ($actual < $target)); // first run inside band
@@ -264,7 +271,7 @@ class HeatingControl extends IPSModule
                 $this->queueFanForSource($queue, $mode);
             }
             $this->dispatch($queue, $log);
-            $this->WriteAttributeString('RecoveryLatch', '{}');
+            $this->clearRecovery();
             $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
             $this->WriteAttributeString('LastDemandRoom', end($demandRooms));
             $this->SetValue('ResidualHeating', false);
@@ -293,6 +300,13 @@ class HeatingControl extends IPSModule
         $candidates = array_merge($candidates, array_keys(array_filter($oldRecovery, static fn($active)=>$active === true)));
         $purge = [];
         $nextRecovery = [];
+        $oldBelowSince = json_decode($this->ReadAttributeString('RecoveryBelowSince'), true);
+        if (!is_array($oldBelowSince)) $oldBelowSince = [];
+        $nextBelowSince = [];
+        $now = $this->sourceClock();
+        $runOn = $this->ReadPropertyInteger('RecoveryRunOnSeconds');
+        $nextWake = null;
+        $runningOn = [];
         foreach ($rooms as $room) {
             $previous = ($oldRecovery[$room['name']] ?? false) === true;
             $margin = $previous ? -$hysteresis : $hysteresis;
@@ -300,11 +314,26 @@ class HeatingControl extends IPSModule
             $threshold = $this->temperature((int)$room['targetID'], false) + $delta + $margin;
             $useful = $recoveryEnabled && $outgoing >= $minimum && $outgoing > $threshold
                 && in_array($room['name'], $candidates, true);
-            $nextRecovery[$room['name']] = $useful;
+            // A continuous loss of usefulness starts one off-delay per room. A warm
+            // reading cancels it; repeated low readings must never extend it.
+            $active = $useful;
+            if (!$useful && $previous && $recoveryEnabled && $runOn > 0
+                && $outgoing > $roomTemperatures[$room['name']]) {
+                $since = $oldBelowSince[$room['name']] ?? $now;
+                if (!is_int($since) || $since > $now || $since < 0) $since = $now;
+                $remaining = $runOn - ($now - $since);
+                if ($remaining > 0) {
+                    $active = true;
+                    $nextBelowSince[$room['name']] = $since;
+                    $nextWake = $nextWake === null ? $remaining : min($nextWake, $remaining);
+                    $runningOn[] = $room['name'];
+                }
+            }
+            $nextRecovery[$room['name']] = $active;
             $this->debug(sprintf('RESIDUAL ROOM %s previous=%d active=%d minimum=%.2f target+delta=%.2f',
-                $room['name'], (int)$previous, (int)$useful, $minimum, $threshold));
-            $this->queue($queue, (int)$room['flapID'], $useful ? $room['open'] : $room['closed']);
-            if ($useful) $purge[] = $room['name'];
+                $room['name'], (int)$previous, (int)$active, $minimum, $threshold));
+            $this->queue($queue, (int)$room['flapID'], $active ? $room['open'] : $room['closed']);
+            if ($active) $purge[] = $room['name'];
         }
         $this->sourceIdle($purge ? 'Residual heat recovery: heat sources off' : 'No room demand: heat sources off');
         $this->queueHeatOff($queue, !$purge);
@@ -312,12 +341,22 @@ class HeatingControl extends IPSModule
         else $this->queueFanOff($queue);
         $this->dispatch($queue, $log);
         $this->WriteAttributeString('RecoveryLatch', json_encode($nextRecovery, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+        $this->WriteAttributeString('RecoveryBelowSince', json_encode((object)$nextBelowSince, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+        $this->SetTimerInterval('RecoveryRunOnTimer', $nextWake === null ? 0 : $nextWake * 1000);
         $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         $this->SetValue('ResidualHeating', (bool)$purge);
         $decision = $purge ? 'Residual heat: ' . implode(', ', $purge) :
             ($recoveryEnabled ? 'Idle' : 'Idle: residual heat recovery disabled');
+        $decision .= $runningOn ? ' (fan run-on: ' . implode(', ', $runningOn) . ')' : '';
         $this->publish($decision, $log);
         $this->mirrorLegacyStatus($rooms, $nextLatch, (bool)$purge, null, $decision, $log);
+    }
+
+    private function clearRecovery(): void
+    {
+        $this->WriteAttributeString('RecoveryLatch', '{}');
+        $this->WriteAttributeString('RecoveryBelowSince', '{}');
+        $this->SetTimerInterval('RecoveryRunOnTimer', 0);
     }
 
     private function queueHeatSource(array &$q, int $mode, ?int $power = null): void
@@ -524,6 +563,9 @@ class HeatingControl extends IPSModule
         foreach (['SourceTransferDelaySeconds'=>[30, 3600], 'HeatPumpMinimumOffSeconds'=>[60, 3600]] as $name=>$range) {
             $value = $this->ReadPropertyInteger($name);
             if ($value < $range[0] || $value > $range[1]) throw new RuntimeException('Invalid transfer timing: ' . $name);
+        }
+        if ($this->ReadPropertyInteger('RecoveryRunOnSeconds') < 0 || $this->ReadPropertyInteger('RecoveryRunOnSeconds') > 600) {
+            throw new RuntimeException('Recovery fan run-on must be between 0 and 600 seconds');
         }
         $this->recoveryEnabled(); // Validate the optional switch before sending any commands.
         foreach (self::DEFAULT_IDS as $property => $_) {
@@ -735,7 +777,7 @@ class HeatingControl extends IPSModule
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
         $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS), array_keys(self::TEST_DEFAULTS),
-            ['HeatPumpCOPMethod','HeatPumpGasEfficiencyPercent','HeatPumpMatrixTemperatureToleranceC','HeatPumpMeasuredMatrix','Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp',
+            ['HeatPumpCOPMethod','HeatPumpGasEfficiencyPercent','HeatPumpMatrixTemperatureToleranceC','HeatPumpMeasuredMatrix','Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp', 'RecoveryRunOnSeconds',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
@@ -755,9 +797,12 @@ class HeatingControl extends IPSModule
         foreach (array_merge(self::DEFAULT_IDS, self::DEFAULT_STATUS_IDS, ['RecoveryEnableID' => 0, 'VaultInstanceID' => 0, 'ElectricityPriceInstanceID' => 0]) as $name => $_) if (isset($incoming[$name]) && !is_int($incoming[$name])) {
             throw new \InvalidArgumentException('Expected integer ID: ' . $name);
         }
-        foreach (['SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'MixerOpen', 'MixerClosed',
+        foreach (['RecoveryRunOnSeconds', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'MixerOpen', 'MixerClosed',
                   'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue'] as $name) {
             if (isset($incoming[$name]) && !is_int($incoming[$name])) throw new \InvalidArgumentException('Expected integer: ' . $name);
+        }
+        if (array_key_exists('RecoveryRunOnSeconds', $incoming) && (!is_int($incoming['RecoveryRunOnSeconds']) || $incoming['RecoveryRunOnSeconds'] < 0 || $incoming['RecoveryRunOnSeconds'] > 600)) {
+            throw new \InvalidArgumentException('Recovery fan run-on must be an integer between 0 and 600 seconds');
         }
         if (isset($incoming['ResidualMinOutgoingTemp']) && !is_numeric($incoming['ResidualMinOutgoingTemp'])) {
             throw new \InvalidArgumentException('Invalid residual minimum');
