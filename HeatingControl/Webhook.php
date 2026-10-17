@@ -246,6 +246,7 @@ trait HeatingControlWebhook
             'decision'=>$this->GetValue('DecisionStatus'), 'log'=>$this->GetValue('ActionLog'),
             'residual'=>$this->GetValue('ResidualHeating'), 'lastRoom'=>$this->ReadAttributeString('LastDemandRoom'),
             'recoveryMinimum'=>$this->ReadPropertyFloat('ResidualMinOutgoingTemp'),
+            'recoveryRunOnSeconds'=>$this->ReadPropertyInteger('RecoveryRunOnSeconds'),
             'mixerOpen'=>$this->ReadPropertyInteger('MixerOpen'), 'mixerClosed'=>$this->ReadPropertyInteger('MixerClosed'),
             'sourceSelection'=>['automatic'=>(bool)$this->GetValue('AutomaticSourceSelection'), 'effective'=>(int)$this->GetValue('EffectiveSource'),
                 'power'=>(int)$this->GetValue('SelectedHeatPumpPower'), 'status'=>(string)$this->GetValue('SourceSelectionStatus'),

@@ -638,6 +638,17 @@
           "digits": 1,
           "minimum": 0,
           "maximum": 50
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "RecoveryRunOnSeconds",
+          "caption": "Recovery fan run-on (seconds; 0 = off)",
+          "minimum": 0,
+          "maximum": 600
+        },
+        {
+          "type": "Label",
+          "caption": "Default 60 seconds. After a temperature stop threshold is crossed, keep the fan and recovering room flaps active. Warm recovery cancels the countdown. Air at or below the room temperature, recovery off and heating shutdown take priority."
         }
       ]
     },
