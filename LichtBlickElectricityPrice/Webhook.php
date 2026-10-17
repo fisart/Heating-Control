@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../libs/SystemPortalNavigation.php';
+
 
 trait LichtBlickElectricityPriceWebhook
 {
@@ -104,12 +106,7 @@ trait LichtBlickElectricityPriceWebhook
 
     private function webPortalPath(): string
     {
-        $eligible = [];
-        foreach (IPS_GetInstanceListByModuleID('{922E5A10-A048-463D-A973-97B4BBD9096B}') as $id) {
-            try { if (IPS_GetProperty((int)$id,'Enabled') === true) $eligible[] = (int)$id; }
-            catch (Throwable $e) { continue; }
-        }
-        return count($eligible) === 1 ? '/hook/alarm_portal_'.$eligible[0] : '';
+        return AFSystemPortalNavigationV1::path($this->webVault());
     }
 
     /** A read-only snapshot: opening the dashboard never fetches, learns or commands heating. */

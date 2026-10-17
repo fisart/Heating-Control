@@ -12,7 +12,7 @@
 </style>
 </head>
 <body><main data-path="{{PATH}}" data-csrf="{{CSRF}}">
-<header><div><div class="eyebrow">Home climate · Heating Control</div><h1>Warmth, under control.</h1><p class="subtitle">Rooms, heat sources and recovered warmth in one view.</p></div><div class="tools"><a href="{{PORTAL}}" id="portal" hidden>Back to portal</a><button class="secondary" id="portal-back" hidden>Back</button><button class="secondary" id="refresh">Refresh</button><span id="status" aria-live="polite">Connecting…</span></div></header>
+<header><div><div class="eyebrow">Home climate · Heating Control</div><h1>Warmth, under control.</h1><p class="subtitle">Rooms, heat sources and recovered warmth in one view.</p></div><div class="tools"><a href="{{PORTAL}}" target="_top" id="portal" hidden>← System portal</a><button class="secondary" id="portal-back" hidden>Back</button><button class="secondary" id="refresh">Refresh</button><span id="status" aria-live="polite">Connecting…</span></div></header>
 <div id="message" role="status" aria-live="polite"></div>
 <section id="decision" class="banner"><strong>Reading heating status…</strong><p>Controls become available after authentication and a successful status refresh.</p></section>
 <section id="automatic-source" class="card" aria-label="Automatic heat source selection">
