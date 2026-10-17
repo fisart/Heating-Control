@@ -56,9 +56,11 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
 
  assert.equal(d.querySelector('#portal').getAttribute('href'),'/hook/alarm_portal_10');
  assert.equal(d.querySelector('#portal').hidden,false,'Actual portal backlink visible');
+ assert.equal(d.querySelector('#portal').getAttribute('target'),'_top','Portal link opens the top-level context');
+ assert.equal(d.querySelector('#portal').textContent,'← System portal');
  assert.equal(d.querySelector('#portal-back').hidden,true,'Browser fallback hidden when portal is available');
  for(const href of ['', 'javascript:alert(1)','https://evil.example/hook/alarm_portal_10']){
-  const html=fixture.page.body.replace('href="/hook/alarm_portal_10" id="portal"','href="'+href+'" id="portal"');
+  const html=fixture.page.body.replace('href="/hook/alarm_portal_10"','href="'+href+'"');
   const fallback=new JSDOM(html,{url:w.location.href+'?return=https://evil.example',runScripts:'outside-only',virtualConsole:vc});
   let backs=0;fallback.window.history.back=()=>{backs++;};fallback.window.setInterval=()=>0;fallback.window.fetch=w.fetch;
   fallback.window.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
@@ -175,3 +177,4 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.deepEqual(errors,[]);
  dom.window.close();console.log('Page DOM: device groups, archived-only links, sensor names, chart periods and resolutions, empty results, multi-sensor values, escaping and expired sessions passed.');
 })().catch(e=>{console.error(e);process.exit(1);});
+

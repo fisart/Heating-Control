@@ -66,8 +66,17 @@ check(serialize([$m->values,$m->attributes,$m->buffers,$m->properties])===$befor
 $savedValidity=$m->values['PriceValid'];$m->values['PriceValid']=false;
 $data=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
 check($data['values']['PriceAvailable']&&!$data['values']['PriceValid']&&!$data['recommendation']['valid'],'Unconfirmed tariff quote remains visible without a valid heating decision');$m->values['PriceValid']=$savedValidity;
-$GLOBALS['instanceModules'][42]='{922E5A10-A048-463D-A973-97B4BBD9096B}';$GLOBALS['instanceProperties'][42]=['Enabled'=>true];
+$GLOBALS['instanceModules'][42]='{922E5A10-A048-463D-A973-97B4BBD9096B}';$GLOBALS['instanceProperties'][42]=['Enabled'=>true,'VaultInstanceID'=>7];
+$navigationHooks=$GLOBALS['instanceProperties'][5]['Hooks'];
+$GLOBALS['instanceProperties'][5]['Hooks']=json_encode([['Hook'=>'/hook/alarm_portal_42','TargetID'=>42]]);
 check(str_contains(response($m)['body'],'href="/hook/alarm_portal_42"'),'Direct back link to the sole enabled portal');
+check(str_contains(response($m)['body'],'target="_top"'),'Portal navigation targets top level');
+$GLOBALS['instanceProperties'][42]['VaultInstanceID']=99;
+check(!str_contains(response($m)['body'],'href="/hook/alarm_portal_42"'),'Other-vault portal is not a navigation destination');
+$GLOBALS['instanceProperties'][42]['VaultInstanceID']=7;
+$GLOBALS['instanceProperties'][5]['Hooks']='[]';
+check(!str_contains(response($m)['body'],'href="/hook/alarm_portal_42"'),'Unregistered portal is not a navigation destination');
+$GLOBALS['instanceProperties'][5]['Hooks']=$navigationHooks;
 unset($GLOBALS['instanceModules'][42]);
 $snapshot=$m->values['RecommendationJSON'];$expired=json_decode($snapshot,true);$expired['updatedAt']=time()-181;$m->values['RecommendationJSON']=json_encode($expired);
 $data=json_decode(response($m,'GET',['view'=>'state'])['body'],true);check(!$data['recommendation']['valid'] && $data['recommendation']['source']===2 && $data['recommendation']['powerPercent']===0,'Expired decision displays gas fallback, zero power');
@@ -94,4 +103,5 @@ $m->properties['WebEnabled']=false;$m->SetupHook();check(json_decode($GLOBALS['i
 $m->properties['WebEnabled']=true;$GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/lichtblick_1","TargetID":99}]';$m->SetupHook();
 check(str_contains($m->values['WebPath'],'another object') && $GLOBALS['hookApplies']===$count+1,'Cannot steal a route from another owner');
 echo "LichtBlick secure read-only page and webhook lifecycle checks passed.\n";
+
 
