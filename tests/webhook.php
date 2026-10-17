@@ -17,37 +17,37 @@ check(!str_contains($page['body'],'{{'),'All template substitutions resolved');
 check(str_contains($page['headers']['Content-Security-Policy'],"frame-ancestors 'none'")&&str_contains($page['headers']['Content-Security-Policy'],"script-src 'nonce-"),'Restrictive nonce CSP');
 check($page['headers']['Cache-Control']==='private, no-store, max-age=0','Sensitive page never cached');
 check($page['headers']['Content-Security-Policy']!==response($m)['headers']['Content-Security-Policy'],'Fresh CSP nonce');
-// Navigation targets the registered AlarmPortal, not the vault login/admin page.
-check(str_contains($page['body'],'href="" id="portal" hidden'),'No portal produces a browser-Back fallback');
+// Navigation targets the registered System Portal, not the vault login/admin page.
+check(str_contains($page['body'],'href="" target="_top" id="portal" hidden'),'No portal produces a browser-Back fallback');
 $GLOBALS['instanceModules'][10]='{922E5A10-A048-463D-A973-97B4BBD9096B}';
 $GLOBALS['instanceProperties'][10]=['Enabled'=>true,'VaultInstanceID'=>7];
 $originalHooks=$GLOBALS['instanceProperties'][5]['Hooks'];
 $GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/alarm_portal_10","TargetID":10}]';
 $navigation=response($m,'GET',['return'=>'https://evil.example','portal'=>'/hook/secrets_99']);
-check($navigation['status']===200&&str_contains($navigation['body'],'href="/hook/alarm_portal_10" id="portal"'),'Registered portal selected; query redirects ignored');
+check($navigation['status']===200&&str_contains($navigation['body'],'href="/hook/alarm_portal_10" target="_top" id="portal"'),'Registered portal selected; query redirects ignored');
 check(!str_contains($navigation['body'],'href="/hook/secrets_7?portal=1"'),'Backlink does not lead to SecretsManager');
 $GLOBALS['instanceProperties'][10]['VaultInstanceID']=0;
-check(str_contains(response($m)['body'],'href="/hook/alarm_portal_10" id="portal"'),'Portal with a single automatically selected shared vault accepted');
+check(str_contains(response($m)['body'],'href="/hook/alarm_portal_10" target="_top" id="portal"'),'Portal with a single automatically selected shared vault accepted');
 $GLOBALS['instanceProperties'][10]['Enabled']=false;
-check(str_contains(response($m)['body'],'href="" id="portal"'),'Disabled portal not linked');
+check(str_contains(response($m)['body'],'href="" target="_top" id="portal"'),'Disabled portal not linked');
 $GLOBALS['instanceProperties'][10]['Enabled']=true;
 foreach(['[]','[{"Hook":"/hook/alarm_portal_10","TargetID":99}]','[{"Hook":"/hook/alarm_portal_10","TargetID":10},{"Hook":"/hook/alarm_portal_10","TargetID":99}]','[{"Hook":"https://evil.example","TargetID":10}]','{bad'] as $registry) {
  $GLOBALS['instanceProperties'][5]['Hooks']=$registry;
- check(str_contains(response($m)['body'],'href="" id="portal"'),'Missing/conflicting/malformed portal registry falls back safely');
+ check(str_contains(response($m)['body'],'href="" target="_top" id="portal"'),'Missing/conflicting/malformed portal registry falls back safely');
 }
 $GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/alarm_portal_10","TargetID":10}]';
 $GLOBALS['instanceModules'][11]=$GLOBALS['instanceModules'][10];$GLOBALS['instanceProperties'][11]=['Enabled'=>true,'VaultInstanceID'=>7];
 $GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/alarm_portal_10","TargetID":10},{"Hook":"/hook/alarm_portal_11","TargetID":11}]';
-check(str_contains(response($m)['body'],'href="" id="portal"'),'Multiple eligible portals not guessed');
+check(str_contains(response($m)['body'],'href="" target="_top" id="portal"'),'Multiple eligible portals not guessed');
 $GLOBALS['instanceModules'][8]=$GLOBALS['instanceModules'][7];$GLOBALS['instanceProperties'][8]=$GLOBALS['instanceProperties'][7];
 $m->properties['VaultInstanceID']=7;$GLOBALS['instanceProperties'][10]['VaultInstanceID']=8;$GLOBALS['instanceProperties'][11]['Enabled']=false;
-check(str_contains(response($m)['body'],'href="" id="portal"'),'Portal using another vault not selected');
+check(str_contains(response($m)['body'],'href="" target="_top" id="portal"'),'Portal using another vault not selected');
 $GLOBALS['instanceProperties'][10]['VaultInstanceID']=0;
-check(str_contains(response($m)['body'],'href="" id="portal"'),'Ambiguous automatic portal vault not guessed');
+check(str_contains(response($m)['body'],'href="" target="_top" id="portal"'),'Ambiguous automatic portal vault not guessed');
 $GLOBALS['instanceProperties'][10]['VaultInstanceID']=7;
-check(str_contains(response($m)['body'],'href="/hook/alarm_portal_10" id="portal"'),'Explicit matching portal vault accepted');
+check(str_contains(response($m)['body'],'href="/hook/alarm_portal_10" target="_top" id="portal"'),'Explicit matching portal vault accepted');
 $GLOBALS['instanceProperties'][10]['VaultInstanceID']=5;
-check(str_contains(response($m)['body'],'href="" id="portal"'),'Wrong module cannot supply a portal vault');
+check(str_contains(response($m)['body'],'href="" target="_top" id="portal"'),'Wrong module cannot supply a portal vault');
 unset($GLOBALS['instanceModules'][8],$GLOBALS['instanceModules'][10],$GLOBALS['instanceModules'][11]);
 $GLOBALS['instanceProperties'][5]['Hooks']=$originalHooks;$m->properties['VaultInstanceID']=0;
 $s=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
@@ -113,3 +113,4 @@ $m->properties['WebEnabled']=true;$GLOBALS['instanceProperties'][5]['Hooks']='[{
 $m=heatingFixture();$GLOBALS['pendingChanges']=true;$before=$GLOBALS['instanceProperties'][5]['Hooks'];$m->SetupHook();check($GLOBALS['instanceProperties'][5]['Hooks']===$before,'Pending webhook edits preserved');
 $m=heatingFixture();$backup=$m->ExportConfig();$m->ImportConfig($backup);check(!$m->properties['WebEnabled']&&!$m->properties['Enabled']&&$m->properties['DryRun'],'Restore retains auth selection but disables web and controller');
 echo "Heating webhook: $checks assertions passed.\n";
+
