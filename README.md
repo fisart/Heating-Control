@@ -78,6 +78,10 @@ hysteresis 58771 (then 1 °C), residual delta 28538 (then 6 K), desired fan
 speed 48646 (then 90), desired heat pump power 59800 (then 83), and the four
 room target variables. Their current values are read during each evaluation.
 
+## Daily report heating-use percentages — 0.3.38
+
+The daily Verbrauch & Kosten email now shows heat-pump, gas air-heating and idle time, with each share of the full day. It uses the connected Heating Control’s archived on/off states for the report’s Berlin day, including idle time; the three percentages total 100%. Missing or conflicting history is labelled unavailable. Gas radiator/hot-water use and energy/cost shares are outside this runtime comparison. See [the consumption report guide](docs/consumption-and-costs.md#daily-heating-use-split--0338-build-49). Existing report content, scheduling, controls and settings remain in place.
+
 ## LichtBlick prices and source recommendation
 
 Version **0.3.0** adds a separate **LichtBlickElectricityPrice** instance with

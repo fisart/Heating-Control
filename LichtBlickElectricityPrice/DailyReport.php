@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/DailyHeatingUsage.php';
 
 /** Email view of the reviewed daily totals. It never allocates manual period readings to days. */
 final class LichtBlickDailyReport
@@ -11,7 +12,7 @@ final class LichtBlickDailyReport
         return (new DateTimeImmutable('@'.$now))->setTimezone(new DateTimeZone('Europe/Berlin'))->setTime(0,0)->modify('+1 day')->getTimestamp();
     }
 
-    public static function model(string $date, array $report, bool $sample=false): array
+    public static function model(string $date, array $report, bool $sample=false, ?array $heatingUsage=null): array
     {
         $rows=[]; $cents=0; $costParts=0; $complete=true; $provisional=false;
         foreach (['electricity'=>'Electricity','gas'=>'Gas','house'=>'House water','well'=>'Well water'] as $key=>$label) {
@@ -41,7 +42,22 @@ final class LichtBlickDailyReport
             $complete=$complete && $costComplete; $provisional=$provisional || $estimated;
         }
         return ['date'=>$date,'rows'=>$rows,'costCents'=>$costParts?$cents:null,'completeCost'=>$complete,
-            'provisional'=>$provisional,'mainIncludesGarden'=>$report['waterHouseIncludesGarden']??false,'sample'=>$sample];
+            'heatingUsage'=>$heatingUsage??['available'=>false,'reason'=>'Archived heating operating times are unavailable.'],'provisional'=>$provisional,'mainIncludesGarden'=>$report['waterHouseIncludesGarden']??false,'sample'=>$sample];
+    }
+
+    private static function heatingHTML(array $usage): string
+    {
+        $e=static fn(string $v):string=>htmlspecialchars($v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+        $html='<tr><td colspan="3" style="padding:22px 24px;border-bottom:1px solid #e8edf2;"><h2 style="font-size:19px;margin:0 0 14px;">Heating use · share of the day</h2>';
+        if($usage['available']??false) {
+            $duration=static fn(int $s):string=>intdiv($s,3600).' h '.sprintf('%02d',intdiv($s%3600,60)).' min'.($s%60?' '.($s%60).' s':'');
+            $html.='<table role="presentation" width="100%" cellspacing="0" cellpadding="0">';
+            foreach(['heatPump'=>'Heat pump','gas'=>'Gas air heating','idle'=>'Idle / no air heating'] as $key=>$label)
+                $html.='<tr><td style="padding:9px 0;">'.$label.'</td><td style="padding:9px;text-align:right;white-space:nowrap;">'.$e($duration($usage[$key.'Seconds'])).'</td><td style="padding:9px 0;text-align:right;white-space:nowrap;font-weight:bold;">'.number_format($usage[$key.'Percent'],1,',','.').' %</td></tr>';
+            $html.='</table><p style="font-size:12px;color:#67768a;">Full day: '.$e($duration($usage['daySeconds'])).'. Heat pump, gas and idle time total 100% of this Berlin calendar day.</p>';
+            if(($usage['reason']??'')!=='')$html.='<p style="font-size:12px;color:#67768a;">'.$e($usage['reason']).'</p>';
+        } else $html.='<p style="font-size:13px;color:#67768a;">'.$e($usage['reason']??'Heating usage unavailable.').'</p>';
+        return $html.'<p style="font-size:12px;line-height:1.6;color:#67768a;">Based on archived control on/off states: heat pump enabled in heating mode and gas air-heating pump on. These are recorded operating states, not burner/compressor feedback or energy shares. Gas use for radiators and hot water is outside this split.</p></td></tr>';
     }
 
     public static function html(array $model): string
@@ -62,6 +78,7 @@ final class LichtBlickDailyReport
             .'<tr><td colspan="3">'.$sample.'<div style="padding:30px 24px;background:#143b52;color:#ffffff;"><div style="font-size:12px;letter-spacing:2px;color:#b5d7e3;">VERBRAUCH &amp; KOSTEN</div><h1 style="font-size:27px;margin:12px 0 8px;">Your daily consumption</h1><div style="font-size:15px;">'.$escape($date).' · 00:00–24:00 · Europe/Berlin</div></div></td></tr>'
             .'<tr style="background:#f7f9fc;color:#67768a;font-size:12px;"><th align="left" style="padding:12px 20px;">CONSUMPTION</th><th align="right" style="padding:12px;">QUANTITY</th><th align="right" style="padding:12px 20px;">COST · EUR</th></tr>'.$body
             .'<tr><td colspan="3" style="padding:24px;background:#eaf4f3;"><div style="font-size:13px;color:#37645f;">'.$escape($totalLabel).'</div><div style="font-size:34px;font-weight:bold;margin:8px 0;">'.$escape($money($model['costCents'])).'</div><div style="font-size:12px;color:#37645f;">'.$escape($status).'</div></td></tr>'
+            .self::heatingHTML($model['heatingUsage'])
             .'<tr><td colspan="3" style="padding:22px 24px;font-size:12px;line-height:1.7;color:#67768a;">Gross calculated supply costs, including documented daily fixed charges. Later electricity readings currently include energy charges only; undocumented standing charges are not added. Invoice aid and billing reconciliation remain separate.<br><br>'.$escape($main).'<br><br>Missing values remain unavailable. Partial amounts are labelled as known costs. Well water has no water charge; pump electricity is included in the electricity meter.</td></tr></table><div style="padding:16px;font-size:11px;color:#8793a1;">Daily report · Scheduled for 00:00 Europe/Berlin</div></td></tr></table></body></html>';
     }
 }
@@ -78,7 +95,23 @@ trait LichtBlickDailyReportAccess
         [$from,$to]=LichtBlickPriceStore::dates($date,$date,1);
         if ($to>$now) throw new InvalidArgumentException('Use a completed Berlin calendar day');
         $data=json_decode($this->GetTotalConsumption($date,$date,'daily'),true,64,JSON_THROW_ON_ERROR);
-        return LichtBlickDailyReport::html(LichtBlickDailyReport::model($date,$data));
+        return LichtBlickDailyReport::html(LichtBlickDailyReport::model($date,$data,false,$this->dailyHeatingUsage($from,$to)));
+    }
+
+    private function dailyHeatingUsage(int $from,int $to): array
+    {
+        try {
+            if(!function_exists('IPS_GetInstanceListByModuleID')||!function_exists('AC_GetLoggedValues')||!function_exists('AC_GetLoggingStatus'))
+                throw new RuntimeException('Heating history access is unavailable.');
+            $controllers=[];
+            foreach(IPS_GetInstanceListByModuleID('{8B333AC9-EE67-4D24-8CE7-433BBB391E6C}') as $id)
+                if((int)IPS_GetProperty($id,'ElectricityPriceInstanceID')===$this->InstanceID)$controllers[]=(int)$id;
+            if(count($controllers)!==1)throw new RuntimeException($controllers?'Several heating controllers are connected; heating usage is ambiguous.':'No Heating Control instance is connected to this consumption module.');
+            $id=$controllers[0];$sources=[];
+            foreach(['heatPumpOn'=>'HeatPumpOnID','heatPumpHeating'=>'HeatPumpHeatModeID','gasAirPump'=>'GasPumpID'] as $key=>$property)$sources[$key]=(int)IPS_GetProperty($id,$property);
+            if(count(array_unique($sources))!==3)throw new RuntimeException('Heating state variables must be distinct.');
+            return LichtBlickDailyHeatingUsage::read($this->ReadPropertyInteger('ArchiveID'),$sources,$from,$to);
+        } catch(Throwable $e) {return ['available'=>false,'reason'=>'Heating usage unavailable: '.$e->getMessage()];}
     }
 
     /** Explicit form action; works while the daily schedule is disabled and does not consume its send marker. */
