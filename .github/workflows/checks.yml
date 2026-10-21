@@ -38,6 +38,7 @@ jobs:
           php -l LichtBlickElectricityPrice/ManualWater.php
           php -l LichtBlickElectricityPrice/TotalHistory.php
           php -l LichtBlickElectricityPrice/DailyReport.php
+          php -l LichtBlickElectricityPrice/DailyHeatingUsage.php
       - name: Heating behavior and web security
         run: |
           php tests/lichtblick.php
@@ -47,6 +48,7 @@ jobs:
           php tests/lichtblick-gas-costs.php
           php tests/lichtblick-water-total.php
           php tests/lichtblick-daily-report.php
+          php tests/lichtblick-heating-usage.php
           php tests/lichtblick-reviewed-water.php
           php -d memory_limit=64M tests/lichtblick-water-dense.php
           php tests/lichtblick-webhook.php

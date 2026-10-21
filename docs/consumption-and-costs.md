@@ -337,3 +337,13 @@ is sent when disabled or merely downloading a preview.
 Run `php tests/lichtblick-daily-report.php` for clock changes, date rollover,
 preview isolation, SMTP selection, restart/duplicate handling, failures,
 rounding, free well water and incomplete/provisional reporting.
+
+## Daily heating-use split — 0.3.38, build 49
+
+The existing daily consumption email and its preview now include **Heating use · share of the day** for that same completed Berlin calendar day. They show heat-pump, gas air-heating and idle hours plus percentages of the full day. For example, seven heat-pump hours, three gas air-heating hours and fourteen idle hours produce 29.2% / 12.5% / 58.3%. Displayed values are rounded to tenths and total exactly 100.0%. These are operating-time shares, not energy-input, cost or delivered-heat shares.
+
+The report automatically locates the single Heating Control instance whose `ElectricityPriceInstanceID` points to this consumption module. It reads the archived Boolean sources selected by that controller’s `HeatPumpOnID`, `HeatPumpHeatModeID` and `GasPumpID`, using this module’s configured ArchiveID. Heat-pump time requires both on and heating mode; gas time uses the air-heating pump on-state. These control states do not prove burner/compressor feedback. Gas used for radiators or domestic hot water is outside this split. Current recommendations and source-selection variables are not used as runtime evidence.
+
+The reader integrates time between raw state changes, including a held baseline at midnight and excluding the next day’s midnight. Berlin’s 23- and 25-hour clock-change days use their actual length. It reads existing logs only and does not enable logging, change configuration, command heaters or rewrite history. A missing/unlogged/invalid source, missing historical baseline, duplicate contradictory event or ambiguous controller connection leaves the heating section explicitly unavailable while preserving the rest of the consumption report. Simultaneous heat-pump/gas on-states also suppress percentages. A complete day with neither source active says no recorded air-heating operation and shows 0% heat pump / 0% gas / 100% idle. Missing history is never treated as idle.
+
+Update Heating-Control and reopen the existing report preview. No new settings or SMTP changes are needed. Logging must already exist for all three control-state variables; if it is missing, the section explains which state is unavailable. Previously sent emails remain unchanged.
