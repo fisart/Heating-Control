@@ -268,8 +268,8 @@ class HeatingControl extends IPSModule
             $ready = $this->sourceReady($queue, $mode);
             if ($ready) {
                 $this->queueHeatSource($queue, $mode, $selectedPower);
-                $this->queueFanForSource($queue, $mode);
             }
+            $this->queueFanForDemand($queue, $rooms, $demandRooms);
             $this->dispatch($queue, $log);
             $this->clearRecovery();
             $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -376,17 +376,19 @@ class HeatingControl extends IPSModule
         }
     }
 
-    private function queueFanForSource(array &$q, int $mode): void
+    private function queueFanForDemand(array &$q, array $rooms, array $demandRooms): void
     {
-        $source = $mode === $this->ReadPropertyInteger('HeatPumpModeValue')
-            ? $this->floatValue('HeatPumpTempID') : $this->floatValue('HeatExchangerTempID');
-        $incoming = $this->floatValue('IncomingAirTempID');
-        $this->debug(sprintf('FAN source=%.2f incoming=%.2f threshold=%.2f',
-            $source, $incoming, $this->floatValue('ResidualDeltaID')));
-        $hp=$mode === $this->ReadPropertyInteger('HeatPumpModeValue');
-        $minimum=$hp ? $this->heatPumpRequirement($this->rooms())['coilMinimum'] : -40;
-        $minimum-=$this->boolValue('FanOnID') ? max(0,$this->floatValue('HysteresisID')) : 0;
-        if ($source >= $minimum && $source - $incoming >= $this->floatValue('ResidualDeltaID')) $this->queueFanOn($q);
+        $outgoing = $this->temperature($this->id('OutgoingAirTempID'));
+        $targets = [];
+        foreach ($rooms as $room) if (in_array($room['name'], $demandRooms, true)) {
+            $targets[] = $this->temperature((int)$room['targetID'], false);
+        }
+        if (!$targets) throw new RuntimeException('Fan demand needs a receiving room');
+        $target = max($targets);
+        $this->debug(sprintf('FAN outgoing=%.2f target=%.2f demand=%s; %s',
+            $outgoing, $target, implode(', ', $demandRooms),
+            $outgoing >= $target ? 'warm enough: fan on' : 'below target: fan off'));
+        if ($outgoing >= $target) $this->queueFanOn($q);
         else $this->queueFanOff($q);
     }
 
@@ -825,5 +827,6 @@ class HeatingControl extends IPSModule
         return 'Configuration imported. Controller is disabled; verify IDs before enabling.';
     }
 }
+
 
 

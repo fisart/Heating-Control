@@ -52,7 +52,7 @@ the entire gas boiler or directly commands radiator/DHW services.
 |---|---|
 | Activate heat pump | Gas-air pump **32875=false**; gas mixer **14348=100** (closed); heat/cool **51011=true** (heating); physical percentage **19207=selected measured percentage**; heat-pump enable **35931=true** |
 | Activate gas-air heating | Heat-pump enable **35931=false**; percentage **19207=0**; mixer **14348=0** (open); gas-air pump **32875=true**; flow command **14533=value from 46820** |
-| Stop sources for transfer | **35931=false**, **19207=0**, **14348=100**, **32875=false**; fan **46921=false**, fan speed **29718=0** |
+| Stop sources for transfer | **35931=false**, **19207=0**, **14348=100**, **32875=false**; fan remains governed by outgoing air and room demand |
 
 Before changing from an active source, both air sources are stopped. The
 **SourceTransferDelaySeconds** pause defaults to 120 seconds and starts only after
@@ -69,10 +69,22 @@ source does not start. Equipment defrost, compressor ramping and internal limits
 remain controlled by the heat pump. Manufacturer controller documentation describes
 staged ramp delays; the software's minimum off timer is not a substitute for them.
 
-When a source is ready, existing fan logic starts the fan only when its temperature
-exceeds incoming air by the configured ResidualDeltaID (**28538**). Fan speed comes
-from **48646**. Demand opens the relevant room flaps. The existing gas flow target
-may be shared with other boiler services and still needs installation verification.
+## Fan control independent of source transfer
+
+From **0.3.40 build 51**, source changes do not switch off the fan. While rooms request heat, actual **outgoing-air temperature (OutgoingAirTempID)** controls it:
+
+    fan on  when outgoing air >= highest target of the rooms requesting heat
+    fan off when outgoing air <  highest target of the rooms requesting heat
+
+Equality keeps the fan on. A closed room with no demand does not raise this threshold. The same rule applies during both-source-off transfer waits, compressor minimum-off waits, normal heat-pump operation and normal gas-air operation. It can keep the fan running or start it when useful outgoing air is available. Fan speed remains the desired value from **48646**; demand keeps the receiving-room flaps open.
+
+The rule uses the measured supply/outgoing air, without an added intake-rise or exchanger-temperature gate. The configured supply margin still qualifies economic heat-pump capacity; it is not added to this fan target. Debug output records outgoing temperature, the applicable room target and the fan decision.
+
+The heat sources retain stop acknowledgments, mixer travel delay, break-before-make and the compressor minimum off time. Fan operation cannot bypass those protections. No-demand residual recovery/run-on, explicit shutdown, master/summer bypass and supervised calibration keep their existing controls.
+
+The supplied 23 October log switches from HP selection to gas fallback at 10:30:02 when a quote expires, then back to HP at 10:30:42 after the next quote. This release lets warm-air delivery continue through those source waits. It does not extend an expired price quote or change economic source-selection rules.
+
+The gas flow target may be shared with other boiler services and still needs installation verification.
 
 ## Outputs and validation
 
