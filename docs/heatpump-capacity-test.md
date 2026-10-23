@@ -258,7 +258,7 @@ temperature-limit stop can add previously completed stable points.
 Temperature limits remain 28°C rooms / 55°C exchanger, editable. Temperature age
 uses `MaxSensorAgeSeconds` (0 disables age stops); house power must update within
 180 seconds. Source/fan/flap acknowledgement, timer interruptions, external
-shutdown/cooling, disable/dry run and unplanned restarts stop the experiment.
+shutdown/cooling, dry run and unplanned restarts stop the experiment. From 0.3.42, disabling the controller instead releases all linked variables without stop/restore commands; raw readings and the interrupted checkpoint remain, and the test does not resume on re-enable.
 Only the acknowledged scheduled pause described below can resume automatically. Radiator/DHW and other house loads should be comparable
 between baseline and test; this remains a whole-house subtraction, not isolated
 compressor measurement. Full-cycle economics near freezing additionally needs

@@ -112,5 +112,25 @@ $m->properties['WebEnabled']=false;$m->SetupHook();check(json_decode($GLOBALS['i
 $m->properties['WebEnabled']=true;$GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/heating_1","TargetID":99}]';$m->SetupHook();check($GLOBALS['instanceProperties'][5]['Hooks']==='[{"Hook":"/hook/heating_1","TargetID":99}]','Cannot take another hook owner');
 $m=heatingFixture();$GLOBALS['pendingChanges']=true;$before=$GLOBALS['instanceProperties'][5]['Hooks'];$m->SetupHook();check($GLOBALS['instanceProperties'][5]['Hooks']===$before,'Pending webhook edits preserved');
 $m=heatingFixture();$backup=$m->ExportConfig();$m->ImportConfig($backup);check(!$m->properties['WebEnabled']&&!$m->properties['Enabled']&&$m->properties['DryRun'],'Restore retains auth selection but disables web and controller');
+// Module control remains available while disabled; it cannot write linked settings.
+$m=heatingFixture();$GLOBALS['authenticated']=true;
+check(response($m,'POST',[],['control'=>'ModuleEnabled','value'=>false],['HTTP_X_HEATING_CSRF'=>'bad'])['status']===403,'Disable endpoint is CSRF protected');
+check(response($m,'POST',[],['control'=>'ModuleEnabled','value'=>0])['status']===422,'Enable endpoint requires strict Boolean');
+$GLOBALS['commands']=[];$GLOBALS['directWrites']=[];
+$r=response($m,'POST',[],['control'=>'ModuleEnabled','value'=>false]);
+check($r['status']===200&&!$m->properties['Enabled']&&!$GLOBALS['commands']&&!$GLOBALS['directWrites'],'HTML disable releases all linked variables without writes');
+check(response($m,'POST',[],['control'=>'FlapCalibrationStart','value'=>true])['status']===422,'Disabled calibration start rejected');
+check(response($m,'POST',[],['control'=>'room:0','value'=>24])['status']===422,'Disabled linked setting remains blocked');
+check(response($m,'POST',[],['control'=>'ModuleEnabled','value'=>true])['status']===200&&$m->properties['Enabled'],'HTML can re-enable the controller');
+check(response($m,'POST',[],['control'=>'FlapCalibrationWaitSeconds','value'=>5])['status']===200&&$m->properties['FlapCalibrationWaitSeconds']===5,'HTML wait setting is persisted');
+check(response($m,'POST',[],['control'=>'FlapCalibrationWaitSeconds','value'=>0])['status']===422,'HTML rejects invalid dwell');
+check(response($m,'POST',[],['control'=>'FlapCalibrationStart','value'=>true])['status']===200&&$m->values['FlapCalibrationActive'],'HTML starts exclusive calibration');
+check(response($m,'POST',[],['control'=>'WinterID','value'=>false])['status']===422,'Calibration blocks ordinary linked-setting writes');
+check(response($m,'POST',[],['control'=>'HeatPumpTestStart','value'=>true])['status']===422,'Calibration blocks concurrent heat-pump test');
+$view=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
+check($view['flapCalibration']['active']&&$view['flapCalibration']['waitSeconds']===5&&$view['flapCalibration']['status']!=='','HTML state includes progress and dwell');
+check(response($m,'POST',[],['control'=>'FlapCalibrationCancel','value'=>true])['status']===200&&!$m->values['FlapCalibrationActive'],'HTML cancels calibration');
+
 echo "Heating webhook: $checks assertions passed.\n";
+
 

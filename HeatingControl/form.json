@@ -12,6 +12,23 @@
     },
     {
       "type": "ExpansionPanel",
+      "caption": "Air-flap calibration",
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "FlapCalibrationWaitSeconds",
+          "caption": "Wait at each flap position (seconds)",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        {
+          "type": "Label",
+          "caption": "Use the protected HTML page to calibrate every configured flap: open, close, open with this wait at each position. Heat sources and fan remain off. Disabling the controller releases all linked variables immediately and interrupts tests/calibration without output commands."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
       "caption": "Automatic gas / heat-pump switchover",
       "items": [
         {

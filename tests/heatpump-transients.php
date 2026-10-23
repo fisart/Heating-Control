@@ -144,7 +144,7 @@ foreach(['cancel','disabled','hot-room','timer','timeout'] as $fault) {
     elseif($fault==='timer')transientTick($m,true,100);
     else for($i=0;$i<150&&$m->values['HeatPumpTestActive'];$i++)transientTick($m,true);
     for($i=0;$i<10&&$m->values['HeatPumpTestActive'];$i++)transientTick($m,true);
-    check(!$m->values['HeatPumpTestActive']&&!GetValue(35931),'Safety/cancel still stops transient operation: '.$fault);
+    check(!$m->values['HeatPumpTestActive']&&($fault==='disabled'||!GetValue(35931)),'Safety/cancel or disabled release ends transient ownership: '.$fault);
     if($fault==='timeout')check(str_contains($m->values['HeatPumpTestStatus'],'recovery timed out'),'Unrecovered transient times out explicitly');
 }
 // Reboot preserves the interruption audit but repeats a fresh measurement; no bridge across shutdown.
@@ -164,3 +164,4 @@ for($i=0;$i<600&&$m->values['HeatPumpTestActive'];$i++) {
 $r=json_decode($m->values['HeatPumpTestResults'],true);
 check($r['complete']&&!$r['transientLog']&&$r['points'][6]['excludedSeconds']===0,'Explicitly disabled guard never removes samples');
 echo "PASS: $checks temperature-transient replay, matched intervals, recovery and safety checks\n";
+
