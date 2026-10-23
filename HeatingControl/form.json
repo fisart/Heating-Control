@@ -400,7 +400,7 @@
       "items": [
         {
           "type": "Label",
-          "caption": "During room demand, the fan runs while measured outgoing air is at or above the highest target of the demanding rooms. Source transfer does not stop it; compressor and source delays remain independent."
+          "caption": "During room demand, the fan runs while the selected heat-source exchanger is at or above the highest target of the demanding rooms. Source transfer does not stop it; compressor and source delays remain independent."
         },
         {
           "type": "SelectVariable",
@@ -437,7 +437,7 @@
         {
           "type": "SelectVariable",
           "name": "HeatPumpTempID",
-          "caption": "Heat-pump exchanger temperature — calibration test",
+          "caption": "Heat-pump exchanger temperature — fan start and calibration test",
           "validVariableTypes": [
             2
           ]

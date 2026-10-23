@@ -1,6 +1,6 @@
 # HeatingControl for IP-Symcon
 
-Version **0.3.40, build 51** makes the heating fan independent of source transfer. While rooms demand heat, the fan runs when measured outgoing air is at or above the highest target among those rooms; it stops below that target. This applies during source waits and normal heat-pump/gas heating. Source transfer and compressor off-time protections still govern the heat sources. See [fan operation during transfer](docs/automatic-source-selection.md#fan-control-independent-of-source-transfer).
+Version **0.3.41, build 52** controls the heating fan from the selected source's heat-exchanger temperature: **HeatPumpTempID** for heat pump, **HeatExchangerTempID** for gas. While rooms demand heat, the fan runs at or above the highest current target among those rooms and stops below it. A hot exchanger can start airflow even while the outgoing-air sensor is cold. Source transfer and compressor off-time protections still govern the heat sources independently. See [fan operation during transfer](docs/automatic-source-selection.md#fan-control-independent-of-source-transfer).
 
 Version **0.3.39, build 50** expands the existing heat-pump calibration while preserving all 30 historical measured rows. Thirteen reviewed additions provide 39 eligible COP observations; the existing surface method now covers 3.25–16°C. Only evidenced defrost-like intervals are removed. See [the updated tables and surface](docs/heatpump-calibration-20261023.md). Existing settings and the chosen COP method remain unchanged.
 
@@ -223,7 +223,7 @@ Version **0.3.15**, build 25 adds **Total consumption** with one selectable date
   residual heat recovery when its normal conditions are met; `false` stops it.
   When no room requests heating, switching it off closes purge flaps, stops
   the fan and clears internal/external residual status on the next evaluation.
-  Normal room heating uses the outgoing-air/room-target fan rule independently of the recovery switch.
+  Normal room heating uses the selected-exchanger/room-target fan rule independently of the recovery switch.
   Changes to the variable trigger evaluation immediately when the controller
   is enabled. DryRun still suppresses all external writes; summer and master
   disable retain their bypass behavior. No variable selected (ID 0 or 1)
@@ -276,7 +276,7 @@ actuator/status outputs are unavailable as web controls.
 is independent of the controller switch, so you can inspect a disabled instance.
 Existing winter/master bypass and holiday/night behavior still apply. True winter
 permits heating; false winter retains the existing summer bypass. The recovery
-switch and residual delta affect residual heat recovery only. During room demand, the fan follows outgoing air versus the demanding-room target. Select `RecoveryEnableID` to control recovery through the page.
+switch and residual delta affect residual heat recovery only. During room demand, the fan follows the selected exchanger temperature versus the demanding-room target. Select `RecoveryEnableID` to control recovery through the page.
 
 Every HTML/state/control request rechecks `SEC_IsPortalAuthenticated`; authentication,
 passkey enrollment and revocation remain in SecretsManager. The page follows that

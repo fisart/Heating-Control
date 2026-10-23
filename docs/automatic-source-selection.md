@@ -52,7 +52,7 @@ the entire gas boiler or directly commands radiator/DHW services.
 |---|---|
 | Activate heat pump | Gas-air pump **32875=false**; gas mixer **14348=100** (closed); heat/cool **51011=true** (heating); physical percentage **19207=selected measured percentage**; heat-pump enable **35931=true** |
 | Activate gas-air heating | Heat-pump enable **35931=false**; percentage **19207=0**; mixer **14348=0** (open); gas-air pump **32875=true**; flow command **14533=value from 46820** |
-| Stop sources for transfer | **35931=false**, **19207=0**, **14348=100**, **32875=false**; fan remains governed by outgoing air and room demand |
+| Stop sources for transfer | **35931=false**, **19207=0**, **14348=100**, **32875=false**; fan remains governed by selected exchanger temperature and room demand |
 
 Before changing from an active source, both air sources are stopped. The
 **SourceTransferDelaySeconds** pause defaults to 120 seconds and starts only after
@@ -71,14 +71,19 @@ staged ramp delays; the software's minimum off timer is not a substitute for the
 
 ## Fan control independent of source transfer
 
-From **0.3.40 build 51**, source changes do not switch off the fan. While rooms request heat, actual **outgoing-air temperature (OutgoingAirTempID)** controls it:
+From **0.3.41 build 52**, the fan uses the **selected heat-source exchanger temperature**, compared with the highest current target of the rooms requesting heat:
 
-    fan on  when outgoing air >= highest target of the rooms requesting heat
-    fan off when outgoing air <  highest target of the rooms requesting heat
+| Selected source | Fan reference sensor |
+| --- | --- |
+| Heat pump | **HeatPumpTempID** |
+| Gas air heating | **HeatExchangerTempID** |
 
-Equality keeps the fan on. A closed room with no demand does not raise this threshold. The same rule applies during both-source-off transfer waits, compressor minimum-off waits, normal heat-pump operation and normal gas-air operation. It can keep the fan running or start it when useful outgoing air is available. Fan speed remains the desired value from **48646**; demand keeps the receiving-room flaps open.
+    fan on  when selected exchanger >= highest target of the rooms requesting heat
+    fan off when selected exchanger <  highest target of the rooms requesting heat
 
-The rule uses the measured supply/outgoing air, without an added intake-rise or exchanger-temperature gate. The configured supply margin still qualifies economic heat-pump capacity; it is not added to this fan target. Debug output records outgoing temperature, the applicable room target and the fan decision.
+Equality keeps the fan on. A closed room with no demand does not raise this threshold. The current selected source determines the reference sensor during both-source-off transfer waits and compressor minimum-off waits as well as normal heating. Source transfer does not issue a fan stop; the applicable exchanger temperature determines the fan decision. Fan speed remains the desired value from **48646**; demand keeps the receiving-room flaps open.
+
+Outgoing air is not the fan reference: without airflow that sensor can remain cold while the exchanger is already hot. The selected exchanger can therefore start the fan from rest. There is no extra temperature margin or intake-rise gate for this fan rule. The configured supply margin still qualifies economic heat-pump capacity. Debug records the selected exchanger sensor, measured temperature, applicable current room target and fan decision.
 
 The heat sources retain stop acknowledgments, mixer travel delay, break-before-make and the compressor minimum off time. Fan operation cannot bypass those protections. No-demand residual recovery/run-on, explicit shutdown, master/summer bypass and supervised calibration keep their existing controls.
 

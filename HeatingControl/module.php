@@ -269,7 +269,7 @@ class HeatingControl extends IPSModule
             if ($ready) {
                 $this->queueHeatSource($queue, $mode, $selectedPower);
             }
-            $this->queueFanForDemand($queue, $rooms, $demandRooms);
+            $this->queueFanForDemand($queue, $mode, $rooms, $demandRooms);
             $this->dispatch($queue, $log);
             $this->clearRecovery();
             $this->WriteAttributeString('DemandLatch', json_encode($nextLatch, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -376,19 +376,20 @@ class HeatingControl extends IPSModule
         }
     }
 
-    private function queueFanForDemand(array &$q, array $rooms, array $demandRooms): void
+    private function queueFanForDemand(array &$q, int $mode, array $rooms, array $demandRooms): void
     {
-        $outgoing = $this->temperature($this->id('OutgoingAirTempID'));
+        $sensor = $mode === $this->ReadPropertyInteger('HeatPumpModeValue') ? 'HeatPumpTempID' : 'HeatExchangerTempID';
+        $exchanger = $this->temperature($this->id($sensor));
         $targets = [];
         foreach ($rooms as $room) if (in_array($room['name'], $demandRooms, true)) {
             $targets[] = $this->temperature((int)$room['targetID'], false);
         }
         if (!$targets) throw new RuntimeException('Fan demand needs a receiving room');
         $target = max($targets);
-        $this->debug(sprintf('FAN outgoing=%.2f target=%.2f demand=%s; %s',
-            $outgoing, $target, implode(', ', $demandRooms),
-            $outgoing >= $target ? 'warm enough: fan on' : 'below target: fan off'));
-        if ($outgoing >= $target) $this->queueFanOn($q);
+        $this->debug(sprintf('FAN exchanger=%s temperature=%.2f target=%.2f demand=%s; %s',
+            $sensor, $exchanger, $target, implode(', ', $demandRooms),
+            $exchanger >= $target ? 'warm enough: fan on' : 'below target: fan off'));
+        if ($exchanger >= $target) $this->queueFanOn($q);
         else $this->queueFanOff($q);
     }
 
