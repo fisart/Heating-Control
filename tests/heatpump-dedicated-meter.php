@@ -47,8 +47,8 @@ foreach($r['points'] as $p) {
 }
 check(count(HeatPumpMatrix::validate($r['points']))===8,'Strict matrix validation accepts dedicated provenance');
 $matrix=webInvoke($m,'measuredMatrix');
-check(count(array_filter($matrix,static fn($p)=>$p['electricalMethod']==='house-counter-minus-pretest-baseline'))===22,'Historical household calibration remains intact');
-check(count(array_filter($matrix,static fn($p)=>$p['electricalMethod']==='dedicated-heatpump-import-counter'))===16,'Dedicated measurements coexist with historical observations');
+check(count(array_filter($matrix,static fn($p)=>$p['electricalMethod']==='house-counter-minus-pretest-baseline'))===25,'Historical household calibration remains intact');
+check(count(array_filter($matrix,static fn($p)=>$p['electricalMethod']==='dedicated-heatpump-import-counter'))===26,'Dedicated measurements coexist with historical observations');
 check(str_contains(HeatPumpMatrix::economics($r['points'][0],10.48,100,25,2,20,2)['assumptions'],'dedicated circuit only'),'Price calculation exposes the circuit scope');
 $good=$r['points'][0];
 foreach(['counterID'=>0,'baselineSubtracted'=>true,'exportElectricityKWh'=>.01,'counterScale'=>0.0,'counterFinalized'=>false] as $key=>$value) {
@@ -108,3 +108,4 @@ check($reboot['points'][0]===$old[0],'Pre-reboot finalized dedicated measurement
 check(count($reboot['rebootHistory'])===1&&count($reboot['baselines'])===2,'Reboot history and separate meter checks persist');
 unset($GLOBALS['kernelStartTime']);
 echo "PASS: $checks dedicated-meter provenance, matched-energy, legacy-retention and failure checks\n";
+

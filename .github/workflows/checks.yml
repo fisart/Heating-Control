@@ -59,6 +59,7 @@ jobs:
           php tests/heatpump-reboot.php
           php tests/heatpump-economics.php
           php tests/heatpump-surface.php
+          php tests/heatpump-expansion.php
           php tests/form-audit.php
           php tests/measured-links.php
           php tests/source-selection.php
@@ -82,5 +83,6 @@ jobs:
         run: |
           node tests/page-dom.cjs
           node tests/lichtblick-page-dom.cjs
+
 
 

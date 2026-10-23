@@ -30,6 +30,7 @@ foreach(['HeatingControl','LichtBlickElectricityPrice'] as $class) {
 }
 $m=heatingFixture();$form=json_decode($m->GetConfigurationForm(),true);
 $overview=array_values(array_filter(elements($form['elements']),static fn($e)=>($e['name']??'')==='HeatPumpMatrixOverview'))[0];
-check(count($overview['values'])===30,'Reorganized form still loads measured rows');
+check(count($overview['values'])===43,'Reorganized form still loads measured rows');
 $room=array_values(array_filter($form['elements'],static fn($e)=>($e['name']??'')==='RoomConfigurationPopup'))[0];check(count($room['popup']['items'][1]['values'])===4,'Room editor still loads all rooms');
 echo "PASS: $checks form-property, default, API-signature and layout-inventory checks\n";
+

@@ -1,51 +1,17 @@
-# Selectable COP method — 0.3.35, build 45
+# COP surface — expanded calibration, 0.3.39 build 50
 
-The bundled surface now uses the seven valid dedicated-meter measurements from
-15–16 October, together with the twenty accepted historical house-meter points.
-There are **27 fitted observations across four runs**. The exact measured matrix
-preserves all 30 original/reviewed rows, including three exclusions. The latest
-90% defrost-like transient is not used to fit normal-heating performance.
+The existing measured matrix is expanded, preserving every original measured field in its 30 historical rows. Thirteen reviewed rows bring the stored total to 43; 39 counter-backed normal-heating observations fit the surface. Two earlier thermal-only observations contribute independent capacity evidence. See the [new tables, event windows and expansion audit](heatpump-calibration-20261023.md).
 
-Under **COP method, operating matrix and electricity break-even price**, select
-**Measured COP points** or **Calculated COP surface**. The protected heating page
-has the same selector. Existing method choice, automatic/manual selection,
-temperature tolerance and price-provider settings survive the update. Selecting
-a method does not enable automatic heating or overwrite manual desired power.
-Active/paused tests lock method changes; passkey/CSRF/read-only gates remain.
+Select **Measured COP points** or **Calculated COP surface** in the instance form or protected page. Existing method selection, custom matrix, automatic/manual mode, desired power and price-provider settings are preserved. An empty custom measured matrix uses the expanded bundled default. No calibration or equipment action starts on update.
 
-| Method | COP used | Qualification |
-| --- | --- | --- |
-| Measured points (default) | Exact recorded COP; latest dedicated points are bundled alongside historical points | Existing outside AND inlet tolerance; stable/usable flags; fan and supply checks |
-| Calculated COP surface | Reviewed heat/electric interpolation, evaluated at actual outdoor temperature and 1% power steps from 30–100% | 5–16°C domain; observed within-run capacity brackets; modeled AND observed air rise must meet target + supply margin − actual inlet and minimum rise |
+| Method | Data and support |
+| --- | --- |
+| Measured COP points | Exact retained measurements; current outside AND inlet tolerance, fan and supply checks. Original exclusions stay visible; reviewed additions and filtered replacements are selectable. |
+| Calculated COP surface | Established thin-plate/affine zero-smoothing fit, now expanded to 39 observations. Outdoor domain 3.25–16°C, powers 30–100% at 1% steps. Both modeled and independently observed rise must qualify. |
 
-Both methods use the current verified LichtBlick quote and its actual safety
-margin and hysteresis, without substituting factory defaults:
+## Unchanged mathematical method
 
-    break-even = gas price × selected COP / gas efficiency
-    heat-pump exit ceiling = break-even × (1 − safety margin / 100)
-    heat-pump entry = exit ceiling − price hysteresis
-
-For a provider configured at 5%, the multiplier is 0.95, applied once. At the
-recorded dedicated 50% point, gas 10.48 ct/kWh, 100% efficiency and 1 ct/kWh
-hysteresis give entry below 30.93 ct/kWh and exit at 31.93 ct/kWh. These are
-examples; module updates do not change live settings. Invalid/expired quotes
-clear thresholds and select gas. Unsupported surface conditions select gas with
-an explanation, without silently switching to measured mode.
-
-## Mathematical surface
-
-Version **provisional-heatpump-surface-2026-10-16-v3** corrects runtime eligibility.
-The v2 fitted coefficients, observations, charts and saved analysis matrix are unchanged. Coefficients and diagnostics:
-[data/heatpump-cop-surface.json](data/heatpump-cop-surface.json). Exact input rows
-and exclusion flags:
-[data/heatpump-cop-surface-observations.json](data/heatpump-cop-surface-observations.json).
-Their SHA-256 is verified before evaluation. The
-[dense reference matrix](data/heatpump-surface-matrix.json) contains 45 weather
-rows × 71 power columns: 3,195 estimates per field, including COP, air rise,
-electrical/thermal kW, reference inlet, support and illustrative 5% prices.
-
-The controller interpolates full-period air rise and electrical kW using a
-minimum-curvature thin-plate radial basis plus an affine trend. Coordinates:
+Version **provisional-heatpump-surface-2026-10-23-v4** uses the same normalized coordinates and basis:
 
     x = (outside − 10.5) / 5.5
     y = (power − 65) / 35
@@ -54,73 +20,26 @@ minimum-curvature thin-plate radial basis plus an affine trend. Coordinates:
     estimated heat kW = 0.000335 × 2000 × interpolated air rise
     estimated COP = estimated heat kW / interpolated electrical kW
 
-The same basis interpolates a descriptive reference inlet. Zero smoothing
-retains all accepted measurements exactly; it does not establish predictive
-accuracy. The old imposed positive weather slope and fixed 40–50% efficiency
-peak are removed. Whole-run holdout RMSE is approximately **0.449 COP** and
-**2.762°C air rise**. The surface remains provisional, with four runs and shared
-airflow/meter uncertainties outside those diagnostics. It is not a seasonal or
-complete-defrost-cycle COP model.
+Full-period air rise, electrical input and descriptive reference inlet are fitted separately with the same centers. Zero smoothing preserves fitted observations exactly. Refitting an expanded set can change calculated values throughout the grid; it does not alter historical measurements. Coefficients and SHA-256 input provenance are in [the definition](data/heatpump-cop-surface.json). The [3,692-cell reference matrix](data/heatpump-surface-matrix.json) contains 52 temperatures at 0.25°C spacing and 71 power levels. Whole-run holdout RMSE is 0.680 COP and 3.697°C air rise; the model remains provisional.
 
-Historical measurements keep **house-counter-minus-pretest-baseline** provenance;
-new measurements keep **dedicated-heatpump-import-counter**, counter 22365 and
-power 28681 with no household/standby subtraction. A modeled candidate is labelled
-**reviewed-house-increment-and-dedicated-heatpump-fit**, not a dedicated reading.
+## Capacity and price safeguards
 
-## Capacity and operating safeguards
-
-Air origin alone is not a separate selector: heat uses outlet minus inlet.
-For surface eligibility, actual inlet determines the **required rise**, rather
-than having to match an absolute fitted reference inlet:
+Actual inlet determines required rise:
 
     required rise = max(configured minimum rise, room target + supply margin − actual inlet)
 
-Both modeled rise and the independent observed-capacity rise must meet this
-requirement. The old two absolute-inlet matching gates are removed. The fitted
-reference inlet and observed reference inlet remain descriptive diagnostics;
-they cannot reject a surface candidate. Exact measured mode retains its existing
-outside AND inlet tolerance unchanged. This is a control-model assumption;
-these four runs cannot independently establish inlet-temperature effects.
+Both modeled and observed-capacity rise must meet this requirement. Air origin does not form a separate categorical model; actual outlet minus inlet determines measured air heat. Capacity is interpolated within each recorded run's power bracket, then across weather. No unmeasured high-power extension of a run is allowed. A nearest weather endpoint must meet the configured tolerance, at most 3°C. Thermal-only early readings supply capacity evidence without invented electricity or COP. Fan command 90 remains required. Configured test airflow and excluded-flap matching remain calibration metadata rather than normal-operation exclusions. The saved airflow basis is 2,000 m³/h.
 
-The controller interpolates full-period rise within each accepted run's measured
-power bracket, then between weather runs. It never extends a run beyond its
-measured power range. Outside an available weather bracket, a nearest endpoint
-must be within the configured tolerance, at most 3°C. Both modeled and observed
-capacity must meet the required rise. Fan command 90 remains required.
-Configured airflow and excluded-flap matching are **not normal-operation
-exclusion criteria in either COP mode**. Calibration procedures and records
-retain airflow and flap context. The surface keeps its 2,000 m³/h heat/COP basis;
-changing a test-airflow setting does not rescale the existing model. Runtime
-candidates report the model airflow and configured test airflow separately.
+The current verified LichtBlick quote supplies the actual gas price, safety margin and hysteresis:
 
+    break-even = gas price × selected COP / gas efficiency
+    exit ceiling = break-even × (1 − safety margin / 100)
+    entry ceiling = exit ceiling − hysteresis
 
-The runtime domain remains 5–16°C outside and 30–100% power. The analysis grid has
-2,632 cells inside the two-dimensional observation hull and 563 extrapolation
-cells. A cell's geometry label alone does not authorize operation: observed
-capacity coverage and all other requirements must also pass. Nonfinite results,
-nonpositive air rise, electrical input at or below 0.05 kW, and COP outside
-0.5–10 are rejected. Invalid sensor inputs or an enabled sensor-age limit can
-also prevent evaluation. Quotes must be enabled, valid, at most 180 seconds old,
-and not expired. Invalid conditions clear the threshold and select gas.
+Safety margin is applied once. Invalid/expired quotes, unsupported temperature/capacity, nonfinite/nonphysical estimates or other existing equipment safeguards select gas or prevent heating. Surface mode never silently switches to measured mode. Room demand and break-before-make controls remain independent of the economic comparison.
 
-For the reported page snapshot (8.6°C outside, 20.7°C intake, 23°C target,
-5°C supply margin and 5°C minimum rise), required rise is **7.3°C**. Surface
-mode selects **34%**, COP approximately **4.014**, modeled rise **10.563°C**.
-At gas 10.48 ct/kWh, assumed gas efficiency 100%, actual safety 5% and hysteresis
-1 ct/kWh, break-even is **42.07 ct/kWh**, entry **38.96**, exit **39.96**.
-At electricity 46.98 ct/kWh the decision is gas, with visible thresholds.
-These estimates use the rounded snapshot, not live readings. No demand may
-keep equipment off independently of the economic comparison.
+At 8.6°C outside, 20.7°C inlet, 23°C target, 5°C supply margin and 5°C minimum rise, the expanded fit selects **35%**, estimated COP **4.024**. At gas 10.48 ct/kWh, 100% assumed efficiency, 5% safety and 1 ct hysteresis, break-even is **42.17**, entry **39.06**, exit **40.06 ct/kWh**. At 46.98 ct/kWh, the source decision is gas. This example is not a live reading.
 
-At 8°C outside / 13°C intake / 23°C target plus 5°C supply margin, exact mode
-still selects the measured 50% point; surface mode can select 45%. Candidates
-retain modeled status, version, source IDs and capacity-source IDs. They never
-acquire measured quality flags or enter measured history.
+Historical household increments and dedicated heat-pump circuit measurements retain distinct provenance; modeled inputs are labelled as a reviewed mixed fit. Dedicated-circuit COP excludes equipment outside that circuit. Airflow and mixed scopes remain limitations. This event-filtered surface does not measure full-cycle or seasonal COP.
 
-Future tests retain their raw reports and extend measured history normally.
-They do not silently refit the saved runtime coefficients. A reviewed update
-like this one is needed to regenerate and publish the next surface.
-
-Validation includes all 3,195 saved cells and all accepted source observations,
-full PHP regressions, both page DOM suites, automatic source commands, 5% quote
-handling, authentication, CSRF, invalid conditions and gas fallback.
+Future tests append raw measurements and measured history normally. They do not silently refit the saved surface. This reviewed update preserves historical rows and adds evidence; the old records remain available for comparison.

@@ -3,7 +3,8 @@ declare(strict_types=1);
 require __DIR__.'/webhook-fixture.php';
 class EconomicHeating extends HeatingControl {public int $clock=1791962400;protected function sourceClock():int{return $this->clock;}}
 $checks=0;function check($ok,$why){global $checks;if(!$ok)throw new RuntimeException($why);$checks++;}
-$seed=HeatPumpMatrix::validate(HeatPumpMatrix::seed());
+// Historical regression fixture: new default expansion is covered separately.
+$seed=HeatPumpMatrix::validate(json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-calibration-20261016.json'),true)['points']);
 check(count($seed)===30,'All reviewed steps retained');
 $point=HeatPumpMatrix::choose($seed,12,23,23,5,5,90,2000,3);
 check($point['powerPercent']===50,'50% is highest COP among stable supported points');
@@ -36,7 +37,7 @@ try{HeatPumpMatrix::counterAt([['TimeStamp'=>0,'Value'=>100],['TimeStamp'=>60,'V
 try{HeatPumpMatrix::counterAt([['TimeStamp'=>0,'Value'=>100],['TimeStamp'=>100,'Value'=>200]],30);check(false,'Long counter gap rejected');}catch(RuntimeException $e){check(true,'Long counter gap rejected');}
 check(HeatPumpMatrix::counterAt([['TimeStamp'=>0,'Value'=>100],['TimeStamp'=>60,'Value'=>160]],30)===130.0,'Counter boundaries interpolated');
 function fixture():EconomicHeating {
- $m=heatingFixture(EconomicHeating::class);$m->properties['ElectricityPriceInstanceID']=20;
+ $m=heatingFixture(EconomicHeating::class);$m->properties['HeatPumpMeasuredMatrix']=json_encode(json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-calibration-20261016.json'),true)['points']);$m->properties['ElectricityPriceInstanceID']=20;
  $GLOBALS['instanceModules'][20]='{5C0EEDE9-5C09-4F18-BCD1-CE65CFA7B1B7}';
  $GLOBALS['instanceIdents'][20]=['RecommendationJSON'=>82000,'PriceQuoteJSON'=>82001];
  $GLOBALS['variables'][82000]=['VariableType'=>3,'value'=>json_encode(['schema'=>1,'valid'=>false,'source'=>2,'powerPercent'=>0,'reason'=>'Legacy weather says gas'])];
@@ -109,3 +110,4 @@ check(HeatPumpMatrix::choose(array_slice($seed,0,22),5.1,10,10,5,5,90,2000,3)===
 $colder=HeatPumpMatrix::choose($seed,5.1,10,10,5,5,90,2000,3);
 check($colder!==null&&$colder['electricalMethod']==='dedicated-heatpump-import-counter'&&abs($colder['incoming']-10)<=3&&abs($colder['outside']-5.1)<=3,'New colder-inlet measurements qualify only within the unchanged three-degree tolerance');
 echo "PASS: $checks measured economics / integration checks\n";
+
