@@ -44,22 +44,8 @@
           "caption": "Enable or disable automatic switchover using Automatic heating source selection below this instance or on the protected page. Select the LichtBlick instance for verified price, gas tariff, safety margin and price hysteresis. The measured matrix determines the source and power; insufficient measurements or expired prices use gas."
         },
         {
-          "type": "NumberSpinner",
-          "name": "SourceTransferDelaySeconds",
-          "caption": "Pause after stop/mixer command states are acknowledged (seconds)",
-          "minimum": 30,
-          "maximum": 3600
-        },
-        {
-          "type": "NumberSpinner",
-          "name": "HeatPumpMinimumOffSeconds",
-          "caption": "Minimum observed heat-pump off time (seconds)",
-          "minimum": 60,
-          "maximum": 3600
-        },
-        {
           "type": "Label",
-          "caption": "Defaults: transfer pause 120 s; heat-pump off time 300 s. Verify these against the equipment. Command state is not independent physical feedback."
+          "caption": "Source changes have no timed transfer pause or heat-pump minimum-off delay. The replacement source starts after both sources read OFF and the mixer command reads CLOSED. Fan control remains independent."
         }
       ],
       "expanded": true

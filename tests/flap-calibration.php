@@ -26,8 +26,7 @@ flapTick($m,119);check(flapState($m)['phase']===1,'Closed dwell lasts full confi
 flapTick($m,1);check(flapState($m)['phase']===2&&flapsMatch($m,'open'),'All open again at four minutes');
 flapTick($m,119);check($m->values['FlapCalibrationActive']&&flapsMatch($m,'open'),'Final open dwell retains exclusive control');
 flapTick($m,1);check(!$m->values['FlapCalibrationActive']&&str_starts_with($m->values['FlapCalibrationStatus'],'Completed'),'Control returns after six minutes');
-check(!value($m,'GasPumpID')&&!value($m,'HeatPumpOnID'),'Returning normal control retains source transfer protections');
-flapTick($m,120);check(value($m,'GasPumpID'),'Normal heating resumes after protected handover');
+check(value($m,'GasPumpID')&&!value($m,'HeatPumpOnID'),'Normal heating resumes immediately after calibration, without transfer/off timers');
 
 $m=fixture();$m->SetFlapCalibrationWaitSeconds(3);$m->StartFlapCalibration();flapTick($m);
 flapTick($m,3);check(flapState($m)['phase']===1,'Custom dwell is used');

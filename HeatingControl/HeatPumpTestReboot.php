@@ -68,7 +68,7 @@ trait HeatingControlHeatPumpTestReboot
         $duration=match($s['phase']) {
             'step'=>max(0,$s['settings']['HeatPumpTestStepMinutes']*60-$elapsed)+$recovery,
             'baseline'=>max(0,$this->testBaselineSeconds($s)-$elapsed),
-            default=>$this->testBaselineSeconds($s)+max($this->ReadPropertyInteger('HeatPumpMinimumOffSeconds'),$this->ReadPropertyInteger('SourceTransferDelaySeconds')),
+            default=>$this->testBaselineSeconds($s),
         };
         // Leave archive-boundary and command-confirmation time before the lead.
         return $now+$duration+90 >= $s['nextRebootAt']-self::TEST_REBOOT_LEAD;
@@ -168,3 +168,4 @@ trait HeatingControlHeatPumpTestReboot
         $this->SetValue('HeatPumpTestStatus',$label.' at '.date('H:i',$pause['scheduledAt']).'; next step '.$pause['repeatPowerPercent'].'%; sources off');
     }
 }
+

@@ -7,7 +7,7 @@ function state(TestHeating $m): array {return json_decode($m->attributes['HeatPu
 function rebootFixture(string $time='2026-10-15 02:00:00'): TestHeating {
     $GLOBALS['kernelRunlevel']=KR_READY;$GLOBALS['kernelStartTime']=strtotime('2026-10-14 03:02:00');
     $m=fixture();$m->clock=strtotime($time);$m->properties['HeatPumpTestRebootGuardEnabled']=true;
-    $GLOBALS['loggedValues'][38023]=[['TimeStamp'=>$m->clock-90,'Value'=>100000.0-180*90/3600]];
+    $GLOBALS['loggedValues'][38023]=[['TimeStamp'=>$m->clock-60,'Value'=>100000.0-180*60/3600]];
     foreach($GLOBALS['variables'] as &$v)$v['VariableUpdated']=$m->clock;unset($v);
     return $m;
 }
@@ -159,3 +159,4 @@ $settings['HeatPumpTestRebootTime']='{"hour":0,"minute":0,"second":0}';
 check(webInvoke($m,'testNextReboot',$settings,strtotime('2026-10-15 23:50:00'),false)===strtotime('2026-10-16 00:00:00'),'Midnight schedule advances to the next local date');
 check(webInvoke($m,'testRebootTime','{"second":0,"minute":15,"hour":4}')===['hour'=>4,'minute'=>15,'second'=>0],'SelectTime keys are canonicalized rather than depending on JSON order');
 echo "PASS: $checks planned-reboot pause, recovery, measurement and safety checks\n";
+

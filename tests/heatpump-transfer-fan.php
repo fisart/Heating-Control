@@ -21,9 +21,9 @@ function fanTransferFixture(): TimedHeating
     return $m;
 }
 $m=fanTransferFixture();run($m);
-check(value($m,'FanOnID')&&value($m,'FanSpeedID')===90,'Warm exchanger keeps the fan running through the HP off-time wait');
-check(!value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Fan continuity cannot bypass either heat-source protection');
-check(str_contains($m->values['SourceTransferStatus'],'heat-pump off wait 123s'),'Original compressor wait remains unchanged');
+check(value($m,'FanOnID')&&value($m,'FanSpeedID')===90,'Warm exchanger keeps the fan running at immediate HP start');
+check(value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Acknowledged stop permits immediate HP start');
+check(str_contains($m->values['SourceTransferStatus'],'no timed delay'),'No compressor/transfer countdown is applied');
 check(!commanded($m,'FanOnID',false)&&!commanded($m,'FanSpeedID',0),'A source transfer itself sends no fan stop');
 
 // Reproduce the supplied log: expired old quote, then a fresh cheap quote.
@@ -32,7 +32,7 @@ check(value($m,'OperatingModeID')===2&&value($m,'FanOnID'),'Gas fallback does no
 $m->clock=strtotime('2026-10-23T10:30:42+02:00');
 plan($m,1,34,['priceCt'=>34.94,'safetyMarginPercent'=>5,'hysteresisCt'=>1,'validUntil'=>strtotime('2026-10-23T10:45:00+02:00')]);run($m);
 check(value($m,'OperatingModeID')===1&&value($m,'FanOnID'),'Retargeting to HP still retains warm-air delivery');
-check(!value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Retargeting retains break-before-make and minimum off time');
+check(value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Retargeting starts HP after stop acknowledgement without a timer');
 
 $GLOBALS['variables'][$m->properties['HeatPumpTempID']]['value']=23.49;run($m);
 check(!value($m,'FanOnID')&&value($m,'FanSpeedID')===0,'Selected exchanger below the highest demanding-room target stops the fan');
@@ -49,7 +49,7 @@ $m->clock+=120;plan($m,1,34,['priceCt'=>34.94,'safetyMarginPercent'=>5,'hysteres
 $GLOBALS['variables'][$guest['targetID']]['value']=21.0;
 run($m);check(value($m,'HeatPumpOnID')&&value($m,'FanOnID'),'Normal HP heating retains the exchanger fan rule after protected start');
 $GLOBALS['variables'][$m->properties['HeatPumpTempID']]['value']=23.4;run($m);
-check(value($m,'HeatPumpOnID')&&!value($m,'FanOnID'),'Cold exchanger stops the fan without restarting compressor protection');
+check(value($m,'HeatPumpOnID')&&!value($m,'FanOnID'),'Cold exchanger stops the fan without stopping the compressor');
 $GLOBALS['variables'][$m->properties['HeatPumpTempID']]['value']=23.5;run($m);
 check(value($m,'HeatPumpOnID')&&value($m,'FanOnID'),'Fan resumes at the target without a new source transfer');
 
@@ -77,7 +77,7 @@ $GLOBALS['variables'][$m->properties['HeatExchangerTempID']]['value']=23.5;
 $GLOBALS['variables'][$m->properties['HeatPumpTempID']]['value']=5.0;
 $GLOBALS['variables'][$m->properties['OutgoingAirTempID']]['value']=10.0;run($m);
 check(value($m,'FanOnID'),'Gas exchanger at target starts the fan despite cold HP and outgoing sensors');
-check(!value($m,'GasPumpID')&&!value($m,'HeatPumpOnID'),'Gas fan start cannot bypass source interlocks');
+check(value($m,'GasPumpID')&&!value($m,'HeatPumpOnID'),'Gas starts without a timer after HP OFF acknowledgement');
 $m->clock+=120;plan($m,2,0);run($m);
 check(value($m,'GasPumpID')&&value($m,'FanOnID'),'Normal gas heating uses the same gas-exchanger threshold');
 $GLOBALS['variables'][$m->properties['HeatExchangerTempID']]['value']=23.4;run($m);

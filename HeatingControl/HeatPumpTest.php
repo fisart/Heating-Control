@@ -306,8 +306,7 @@ trait HeatingControlHeatPumpTest
                 $this->queueHeatOff($q);$this->queueFanOff($q);$this->dispatch($q,$log);
                 $ack=!$this->boolValue('HeatPumpOnID')&&!$this->boolValue('GasPumpID')&&$this->intValue('GasMixerID')===$this->ReadPropertyInteger('MixerClosed');
                 if(!$ack)$s['readySince']=0;elseif(!$s['readySince'])$s['readySince']=$now;
-                $wait=max($this->ReadPropertyInteger('HeatPumpMinimumOffSeconds'),$this->ReadPropertyInteger('SourceTransferDelaySeconds'));
-                if($s['readySince']&&$now-$s['readySince']>=$wait){$s['phase']='baseline';$s['phaseSince']=$now;$s['window']=[];}
+                if($ack){$s['phase']='baseline';$s['phaseSince']=$now;$s['window']=[];}
             } else {
                 $this->queue($q,$this->id('FanOnID'),true);$this->queue($q,$this->id('FanSpeedID'),$s['settings']['HeatPumpTestFanSpeed']);
                 if($s['phase']==='baseline') {

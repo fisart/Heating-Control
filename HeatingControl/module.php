@@ -151,12 +151,6 @@ class HeatingControl extends IPSModule
             try { $this->recoverHeatPumpTest(); }
             catch (Throwable $e) { $this->SetValue('HeatPumpTestStatus','Test recovery requires attention: '.$e->getMessage());$this->SetTimerInterval('HeatPumpTestTimer',10000); }
         }
-        // An ApplyChanges/restart cannot establish how long external equipment stayed off.
-        $this->WriteAttributeString('HeatPumpStoppedAt', '0');
-        if ($this->GetValue('AutomaticSourceSelection') || $this->ReadAttributeString('AutomaticWasActive') === '1'
-            || $this->ReadAttributeString('SourceTransfer') !== '') {
-            $this->WriteAttributeString('SourceTransfer', '{"target":0,"since":0}');
-        }
         if (!$this->ReadPropertyBoolean('Enabled')) {
             $this->clearRecovery();
             $this->SetValue('LearningSourceMode', 0);
@@ -189,6 +183,7 @@ class HeatingControl extends IPSModule
                 return;
             }
             $this->SetTimerInterval('RecoveryRunOnTimer', 0);
+            $this->SetTimerInterval('SourceCommandCheck', 0);
             if ($this->processFlapCalibration()) return;
             if ($this->processHeatPumpTest()) { $this->clearRecovery(); return; }
             $this->debug('Evaluation started');
@@ -576,10 +571,6 @@ class HeatingControl extends IPSModule
 
     private function validateConfiguration(array $rooms): void
     {
-        foreach (['SourceTransferDelaySeconds'=>[30, 3600], 'HeatPumpMinimumOffSeconds'=>[60, 3600]] as $name=>$range) {
-            $value = $this->ReadPropertyInteger($name);
-            if ($value < $range[0] || $value > $range[1]) throw new RuntimeException('Invalid transfer timing: ' . $name);
-        }
         if ($this->ReadPropertyInteger('RecoveryRunOnSeconds') < 0 || $this->ReadPropertyInteger('RecoveryRunOnSeconds') > 600) {
             throw new RuntimeException('Recovery fan run-on must be between 0 and 600 seconds');
         }
