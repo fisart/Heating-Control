@@ -18,8 +18,9 @@ Daily accepted updates change the original threshold, never the chosen margin.
 Learning uses matched historical consumption, stable holiday targets and fixed
 capacity; unsuitable days retain the threshold. Version 0.3.1 wires the provider's
 single RecommendationJSON snapshot into HeatingControl behind an off-by-default
-switch, implements command-acknowledged transfer delays and observed heat-pump
-off time, and publishes configured capacity. The 50% default is not an optimum.
+switch and publishes configured capacity. The original transfer/off-time timers
+were removed in 0.3.43; current handover uses OFF/CLOSED command acknowledgement
+without an added timed pause. The 50% default is not an optimum.
 See [implemented integration](automatic-source-selection.md) and
 [capacity research](heatpump-capacity-research.md). The provisional weather curve is implemented in 0.3.2; automatically identified
 optimal capacity, minimum run policy, physical feedback, comfort/moisture protection and radiator/DHW coordination

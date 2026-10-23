@@ -8,8 +8,10 @@ trait HeatingControlSourceSelection
     private function createSourceSelection(): void
     {
         $this->RegisterPropertyInteger('ElectricityPriceInstanceID', 0);
-        $this->RegisterPropertyInteger('SourceTransferDelaySeconds', 120);
-        $this->RegisterPropertyInteger('HeatPumpMinimumOffSeconds', 300);
+        // Retired compatibility properties: saved values/imports have no runtime effect.
+        $this->RegisterPropertyInteger('SourceTransferDelaySeconds', 0);
+        $this->RegisterPropertyInteger('HeatPumpMinimumOffSeconds', 0);
+        $this->RegisterTimer('SourceCommandCheck', 0, 'HC_ProcessHeating($_IPS["TARGET"]);');
         $this->RegisterAttributeString('SourceTransfer', '');
         $this->RegisterAttributeString('AutomaticWasActive', '0');
         $this->RegisterAttributeString('HeatPumpStoppedAt', '0');
@@ -80,76 +82,41 @@ trait HeatingControlSourceSelection
     /** Break before make. These variables acknowledge commands, not compressor/valve feedback. */
     private function sourceReady(array &$queue, int $mode): bool
     {
-        $auto = (bool)$this->GetValue('AutomaticSourceSelection');
-        if (!$auto && $this->ReadAttributeString('AutomaticWasActive') !== '1'
-            && $this->ReadAttributeString('SourceTransfer') === '') {
-            $this->SetValue('SourceTransferStatus', 'Manual control'); return true;
+        if (!$this->GetValue('AutomaticSourceSelection') && $this->ReadAttributeString('AutomaticWasActive') !== '1' && $this->ReadAttributeString('SourceTransfer') === '') {
+            $this->SetTimerInterval('SourceCommandCheck', 0);
+            $this->SetValue('SourceTransferStatus', 'Manual control; no timed delay');
+            return true;
         }
-        $now = $this->sourceClock();
-        $hp = $this->boolValue('HeatPumpOnID'); $gas = $this->boolValue('GasPumpID');
+        $hp = $this->boolValue('HeatPumpOnID');
+        $gas = $this->boolValue('GasPumpID');
         $target = $mode === $this->ReadPropertyInteger('HeatPumpModeValue') ? 1 : 2;
-        $stopped = (int)$this->ReadAttributeString('HeatPumpStoppedAt');
-        if ($hp) { $stopped = 0; $this->WriteAttributeString('HeatPumpStoppedAt', '0'); }
-        elseif ($stopped === 0 || $stopped > $now) {
-            $stopped = $now; $this->WriteAttributeString('HeatPumpStoppedAt', (string)$now);
-        }
-        try {
-            $pending = json_decode($this->ReadAttributeString('SourceTransfer') ?: '{}', true, 16, JSON_THROW_ON_ERROR);
-            if (!is_array($pending) || ($pending && (!in_array($pending['target'] ?? null, [1, 2], true)
-                || !is_int($pending['since'] ?? null) || $pending['since'] < 0 || $pending['since'] > $now))) {
-                throw new RuntimeException('Invalid transfer state');
-            }
-        } catch (Throwable $e) { $pending = ['target'=>$target, 'since'=>0]; }
+        $mixerClosed = GetValueInteger($this->id('GasMixerID')) === $this->ReadPropertyInteger('MixerClosed');
         $opposite = $target === 1 ? $gas : $hp;
-        if ($opposite || ($pending && ($pending['target'] ?? 0) !== $target)) {
-            if (!$pending || ($pending['target'] ?? 0) !== $target) {
-                $pending = ['target'=>$target, 'since'=>0];
-                $this->WriteAttributeString('SourceTransfer', json_encode($pending));
-            }
-        }
-        $acknowledged = !$hp && !$gas && GetValueInteger($this->id('GasMixerID')) === $this->ReadPropertyInteger('MixerClosed');
-        if ($pending) {
-            if (!$acknowledged) $pending['since'] = 0;
-            elseif (($pending['since'] ?? 0) === 0) $pending['since'] = $now;
-            $this->WriteAttributeString('SourceTransfer', json_encode($pending));
-        }
-        $delay = $pending ? max(0, ($pending['since'] ?: $now) + $this->ReadPropertyInteger('SourceTransferDelaySeconds') - $now) : 0;
-        $offDelay = $target === 1 && !$hp ? max(0, $stopped + $this->ReadPropertyInteger('HeatPumpMinimumOffSeconds') - $now) : 0;
-        if (($pending && !$acknowledged) || $delay > 0 || $offDelay > 0) {
-            // Source interlocks govern the heat sources, not the shared fan.
-            // evaluate() decides airflow from the selected exchanger and room demand.
+        $handover = $opposite || $this->ReadAttributeString('SourceTransfer') !== '' || ($target === 1 && !$mixerClosed);
+        if ($handover && !(!$hp && !$gas && $mixerClosed)) {
+            $this->WriteAttributeString('SourceTransfer', json_encode(['target'=>$target], JSON_THROW_ON_ERROR));
             $this->queueHeatOff($queue, false);
-            $this->SetValue('SourceTransferStatus', sprintf('Both air sources off before %s; transfer wait %ds, heat-pump off wait %ds; checking stop/mixer command states',
-                $target === 1 ? 'heat pump' : 'gas', $delay, $offDelay));
+            $this->SetValue('SourceTransferStatus', 'Awaiting both sources OFF and mixer CLOSED command acknowledgement before '.($target === 1 ? 'heat pump' : 'gas').'; no timed delay');
+            // Recheck asynchronous commands promptly; this is not a protection countdown.
+            $this->SetTimerInterval('SourceCommandCheck', 1000);
             return false;
         }
         $this->WriteAttributeString('SourceTransfer', '');
-        if (!$auto) $this->WriteAttributeString('AutomaticWasActive', '0');
-        $this->SetValue('SourceTransferStatus', 'Ready: ' . ($target === 1 ? 'heat pump' : 'gas'));
+        $this->SetTimerInterval('SourceCommandCheck', 0);
+        if (!$this->GetValue('AutomaticSourceSelection')) $this->WriteAttributeString('AutomaticWasActive', '0');
+        $this->SetValue('SourceTransferStatus', 'Ready: '.($target === 1 ? 'heat pump' : 'gas').'; no timed delay');
         return true;
     }
 
     private function sourceIdle(string $reason): void
     {
-        if ($this->boolValue('HeatPumpOnID')) $this->WriteAttributeString('HeatPumpStoppedAt', '0');
-        elseif ((int)$this->ReadAttributeString('HeatPumpStoppedAt') === 0) $this->WriteAttributeString('HeatPumpStoppedAt', (string)$this->sourceClock());
-        // A brief loss of room demand must not erase a transfer's stop/travel delay.
-        if ($this->GetValue('AutomaticSourceSelection') || $this->ReadAttributeString('AutomaticWasActive') === '1') {
-            $hp = $this->boolValue('HeatPumpOnID'); $gas = $this->boolValue('GasPumpID');
-            if ($hp || $gas) {
-                $this->WriteAttributeString('SourceTransfer', json_encode(['target'=>$hp ? 2 : 1, 'since'=>0]));
-            } elseif ($this->ReadAttributeString('SourceTransfer') !== '') {
-                try {
-                    $pending = json_decode($this->ReadAttributeString('SourceTransfer'), true, 16, JSON_THROW_ON_ERROR);
-                    if (is_array($pending) && in_array($pending['target'] ?? null, [1, 2], true)
-                        && ($pending['since'] ?? null) === 0
-                        && GetValueInteger($this->id('GasMixerID')) === $this->ReadPropertyInteger('MixerClosed')) {
-                        $pending['since'] = $this->sourceClock();
-                        $this->WriteAttributeString('SourceTransfer', json_encode($pending));
-                    }
-                } catch (Throwable $e) { /* sourceReady reestablishes a corrupt transfer conservatively. */ }
-            }
-        } else { $this->WriteAttributeString('SourceTransfer', ''); }
+        $this->SetTimerInterval('SourceCommandCheck', 0);
+        $hp = $this->boolValue('HeatPumpOnID');
+        $gas = $this->boolValue('GasPumpID');
+        if ($hp || $gas) $this->WriteAttributeString('SourceTransfer', '{"target":0}');
+        elseif (GetValueInteger($this->id('GasMixerID')) === $this->ReadPropertyInteger('MixerClosed')) {
+            $this->WriteAttributeString('SourceTransfer', '');
+        }
         $this->SetValue('EffectiveSource', 0); $this->SetValue('SelectedHeatPumpPower', 0);
         $this->SetValue('SourceTransferStatus', $reason);
         $this->SetValue('SourceSelectionStatus', $reason);

@@ -54,20 +54,11 @@ the entire gas boiler or directly commands radiator/DHW services.
 | Activate gas-air heating | Heat-pump enable **35931=false**; percentage **19207=0**; mixer **14348=0** (open); gas-air pump **32875=true**; flow command **14533=value from 46820** |
 | Stop sources for transfer | **35931=false**, **19207=0**, **14348=100**, **32875=false**; fan remains governed by selected exchanger temperature and room demand |
 
-Before changing from an active source, both air sources are stopped. The
-**SourceTransferDelaySeconds** pause defaults to 120 seconds and starts only after
-both enable/pump command variables read off and the mixer command reads closed.
-A heat-pump start additionally needs **HeatPumpMinimumOffSeconds**, default 300
-seconds, from the observed off command. Unknown off duration, restart or bypass
-causes conservative reobservation. A brief loss of room demand cannot erase the
-transfer pause. These times are configurable implementation defaults, not
-manufacturer-specific certified timings.
+From **0.3.43 build 54**, the module adds **no timed source-transfer pause** and **no heat-pump minimum-off delay**. After stopping the previous source, it permits the replacement source as soon as both source commands read OFF and the mixer command reads CLOSED. A pending command is rechecked promptly; there is no elapsed-time requirement. Configuration apply, re-enable, a brief demand interruption or completion of flap calibration does not create a protection countdown.
 
-These are **command-state acknowledgments**, not compressor-running or actual
-valve-position feedback. If a stop/closed command does not update, the replacement
-source does not start. Equipment defrost, compressor ramping and internal limits
-remain controlled by the heat pump. Manufacturer controller documentation describes
-staged ramp delays; the software's minimum off timer is not a substitute for them.
+**SourceTransferDelaySeconds** and **HeatPumpMinimumOffSeconds** remain registered only for configuration/export compatibility, with factory values 0. They are hidden from the form and ignored everywhere, including old saved nonzero values and heat-pump capacity-test preparation. Importing an old backup cannot restore either wait.
+
+These are **command-state acknowledgments**, not compressor-running or actual valve-position feedback. If a stop/closed command does not update, the replacement source does not start. Equipment defrost and internal limits remain equipment-controlled.
 
 ## Fan control independent of source transfer
 
@@ -81,11 +72,11 @@ From **0.3.41 build 52**, the fan uses the **selected heat-source exchanger temp
     fan on  when selected exchanger >= highest target of the rooms requesting heat
     fan off when selected exchanger <  highest target of the rooms requesting heat
 
-Equality keeps the fan on. A closed room with no demand does not raise this threshold. The current selected source determines the reference sensor during both-source-off transfer waits and compressor minimum-off waits as well as normal heating. Source transfer does not issue a fan stop; the applicable exchanger temperature determines the fan decision. Fan speed remains the desired value from **48646**; demand keeps the receiving-room flaps open.
+Equality keeps the fan on. A closed room with no demand does not raise this threshold. The current selected source determines the reference sensor while awaiting source-command acknowledgement as well as during normal heating. Source transfer does not issue a fan stop; the applicable exchanger temperature determines the fan decision. Fan speed remains the desired value from **48646**; demand keeps the receiving-room flaps open.
 
 Outgoing air is not the fan reference: without airflow that sensor can remain cold while the exchanger is already hot. The selected exchanger can therefore start the fan from rest. There is no extra temperature margin or intake-rise gate for this fan rule. The configured supply margin still qualifies economic heat-pump capacity. Debug records the selected exchanger sensor, measured temperature, applicable current room target and fan decision.
 
-The heat sources retain stop acknowledgments, mixer travel delay, break-before-make and the compressor minimum off time. Fan operation cannot bypass those protections. No-demand residual recovery/run-on, explicit shutdown, master/summer bypass and supervised calibration keep their existing controls.
+The heat sources retain OFF/CLOSED command acknowledgement and break-before-make, without a mixer travel timer or compressor off-time timer. No-demand residual recovery/run-on, explicit shutdown, master/summer bypass and supervised calibration keep their existing controls.
 
 The supplied 23 October log switches from HP selection to gas fallback at 10:30:02 when a quote expires, then back to HP at 10:30:42 after the next quote. This release lets warm-air delivery continue through those source waits. It does not extend an expired price quote or change economic source-selection rules.
 
@@ -125,7 +116,7 @@ From **0.3.42 build 53**, the protected HTML page has an **Enable/Disable heatin
 | 1 | Command every flap OPEN, including commands whose stored value already matches | FlapCalibrationWaitSeconds |
 | 2 | Command every flap CLOSED | FlapCalibrationWaitSeconds |
 | 3 | Command every flap OPEN | FlapCalibrationWaitSeconds |
-| Complete | Return control to normal heating rules | Source-transfer/minimum-off protections still apply |
+| Complete | Return control to normal heating rules | OFF/CLOSED command acknowledgement only; no timed delay |
 
 **Wait at each position (seconds)** is editable on the page and in the instance form, default **120 seconds**, range **1–3600**. With defaults the three dwell stages take **six minutes**, plus any initial stop-acknowledgement delay. The setting is retained in configuration backup/export; it cannot change mid-run. A delayed timer never skips the required wait at a position. The page shows active stage, open/closed command, remaining seconds and waiting/error status. These are command states, not independent physical end-stop feedback.
 

@@ -1,5 +1,7 @@
 # HeatingControl for IP-Symcon
 
+Version **0.3.43, build 54** removes the module's two-minute source-transfer pause and five-minute heat-pump minimum-off delay, including before capacity-test preparation. Previously saved timing properties are inert. Source changes use OFF/CLOSED command acknowledgement only, with no added countdown; fan control remains based on the selected exchanger and current room targets. See [source handover without timed waits](docs/automatic-source-selection.md).
+
 Version **0.3.42, build 53** adds **Enable/Disable heating module** and **Air-flap calibration** to the protected page. Disable releases every linked variable without shutdown/restoration commands, including from an active heat-pump test. Calibration holds heat sources and fan off, commands every configured flap open → close → open, waits the configurable **FlapCalibrationWaitSeconds** (default 120 seconds) at each position, and returns control to heating. See [module enable and flap calibration](docs/automatic-source-selection.md#module-enable-and-air-flap-calibration).
 
 Version **0.3.41, build 52** controls the heating fan from the selected source's heat-exchanger temperature: **HeatPumpTempID** for heat pump, **HeatExchangerTempID** for gas. While rooms demand heat, the fan runs at or above the highest current target among those rooms and stops below it. A hot exchanger can start airflow even while the outgoing-air sensor is cold. Source transfer and compressor off-time protections still govern the heat sources independently. See [fan operation during transfer](docs/automatic-source-selection.md#fan-control-independent-of-source-transfer).
@@ -110,8 +112,9 @@ the heating configuration. On uses its valid source and published power;
 off uses the current source selector and retained manual desired power. Gas is the fallback
 for missing, unverified or expired recommendations, subject to existing demand
 and heating permissions. Source changes stop both air sources before starting
-the other, with a configurable 120-second transfer pause and 300-second observed
-heat-pump off time. These are command-state checks, not physical stop feedback.
+the other after OFF/CLOSED command acknowledgement. The former 120-second transfer
+pause and 300-second observed off-time requirement were removed in 0.3.43; old
+saved timing values are ignored. Command states are not physical stop feedback.
 
 See [exact commands and setup](docs/automatic-source-selection.md) and
 [heat-pump/fan research](docs/heatpump-capacity-research.md). Version **0.3.2**, build 12 adds an opt-in editable outside-temperature power/COP

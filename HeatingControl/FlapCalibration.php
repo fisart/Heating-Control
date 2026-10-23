@@ -32,6 +32,7 @@ trait HeatingControlFlapCalibration
             $this->SetValue('FlapCalibrationActive', false);
             $this->SetValue('FlapCalibrationStatus', $reason.'; flap calibration interrupted; device states retained');
         }
+        $this->SetTimerInterval('SourceCommandCheck', 0);
         $this->SetTimerInterval('HeatPumpTestTimer', 0);
         $this->SetTimerInterval('FlapCalibrationTimer', 0);
         $this->clearRecovery();
@@ -90,6 +91,7 @@ trait HeatingControlFlapCalibration
             $this->SetValue('FlapCalibrationActive', true);
             $this->clearRecovery();
             $this->SetValue('LearningSourceMode', 0);
+            $this->SetTimerInterval('SourceCommandCheck', 0);
             $this->SetTimerInterval('FlapCalibrationTimer', 1000);
         } finally { IPS_SemaphoreLeave($lock); }
         $this->ProcessHeating();

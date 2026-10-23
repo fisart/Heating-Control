@@ -15,6 +15,7 @@ $m=fixture();$m->properties['DryRun']=true;try{$m->StartHeatPumpTest();check(fal
 $m=fixture();$m->properties['HeatPumpTestExcludedFlapID']=999;try{$m->StartHeatPumpTest();check(false,'Missing exclusion must refuse');}catch(RuntimeException $e){check(!$m->values['HeatPumpTestActive'],'Master-bedroom exclusion must match configured room');}
 $m=fixture();$m->StartHeatPumpTest(3);
 check($m->values['HeatPumpTestActive'],'Form/API starts test');
+check(json_decode($m->attributes['HeatPumpTestState'],true)['phase']==='baseline','Acknowledged test preparation enters meter baseline with no protection countdown');
 check(AC_GetLoggingStatus(9,15315)&&AC_GetLoggingStatus(9,38023),'Start enables missing selected-variable logging');
 for($i=0;$i<300&&$m->values['HeatPumpTestActive'];$i++) {
     tick($m);

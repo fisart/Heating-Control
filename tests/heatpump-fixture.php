@@ -19,7 +19,7 @@ function fixture():TestHeating {
     $GLOBALS['variables'][$m->properties['HeatPumpTestFanMeterID']]['value']=80.0;
     $GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=15.0;
     $GLOBALS['variables'][13869]['value']=180.0;$GLOBALS['variables'][38023]['value']=100000.0;
-    $GLOBALS['loggedValues'][38023]=[['TimeStamp'=>$m->clock-90,'Value'=>100000.0-180*90/3600]];
+    $GLOBALS['loggedValues'][38023]=[['TimeStamp'=>$m->clock-60,'Value'=>100000.0-180*60/3600]];
     return $m;
 }
 function tick(TestHeating $m,int $seconds=10,?int $heldIncomingUpdated=null):void {
@@ -36,3 +36,4 @@ function tick(TestHeating $m,int $seconds=10,?int $heldIncomingUpdated=null):voi
     if($heldIncomingUpdated!==null)$GLOBALS['variables'][$m->properties['IncomingAirTempID']]['VariableUpdated']=$heldIncomingUpdated;
     $m->ProcessHeating();
 }
+
