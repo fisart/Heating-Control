@@ -49,8 +49,10 @@ check(!$m->values['HeatPumpTestActive']&&str_contains($m->values['HeatPumpTestSt
 check(json_decode($m->values['HeatPumpTestResults'],true)['temperatureMaxAgeSeconds']===900,'Summary records configured temperature age cutoff');
 $m=fixture();$m->StartHeatPumpTest(3);tick($m);$m->CancelHeatPumpTest();
 check(!$m->values['HeatPumpTestActive']&&!json_decode($m->values['HeatPumpTestResults'],true)['complete'],'Cancellation stores partial run without learning');
-$m=fixture();$m->StartHeatPumpTest(3);$m->properties['Enabled']=false;$m->ProcessHeating();
-check(!$m->values['HeatPumpTestActive']&&!GetValue(35931),'Disabling module still stops test-owned heat');
+$m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][35931]['value']=true;$GLOBALS['variables'][46921]['value']=true;
+$GLOBALS['commands']=[];$GLOBALS['directWrites']=[];$m->SetModuleEnabled(false);$m->ProcessHeating();$m->CancelHeatPumpTest();
+check(!$m->values['HeatPumpTestActive']&&GetValue(35931)&&GetValue(46921)&&!$GLOBALS['commands']&&!$GLOBALS['directWrites'],'Disabled module releases test ownership without changing any device');
+check($m->attributes['InterruptedHeatPumpTest']!==''&&str_contains($m->values['HeatPumpTestStatus'],'readings retained'),'Interrupted test checkpoint is preserved');
 $m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][35931]['value']=true;$GLOBALS['variables'][46921]['value']=true;$m->properties['DryRun']=true;$m->ProcessHeating();
 check(!$m->values['HeatPumpTestActive']&&!GetValue(35931)&&!GetValue(46921),'New dry-run permission cannot leave test-owned heat/fan running');
 $m=fixture();$m->StartHeatPumpTest(3);$GLOBALS['variables'][35931]['value']=true;$GLOBALS['variables'][35931]['VariableAction']=1;$m->CancelHeatPumpTest();
@@ -83,3 +85,4 @@ check($req['coilMinimum']===0.0&&$req['target']===23.0,'Occupied uses active tar
 $GLOBALS['variables'][46970]['value']=true;foreach([12594,40975,30481,37341] as $id)$GLOBALS['variables'][$id]['value']=10.0;
 check(webInvoke($m,'heatPumpRequirement',webInvoke($m,'rooms'))['target']===10.0,'Holiday automatically uses changed room targets');
 echo "PASS: $checks heat-pump test/model checks\n";
+

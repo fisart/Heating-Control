@@ -112,3 +112,23 @@ shutdown priority, source-selector mirroring (including configurable mode values
 DryRun, legacy-action bypass, unchanged-value suppression, handback, configuration restore and authenticated web controls.
 Existing heating/recovery, archive/security and DOM checks also run. No live
 heating equipment was operated during implementation.
+
+## Module enable and air-flap calibration
+
+From **0.3.42 build 53**, the protected HTML page has an **Enable/Disable heating module** button. It changes the existing **Enabled** setting. Disable releases all linked inputs/outputs and legacy status variables: no timer, event, normal heating, active calibration, heat-pump test or page setting can write to them. Current device states are retained; disabling is not a shutdown command. Internal module status/checkpoints may still update. The page stays accessible so the module can be enabled again. Dry run remains a separate existing setting.
+
+**Calibrate air flaps** runs a nonblocking service sequence for **every configured room flap**, including the master-bedroom flap excluded from heat-pump capacity tests:
+
+| Stage | Action | Wait |
+| --- | --- | --- |
+| Preparation | Turn both heat sources and fan off; close mixer; wait for command-state acknowledgement | Until OFF acknowledged |
+| 1 | Command every flap OPEN, including commands whose stored value already matches | FlapCalibrationWaitSeconds |
+| 2 | Command every flap CLOSED | FlapCalibrationWaitSeconds |
+| 3 | Command every flap OPEN | FlapCalibrationWaitSeconds |
+| Complete | Return control to normal heating rules | Source-transfer/minimum-off protections still apply |
+
+**Wait at each position (seconds)** is editable on the page and in the instance form, default **120 seconds**, range **1–3600**. With defaults the three dwell stages take **six minutes**, plus any initial stop-acknowledgement delay. The setting is retained in configuration backup/export; it cannot change mid-run. A delayed timer never skips the required wait at a position. The page shows active stage, open/closed command, remaining seconds and waiting/error status. These are command states, not independent physical end-stop feedback.
+
+During calibration normal heating and other page controls are suspended. Both heat sources and fan stay off; loss of OFF acknowledgement pauses the sequence and restarts the current dwell when recovered. A heat-pump capacity test cannot overlap. **Cancel calibration** returns control to normal heating. **Disable heating module** interrupts calibration immediately and leaves all current device values untouched. Master bypass or a change to dry run interrupts without further output commands. A configuration apply or restart interrupts a flap sequence; it never silently resumes an uncertain position. Output faults retain exclusive calibration ownership and a visible error until cancel/disable.
+
+Disabling during a heat-pump capacity test retains raw readings and an interrupted-state checkpoint, ends test ownership and sends no stop/restore commands. Use normal test Cancel while enabled when a controlled test shutdown is wanted. Re-enable does not resume interrupted tests. APIs: **HC_SetModuleEnabled**, **HC_StartFlapCalibration**, **HC_CancelFlapCalibration**, **HC_SetFlapCalibrationWaitSeconds**.

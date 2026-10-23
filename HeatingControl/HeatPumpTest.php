@@ -104,6 +104,7 @@ trait HeatingControlHeatPumpTest
         $lock='HeatingControl.'.$this->InstanceID;
         if(!IPS_SemaphoreEnter($lock,1000))throw new RuntimeException('Heating controller busy');
         try {
+            if($this->ReadAttributeString('FlapCalibrationState')!=='')throw new RuntimeException('Finish or cancel air-flap calibration first');
             if($this->testState())throw new RuntimeException('A heat-pump test is already running or stopping');
             if(!$this->ReadPropertyBoolean('Enabled')||$this->ReadPropertyBoolean('DryRun')||IPS_GetKernelRunlevel()!==KR_READY)throw new RuntimeException('Enable live Heating Control before starting a test');
             if($this->boolValue('MasterDisableID')||!$this->boolValue('WinterID')||$this->intValue('OperatingModeID')===$this->ReadPropertyInteger('CoolingModeValue'))throw new RuntimeException('Heating is bypassed or cooling is selected');
@@ -148,7 +149,7 @@ trait HeatingControlHeatPumpTest
     public function CancelHeatPumpTest(): void
     {
         $lock='HeatingControl.'.$this->InstanceID;if(!IPS_SemaphoreEnter($lock,1000))throw new RuntimeException('Controller busy');
-        try {$s=$this->testState();if($s){$this->beginTestFinish($s,'Cancelled by user',false);$this->finishTestTick($s);}}
+        try {if(!$this->ReadPropertyBoolean('Enabled')){$this->releaseControlOwnership('Controller disabled');return;}$s=$this->testState();if($s){$this->beginTestFinish($s,'Cancelled by user',false);$this->finishTestTick($s);}}
         finally {IPS_SemaphoreLeave($lock);}
     }
     public function HeatPumpTestTick(): void {$this->ProcessHeating();}
@@ -158,7 +159,7 @@ trait HeatingControlHeatPumpTest
         if($s['phase']!=='stopping'){$s['phase']='stopping';$s['finishReason']=$reason;$s['complete']=$complete;$this->saveTestState($s);}
         $this->SetValue('HeatPumpTestStatus','Stopping test: '.$s['finishReason']);
     }
-    /** Test-owned stop remains effective even if Enabled/DryRun changes during a run. */
+    /** A dry-run change still stops test-owned equipment; disabling releases all control. */
     private function testStopCommands(array $s): void
     {
         $v=[$s['ids']['HeatPumpOnID']=>false,$s['ids']['HeatPumpPowerID']=>0,$s['ids']['GasPumpID']=>false,
@@ -167,6 +168,7 @@ trait HeatingControlHeatPumpTest
     }
     private function testOwnedCommands(array $v): bool
     {
+        if (!$this->ReadPropertyBoolean('Enabled')) return false;
         $ok=true;
         foreach($v as $id=>$value) {
             try {
@@ -494,3 +496,4 @@ trait HeatingControlHeatPumpTest
         return ['target'=>max($targets),'coilMinimum'=>0.0];
     }
 }
+

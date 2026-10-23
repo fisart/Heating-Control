@@ -201,7 +201,7 @@ trait HeatingControlWebhook
             $controls['OperatingModeID']['available'] = false;
             $controls['HeatPumpDesiredPowerID']['available'] = false;
         }
-        if($this->ReadAttributeString('HeatPumpTestState')!=='')foreach($controls as &$control)$control['available']=false;
+        if($this->ReadAttributeString('HeatPumpTestState')!==''||$this->ReadAttributeString('FlapCalibrationState')!=='')foreach($controls as &$control)$control['available']=false;
         unset($control);
         return $controls;
     }
@@ -251,7 +251,7 @@ trait HeatingControlWebhook
             'sourceSelection'=>['automatic'=>(bool)$this->GetValue('AutomaticSourceSelection'), 'effective'=>(int)$this->GetValue('EffectiveSource'),
                 'power'=>(int)$this->GetValue('SelectedHeatPumpPower'), 'status'=>(string)$this->GetValue('SourceSelectionStatus'),
                 'transfer'=>(string)$this->GetValue('SourceTransferStatus'), 'provider'=>$this->webSourceProvider()],
-            'heatPumpTest'=>$this->heatPumpTestView(),
+            'heatPumpTest'=>$this->heatPumpTestView(), 'flapCalibration'=>$this->flapCalibrationView(),
             'rooms'=>$roomData, 'environment'=>$environment, 'equipment'=>$equipment, 'controls'=>$controls];
     }
 
@@ -293,6 +293,23 @@ trait HeatingControlWebhook
         }
         if (!is_string($payload['control'] ?? null)) throw new InvalidArgumentException('Select a supported control.');
         if (IPS_GetKernelRunlevel() !== KR_READY) throw new RuntimeException('Symcon is not ready.');
+        if (in_array($payload['control'], ['ModuleEnabled','FlapCalibrationStart','FlapCalibrationCancel','FlapCalibrationWaitSeconds'], true)) {
+            $value = $payload['value'];
+            switch ($payload['control']) {
+                case 'ModuleEnabled':
+                    if (!is_bool($value)) throw new InvalidArgumentException('Module enable requires a Boolean');
+                    $this->SetModuleEnabled($value); break;
+                case 'FlapCalibrationWaitSeconds':
+                    if (!is_int($value)) throw new InvalidArgumentException('Flap wait requires whole seconds');
+                    $this->SetFlapCalibrationWaitSeconds($value); break;
+                default:
+                    if ($value !== true) throw new InvalidArgumentException('Calibration start/cancel requires true');
+                    if ($payload['control'] === 'FlapCalibrationStart') $this->StartFlapCalibration();
+                    else $this->CancelFlapCalibration();
+            }
+            return ['ok'=>true, 'confirmed'=>true, 'state'=>$this->webState()];
+        }
+        if ($this->ReadAttributeString('FlapCalibrationState') !== '') throw new InvalidArgumentException('Air-flap calibration owns the controls; finish or cancel it first.');
         if (in_array($payload['control'],['HeatPumpTestStart','HeatPumpTestCancel','HeatPumpTestMinutes','HeatPumpTestReboot'],true)) {
             $control=$payload['control'];$value=$payload['value'];
             if($control==='HeatPumpTestMinutes') {
@@ -319,6 +336,7 @@ trait HeatingControlWebhook
         $lock = 'HeatingControl.'.$this->InstanceID;
         if (!IPS_SemaphoreEnter($lock,1000)) throw new RuntimeException('Controller busy; retry.');
         try {
+            if (!$this->ReadPropertyBoolean('Enabled') || $this->ReadPropertyBoolean('DryRun') || $this->ReadAttributeString('FlapCalibrationState') !== '' || $this->testState()) throw new RuntimeException('Controller disabled or calibration/test owns the controls');
             $rooms = $this->rooms();
             $this->validateConfiguration($rooms);
             $control = $this->webControls($rooms)[$payload['control']] ?? null;
@@ -437,5 +455,6 @@ trait HeatingControlWebhook
         }
     }
 }
+
 
 

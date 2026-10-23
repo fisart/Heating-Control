@@ -20,10 +20,36 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
   }
   if(options.method==='POST'&&JSON.parse(options.body).control==='HeatPumpTestReboot'){const v=JSON.parse(options.body).value;state.heatPumpTest.rebootGuardEnabled=v.enabled;state.heatPumpTest.rebootTime=v.time;return {ok:true,status:200,json:async()=>({ok:true,confirmed:true,state})};}
   if(options.method==='POST'&&JSON.parse(options.body).control==='HeatPumpCOPMethod'){state.heatPumpTest.copMethod.selected=JSON.parse(options.body).value;return {ok:true,status:200,json:async()=>({ok:true,confirmed:true,state})};}
+  if(options.method==='POST'){
+   const {control,value}=JSON.parse(options.body);
+   if(control==='ModuleEnabled'){state.enabled=value;state.editable=value&&!state.dryRun;state.flapCalibration.active=false;}
+   else if(control==='FlapCalibrationWaitSeconds')state.flapCalibration.waitSeconds=value;
+   else if(control==='FlapCalibrationStart'){state.flapCalibration.active=true;state.flapCalibration.status='Step 1/3: all flaps OPEN; 120s remaining';}
+   else if(control==='FlapCalibrationCancel'){state.flapCalibration.active=false;state.flapCalibration.status='Cancelled';}
+   return {ok:true,status:200,json:async()=>({ok:true,confirmed:true,state})};
+  }
   return {ok:true,status:200,json:async()=>state};
  };
  w.eval(d.querySelector('script').textContent);
  const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
+ assert.equal(d.querySelector('#module-enabled').textContent,'Disable heating module');
+ d.querySelector('#module-enabled').click();await settle();await settle();
+ assert.equal(state.enabled,false);assert.equal(d.querySelector('#module-enabled').disabled,false);
+ assert.equal(d.querySelector('#module-enabled').textContent,'Enable heating module');
+ assert.ok(d.querySelector('#module-control-status').textContent.includes('no linked variables'));
+ assert.equal(d.querySelector('#flap-start').disabled,true);
+ d.querySelector('#module-enabled').click();await settle();await settle();
+ assert.equal(state.enabled,true);
+ d.querySelector('#flap-wait').value='9';d.querySelector('#flap-wait-save').click();await settle();await settle();
+ assert.equal(state.flapCalibration.waitSeconds,9);
+ d.querySelector('#flap-start').click();await settle();await settle();
+ assert.equal(state.flapCalibration.active,true);assert.equal(d.querySelector('#flap-cancel').disabled,false);
+ assert.equal(d.querySelector('#module-enabled').disabled,false,'Disable remains available during calibration');
+ assert.equal(d.querySelector('#test-start').disabled,true,'Heat-pump test cannot overlap');
+ assert.equal(d.querySelectorAll('#rooms .edit button:enabled,#automatic-control button:enabled').length,0);
+ assert.ok(d.querySelector('#flap-status').textContent.includes('Step 1/3'));
+ d.querySelector('#flap-cancel').click();await settle();await settle();
+ assert.equal(state.flapCalibration.active,false);assert.equal(d.querySelector('#test-start').disabled,false);
  assert.equal(d.querySelectorAll('#matrix-results tr').length,43,'Reviewed matrix is rendered on the protected page');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('Dedicated HP circuit'),'New-test basis identifies the dedicated circuit');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('28681')&&d.querySelector('#test-meter-basis').textContent.includes('22365'),'Configured meter IDs appear on the protected page');

@@ -9,6 +9,7 @@ jobs:
         run: php tests/library-structure.php
       - name: PHP syntax
         run: |
+          php -l HeatingControl/FlapCalibration.php
           php -l HeatingControl/module.php
           php -l HeatingControl/HeatPumpTest.php
           php -l HeatingControl/HeatPumpTransient.php
@@ -64,6 +65,7 @@ jobs:
           php tests/measured-links.php
           php tests/source-selection.php
           php tests/heatpump-transfer-fan.php
+          php tests/flap-calibration.php
           php tests/room-editor.php
           php tests/recovery-hysteresis.php
           php tests/webhook.php

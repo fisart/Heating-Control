@@ -10,6 +10,7 @@ require_once __DIR__ . "/Archive.php";
 require_once __DIR__ . "/SourceSelection.php";
 require_once __DIR__ . "/HeatPumpTest.php";
 require_once __DIR__ . "/HeatPumpEconomics.php";
+require_once __DIR__ . "/FlapCalibration.php";
 
 class HeatingControl extends IPSModule
 {
@@ -18,6 +19,7 @@ class HeatingControl extends IPSModule
     use HeatingControlSourceSelection;
     use HeatingControlHeatPumpTest;
     use HeatingControlHeatPumpEconomics;
+    use HeatingControlFlapCalibration;
 
     private const DEFAULT_IDS = [
         'MasterDisableID' => 11098,
@@ -67,6 +69,7 @@ class HeatingControl extends IPSModule
         $this->createSourceSelection();
         $this->createHeatPumpTest();
         $this->createHeatPumpEconomics();
+        $this->createFlapCalibration();
         $this->RegisterPropertyBoolean('Enabled', false);
         $this->RegisterPropertyBoolean('DryRun', true);
         $this->RegisterPropertyBoolean('DebugEnabled', false);
@@ -139,6 +142,10 @@ class HeatingControl extends IPSModule
     {
         parent::ApplyChanges();
         try {$this->SetValue('HeatPumpModelJSON',json_encode(['schema'=>2,'points'=>$this->measuredMatrix()],JSON_THROW_ON_ERROR));} catch (Throwable $e) {$this->SetValue("HeatPumpPerformanceStatus",$e->getMessage());}
+        if (!$this->ReadPropertyBoolean('Enabled')) $this->releaseControlOwnership('Controller disabled');
+        if ($this->ReadAttributeString('FlapCalibrationState') !== '') {
+            $this->finishFlapCalibration('Interrupted by restart/configuration apply; start a new calibration');
+        }
         // Only an explicitly checkpointed scheduled pause may survive a restart.
         if ($this->ReadAttributeString('HeatPumpTestState') !== '') {
             try { $this->recoverHeatPumpTest(); }
@@ -173,11 +180,16 @@ class HeatingControl extends IPSModule
 
     public function ProcessHeating(): void
     {
-        if ((!$this->ReadPropertyBoolean('Enabled') && $this->ReadAttributeString('HeatPumpTestState')==='') || IPS_GetKernelRunlevel() !== KR_READY) return;
+        if (IPS_GetKernelRunlevel() !== KR_READY) return;
         $lock = 'HeatingControl.' . $this->InstanceID;
         if (!IPS_SemaphoreEnter($lock, 1000)) return;
         try {
+            if (!$this->ReadPropertyBoolean('Enabled')) {
+                $this->releaseControlOwnership('Controller disabled');
+                return;
+            }
             $this->SetTimerInterval('RecoveryRunOnTimer', 0);
+            if ($this->processFlapCalibration()) return;
             if ($this->processHeatPumpTest()) { $this->clearRecovery(); return; }
             $this->debug('Evaluation started');
             $this->evaluate();
@@ -425,8 +437,9 @@ class HeatingControl extends IPSModule
         $q[$id] = $value; // Last decision wins; compare only during dispatch.
     }
 
-    private function dispatch(array $q, array &$log): void
+    private function dispatch(array $q, array &$log, array $forceIDs = []): void
     {
+        if (!$this->ReadPropertyBoolean('Enabled')) return;
         // Publish the mode after equipment commands, without running its legacy action.
         // The source controller owns the protected handover; this is a state mirror.
         $modeID = $this->id('OperatingModeID');
@@ -452,7 +465,7 @@ class HeatingControl extends IPSModule
             else throw new \RuntimeException('Unsupported output type at ' . $id);
             $current = GetValue($id);
             $same = $type === 2 ? abs((float)$current - (float)$value) < 0.01 : $current === $value;
-            if ($same) {
+            if ($same && !in_array($id, $forceIDs, true)) {
                 $this->debug('UNCHANGED ' . $id . ' = ' . json_encode($value));
                 continue;
             }
@@ -780,7 +793,7 @@ class HeatingControl extends IPSModule
             throw new \InvalidArgumentException('Unsupported heating configuration backup');
         }
         $allowed = array_merge(array_keys(self::DEFAULT_IDS), array_keys(self::DEFAULT_STATUS_IDS), array_keys(self::TEST_DEFAULTS),
-            ['HeatPumpCOPMethod','HeatPumpGasEfficiencyPercent','HeatPumpMatrixTemperatureToleranceC','HeatPumpMeasuredMatrix','Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp', 'RecoveryRunOnSeconds',
+            ['HeatPumpCOPMethod','HeatPumpGasEfficiencyPercent','HeatPumpMatrixTemperatureToleranceC','HeatPumpMeasuredMatrix','Enabled', 'DryRun', 'DebugEnabled', 'WebEnabled', 'VaultInstanceID', 'Rooms', 'RecoveryEnableID', 'ElectricityPriceInstanceID', 'SourceTransferDelaySeconds', 'HeatPumpMinimumOffSeconds', 'IntervalSeconds', 'MaxSensorAgeSeconds', 'ResidualMinOutgoingTemp', 'RecoveryRunOnSeconds', 'FlapCalibrationWaitSeconds',
              'MixerOpen', 'MixerClosed', 'CoolingModeValue', 'HeatPumpModeValue', 'GasModeValue']);
         $incoming = $backup['config'];
         if (array_diff(array_keys($incoming), $allowed)) throw new \InvalidArgumentException('Unknown backup property');
@@ -807,6 +820,7 @@ class HeatingControl extends IPSModule
         if (array_key_exists('RecoveryRunOnSeconds', $incoming) && (!is_int($incoming['RecoveryRunOnSeconds']) || $incoming['RecoveryRunOnSeconds'] < 0 || $incoming['RecoveryRunOnSeconds'] > 600)) {
             throw new \InvalidArgumentException('Recovery fan run-on must be an integer between 0 and 600 seconds');
         }
+        if (isset($incoming['FlapCalibrationWaitSeconds']) && (!is_int($incoming['FlapCalibrationWaitSeconds']) || $incoming['FlapCalibrationWaitSeconds'] < 1 || $incoming['FlapCalibrationWaitSeconds'] > 3600)) throw new InvalidArgumentException('Flap wait must be 1–3600 whole seconds');
         if (isset($incoming['ResidualMinOutgoingTemp']) && !is_numeric($incoming['ResidualMinOutgoingTemp'])) {
             throw new \InvalidArgumentException('Invalid residual minimum');
         }
