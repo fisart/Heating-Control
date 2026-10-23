@@ -24,6 +24,8 @@ Full-period air rise, electrical input and descriptive reference inlet are fitte
 
 ## Capacity and price safeguards
 
+During room demand, the fan follows measured outgoing air versus the highest target of the demanding rooms, independently of source transfers. See [the fan rule and source interlocks](automatic-source-selection.md#fan-control-independent-of-source-transfer).
+
 Actual inlet determines required rise:
 
     required rise = max(configured minimum rise, room target + supply margin − actual inlet)

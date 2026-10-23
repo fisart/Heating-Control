@@ -116,7 +116,9 @@ trait HeatingControlSourceSelection
         $delay = $pending ? max(0, ($pending['since'] ?: $now) + $this->ReadPropertyInteger('SourceTransferDelaySeconds') - $now) : 0;
         $offDelay = $target === 1 && !$hp ? max(0, $stopped + $this->ReadPropertyInteger('HeatPumpMinimumOffSeconds') - $now) : 0;
         if (($pending && !$acknowledged) || $delay > 0 || $offDelay > 0) {
-            $this->queueHeatOff($queue, false); $this->queueFanOff($queue);
+            // Source interlocks govern the heat sources, not the shared fan.
+            // evaluate() decides airflow from outgoing air and room demand.
+            $this->queueHeatOff($queue, false);
             $this->SetValue('SourceTransferStatus', sprintf('Both air sources off before %s; transfer wait %ds, heat-pump off wait %ds; checking stop/mixer command states',
                 $target === 1 ? 'heat pump' : 'gas', $delay, $offDelay));
             return false;
@@ -153,4 +155,5 @@ trait HeatingControlSourceSelection
         $this->SetValue('SourceSelectionStatus', $reason);
     }
 }
+
 
