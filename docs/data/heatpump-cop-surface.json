@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "version": "provisional-heatpump-surface-2026-10-16-v3",
-  "status": "Bundled opt-in runtime v3 eligibility correction; v2 coefficients and analysis matrix unchanged; measured-point mode remains default",
+  "version": "provisional-heatpump-surface-2026-10-23-v4",
+  "status": "Provisional expanded runtime surface; established zero-smoothing method retained; measured-point mode remains default",
   "method": "Minimum-curvature thin-plate radial-basis interpolation with affine trend; zero smoothing; equal point weights.",
   "formula": "q=(Tout-10.5)/5.5, r=(power-65)/35; F(q,r)=sum(w_i*d_i^2*ln(d_i))+a0+a1*q+a2*r; phi(0)=0. Interpolate full-period air rise, electrical kW and descriptive inlet C. Heat kW=0.67*airRise; COP=heat/electrical kW.",
   "coefficient_order": "first n rows radial weights at normalized centers; final 3 rows constant, normalized outside, normalized power; columns airRiseC, electricKW, descriptiveInletC",
@@ -117,160 +117,268 @@
       0.42857142857142855
     ],
     [
-      -0.6319915339649266,
+      0.28576363636363633,
+      -0.7142857142857143
+    ],
+    [
+      -0.9718852959121421,
+      0.42857142857142855
+    ],
+    [
+      -0.6196877168632887,
+      0.7142857142857143
+    ],
+    [
+      -0.6288005637773076,
+      1.0
+    ],
+    [
+      -1.0171606475716064,
+      0.7142857142857143
+    ],
+    [
+      -1.2545454545454535,
+      -1.0
+    ],
+    [
+      -1.2545454545454535,
+      -0.7142857142857143
+    ],
+    [
+      -1.2540651801029168,
+      -0.42857142857142855
+    ],
+    [
+      -1.256363636363637,
+      -0.14285714285714285
+    ],
+    [
+      -1.221134199134199,
+      0.14285714285714285
+    ],
+    [
+      -1.2521682978508732,
+      0.42857142857142855
+    ],
+    [
+      -1.3025527192008892,
+      0.7142857142857143
+    ],
+    [
+      -1.312727272727274,
       1.0
     ]
   ],
   "coefficients": [
     [
-      -4.587445028734673,
-      0.09622518679786986,
-      7.876895955109271
+      -6.636250779183159,
+      0.20415919239474045,
+      7.841898268764811
     ],
     [
-      3.905299651748627,
-      0.4957547061969762,
-      6.080359853496082
+      1.0283593026097935,
+      0.5664733102122307,
+      6.571357639012583
     ],
     [
-      -4.693562346180763,
-      -1.0895185477281246,
-      3.5240348727267503
+      -4.527524550156508,
+      -1.1749098420370587,
+      6.173237608203089
     ],
     [
-      2.022833913567612,
-      0.006814023543437551,
-      4.12959294478634
+      1.3427149016053288,
+      -0.10280432490701724,
+      6.4531282400708205
     ],
     [
-      -4.995408984774572,
-      -1.7134074928436216,
-      3.7997689224978277
+      -5.831773605432618,
+      -1.9504609278424725,
+      6.499372634355642
     ],
     [
-      4.173389213758022,
-      2.932628343736507,
-      2.184812098350159
+      5.082305711834736,
+      3.277226736442661,
+      6.128280759901573
     ],
     [
-      -4.227428357252423,
-      -3.8373955225730554,
-      8.754544721635416
+      -6.929133752659087,
+      -5.156678569411019,
+      11.47623511121787
     ],
     [
-      -3.6547241856169754,
-      0.1304894025013655,
-      -1.6671413363740542
+      -2.7355751268729,
+      0.2866598843011355,
+      -3.6250870694061996
     ],
     [
-      3.669858704654303,
-      -0.6800705711197079,
-      0.0502416831366149
+      3.2791002842521224,
+      -0.749134494978867,
+      -0.023148571646996994
     ],
     [
-      4.481383705432887,
-      1.385717887968421,
-      -1.6124923100591915
+      4.5473830223125296,
+      1.4040015499552267,
+      -2.2554561625271785
     ],
     [
-      -4.347261434229061,
-      -1.3462723079716394,
-      -1.3630295914520965
+      -4.087484609808713,
+      -1.3301660263367043,
+      -2.008853250668448
     ],
     [
-      5.198698437381855,
-      1.5263496805649108,
-      -1.5575246393974762
+      5.448750369623229,
+      1.5745746848738824,
+      -2.396098451509197
     ],
     [
-      -6.276677997488828,
-      -2.163742695054832,
-      -1.3101765872059226
+      -6.100238741239676,
+      -2.1359923179294094,
+      -2.3661666263944117
     ],
     [
-      6.732817655241081,
-      3.3451284831215746,
-      -2.3651185024723373
+      7.5086212391175735,
+      3.6397150271150296,
+      -2.9528198620101884
     ],
     [
-      -3.804453358904843,
-      -0.9793004055083261,
-      -1.3901493402773502
+      -3.928261520263341,
+      -1.0799691032785728,
+      -4.837724733249771
     ],
     [
-      -6.004230078332819,
-      0.6590188921603496,
-      6.204693415600181
+      -11.991217505078565,
+      1.2617055832827453,
+      21.690749987340403
     ],
     [
-      3.718282281581243,
-      -0.5891865518965692,
-      -1.45467261983006
+      -4.534567485887108,
+      -0.28434083414025346,
+      28.321127779752654
     ],
     [
-      2.7275295162409177,
-      0.7627462339208736,
-      4.667669388941604
+      -0.4710909606230663,
+      -0.19873581300719895,
+      28.884595116055255
     ],
     [
-      -1.0343895711845545,
-      -0.03443961172395504,
-      -1.3994208843857037
+      -4.173880291609967,
+      -1.8306388136995861,
+      28.75644494182218
     ],
     [
-      -6.762875545101004,
-      -2.9914020972072835,
-      18.511425034956005
+      -16.792288948552372,
+      -5.680584912777752,
+      57.54353209808251
     ],
     [
-      1.1610838962570365,
-      -0.30938361565205924,
-      -10.898350822130352
+      2.7253649929124553,
+      -0.2749513079993282,
+      -16.136827226296834
     ],
     [
-      6.084096959076852,
-      -1.353087844972241,
-      -4.507132326893539
+      8.405258944949166,
+      -1.3945765939040053,
+      -14.586782743185822
     ],
     [
-      -4.788407005725125,
-      2.2074723102477924,
-      -4.080603260311627
+      -2.6761291416864985,
+      2.4190736455546915,
+      -14.862377415516859
     ],
     [
-      4.747244377939192,
-      0.015060674160566489,
-      -7.931890651113002
+      7.1437061676119455,
+      0.690604140881397,
+      -20.77961128658159
     ],
     [
-      2.5259576704839755,
-      0.6688269521315743,
-      -6.345941517429449
+      1.662723072166147,
+      -0.5510308547169053,
+      -15.182887138220154
     ],
     [
-      1.5653751628911021,
-      0.5533110502508166,
-      -10.374138991279729
+      16.40504588478813,
+      5.080413665393299,
+      -25.88749961302934
     ],
     [
-      2.463012747270935,
-      2.30166343694838,
-      -7.5262555106243685
+      3.2595227395471547,
+      -0.23061997625991867,
+      3.933283631507275
     ],
     [
-      25.758071170862834,
-      4.406016854891762,
-      15.355311323754147
+      -20.23877658846726,
+      2.5464619644225537,
+      31.385461850985532
     ],
     [
-      1.0868748779367177,
-      -0.17581492149913325,
-      -4.577460993949321
+      -5.946657507614578,
+      -2.373215292326409,
+      -29.624029638118053
     ],
     [
-      10.798309895113778,
-      2.8592992651408555,
-      -2.2482098303273084
+      7.394660407643305,
+      6.919817896577049,
+      -13.719375519715424
+    ],
+    [
+      -0.5385404665462943,
+      -11.340056845154196,
+      66.21598747267866
+    ],
+    [
+      3.5377258545801435,
+      -0.5419463075628712,
+      -2.3617769871608636
+    ],
+    [
+      6.946183291585478,
+      -1.0651079419005158,
+      -25.104529122676233
+    ],
+    [
+      4.471248600438674,
+      1.5034465710287812,
+      -20.8417133775162
+    ],
+    [
+      -9.720548210259222,
+      0.5435566336392968,
+      -4.029933880653739
+    ],
+    [
+      16.173931428808743,
+      1.235899461707212,
+      -52.05391631777044
+    ],
+    [
+      45.599534336964794,
+      9.95368933923187,
+      -23.019275840336825
+    ],
+    [
+      -60.75005086052555,
+      -9.891846187488653,
+      -23.112049016792234
+    ],
+    [
+      26.647850099115008,
+      6.23028800064491,
+      3.893246711232158
+    ],
+    [
+      16.407453375306357,
+      2.653709715237427,
+      40.58482686291625
+    ],
+    [
+      -3.5009060207525255,
+      -0.7810338636936727,
+      15.02621946031699
+    ],
+    [
+      11.923828129778219,
+      3.5978548399232704,
+      0.33251856182905226
     ]
   ],
   "output_columns": [
@@ -278,73 +386,69 @@
     "electrical input kW",
     "measured inlet C"
   ],
-  "source_sha256": "7b93220dbf0a822f0bafc822ffcbb806ed4b365edd655ec0359919ddae226758",
+  "source_sha256": "fdd9b529ae87b186c43ce44783bda074e4ec09928a6ba36a2858d317d188d927",
   "source_file": "heatpump-cop-surface-observations.json",
   "shape_assumptions_removed": [
     "No forced nonnegative weather slope.",
-    "No fixed 40\u201350% power peak."
+    "No fixed 40–50% power peak."
   ],
   "domain": {
-    "outside_min_C": 5,
+    "outside_min_C": 3.25,
     "outside_max_C": 16,
     "power_min_percent": 30,
     "power_max_percent": 100
   },
   "metrics": {
-    "accepted_points": 27,
-    "excluded_points": 3,
-    "independent_runs": 4,
-    "dedicated_meter_points": 7,
-    "legacy_house_meter_points": 20,
-    "training_max_abs_error_COP": 1.7763568394002505e-14,
-    "leave_one_run_out_rmse_COP": 0.44888256016549916,
-    "leave_one_run_out_rmse_air_rise_C": 2.7619934802859962,
-    "leave_one_run_out_by_run": [
-      {
-        "heldOutRun": "2026-10-14 morning",
-        "points": 7,
-        "rmseCOP": 0.3591062077574702,
-        "rmseAirRiseC": 1.4609108303171303,
-        "rmseElectricKW": 0.5541866903894658
-      },
+    "accepted_points": 39,
+    "preserved_historical_rows": 30,
+    "recorded_rows": 43,
+    "fitted_runs": 5,
+    "recorded_runs": 6,
+    "thermal_only_points": 2,
+    "dedicated_meter_points": 16,
+    "legacy_house_meter_points": 23,
+    "leave_one_run_out_rmse_COP": 0.6796533127196391,
+    "leave_one_run_out_rmse_air_rise_C": 3.697120127708712,
+    "grid_cells": 3692,
+    "inside_hull_cells": 3227,
+    "extrapolation_cells": 465,
+    "leave_one_run_out": [
       {
         "heldOutRun": "2026-10-14 afternoon",
         "points": 8,
-        "rmseCOP": 0.22744733815716348,
-        "rmseAirRiseC": 2.485809024903911,
-        "rmseElectricKW": 0.7840994799511427
+        "rmseCOP": 0.21021509270136313,
+        "rmseAirRiseC": 3.8034837411748876
+      },
+      {
+        "heldOutRun": "2026-10-14 morning",
+        "points": 8,
+        "rmseCOP": 0.3744876236754353,
+        "rmseAirRiseC": 2.1833885275061538
       },
       {
         "heldOutRun": "2026-10-15 night",
-        "points": 5,
-        "rmseCOP": 0.5660434104747594,
-        "rmseAirRiseC": 4.182041089123322,
-        "rmseElectricKW": 1.2768433843178457
+        "points": 7,
+        "rmseCOP": 0.7954956254957944,
+        "rmseAirRiseC": 3.1470464091044685
       },
       {
         "heldOutRun": "20261015-211706-139c48ad9dc5",
-        "points": 7,
-        "rmseCOP": 0.6002136525821943,
-        "rmseAirRiseC": 2.781348131442465,
-        "rmseElectricKW": 1.2376455576106438
+        "points": 8,
+        "rmseCOP": 0.7539215284519224,
+        "rmseAirRiseC": 4.169461768133996
+      },
+      {
+        "heldOutRun": "20261023-035751-5129d11e966f",
+        "points": 8,
+        "rmseCOP": 0.9722969627684089,
+        "rmseAirRiseC": 4.620703421333419
       }
-    ],
-    "cells": 3195,
-    "interpolation_cells": 2632,
-    "extrapolation_cells": 563,
-    "minimum_COP": 1.9465023999136823,
-    "maximum_COP": 4.017085350014751
+    ]
   },
   "limitations": [
-    "All dense cells are mathematical estimates, not new measurements.",
-    "The surface pools actual inlet conditions from four runs. Its outdoor-temperature pattern does not isolate a causal weather effect.",
-    "Actual inlet range approximately 12.7\u201325.2C and changed metering method are retained in point provenance. Inlet-reference matrix is a descriptive interpolation, not a selectable independent condition.",
-    "Whole-run holdout errors are diagnostics from four runs, not confidence intervals. Exact interpolation is zero training error by construction.",
-    "Extrapolation outside the accepted (outside,power) convex hull is explicitly flagged, even within the 5\u201316C and 30\u2013100% rectangular grid.",
-    "Full-period heat uses nameplate-based 2000m3/h airflow. Installed airflow and meter systematic uncertainty are not included in fit errors.",
-    "Dedicated circuit excludes equipment outside that meter; historical house-baseline increments retain their own scope.",
-    "Defrost-like/transient points are displayed but excluded from the normal-heating interpolation. No complete-cycle defrost or seasonal COP model.",
-    "Runtime uses this reviewed fit, with current-price checks, existing intake tolerance, observed capacity brackets and air-supply requirements. Future tests require an explicit reviewed refit."
+    "Estimated fixed airflow, mixed electrical circuit scopes, sequential warm-up and sparse weather coverage.",
+    "Thermal-only earliest run supports capacity checks but has no invented electrical input or COP.",
+    "Event-filtered normal heating; not seasonal or complete-defrost-cycle COP."
   ],
   "reference_basis": {
     "airflow_m3h": 2000,
@@ -356,14 +460,18 @@
       "dedicated-heatpump-import-counter"
     ],
     "incoming_air_range_C": [
-      12.775394556128091,
+      9.516937255859375,
       25.160113920393645
     ]
   },
   "excluded_flap_id": 40259,
   "support_hull_normalized": [
     [
-      -0.9080685576826693,
+      -1.312727272727274,
+      1.0
+    ],
+    [
+      -1.2545454545454535,
       -1.0
     ],
     [
@@ -381,26 +489,7 @@
     [
       0.5531384801451312,
       1.0
-    ],
-    [
-      -0.6319915339649266,
-      1.0
-    ],
-    [
-      -0.9974862183020935,
-      0.14285714285714285
-    ],
-    [
-      -0.995930255996774,
-      -0.14285714285714285
-    ],
-    [
-      -0.9915567176186649,
-      -0.42857142857142855
-    ],
-    [
-      -0.9811764705882354,
-      -0.7142857142857143
     ]
-  ]
+  ],
+  "update_policy": "Append reviewed observations; preserve original measured fields. Existing thin-plate/affine zero-smoothing method retained. Only event-overlapping historical 100% row is superseded by its filtered derivative."
 }

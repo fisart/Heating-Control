@@ -1,3 +1,9 @@
+# Retrospective calibration expansion — 23 October 2026
+
+The [reviewed expansion](heatpump-calibration-20261023.md) replays all six archived runs continuously across power boundaries with the criteria below. It identifies four event brackets and adds filtered derivative rows while preserving original measured values. The live test guard described below remains scoped to the current power step; this release expands calibration and runtime source selection, rather than claiming a new live detector. An internal-to-external intake change alone is retained, as are unchanged temperatures and non-event drift.
+
+---
+
 # Calibration through a temperature transient - 0.3.36, build 46
 
 A temporary temperature collapse should not force the entire power step to be
@@ -104,3 +110,4 @@ a fixed fan. A stronger proposed operating guard would stop cold-air delivery,
 allow internal defrost, require a warmed exchanger before restarting airflow,
 verify supply temperature after restart and use a bounded controlled gas fallback.
 That proposed normal-operation state machine is not installed by this release.
+

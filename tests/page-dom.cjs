@@ -24,7 +24,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  };
  w.eval(d.querySelector('script').textContent);
  const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
- assert.equal(d.querySelectorAll('#matrix-results tr').length,30,'Reviewed matrix is rendered on the protected page');
+ assert.equal(d.querySelectorAll('#matrix-results tr').length,43,'Reviewed matrix is rendered on the protected page');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('Dedicated HP circuit'),'New-test basis identifies the dedicated circuit');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('28681')&&d.querySelector('#test-meter-basis').textContent.includes('22365'),'Configured meter IDs appear on the protected page');
  assert.equal(d.querySelector('#matrix-results tr').children.length,8,'Matrix row aligns with the meter-basis column');
@@ -177,4 +177,5 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.deepEqual(errors,[]);
  dom.window.close();console.log('Page DOM: device groups, archived-only links, sensor names, chart periods and resolutions, empty results, multi-sensor values, escaping and expired sessions passed.');
 })().catch(e=>{console.error(e);process.exit(1);});
+
 

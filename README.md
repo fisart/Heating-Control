@@ -1,5 +1,7 @@
 # HeatingControl for IP-Symcon
 
+Version **0.3.39, build 50** expands the existing heat-pump calibration while preserving all 30 historical measured rows. Thirteen reviewed additions provide 39 eligible COP observations; the existing surface method now covers 3.25–16°C. Only evidenced defrost-like intervals are removed. See [the updated tables and surface](docs/heatpump-calibration-20261023.md). Existing settings and the chosen COP method remain unchanged.
+
 Version **0.3.37, build 47** adds configurable fan run-on during residual heat
 recovery (recuperation). The default is 60 seconds after a stop threshold is
 crossed; the recovering room flaps remain open. A warm recovery cancels the
@@ -462,3 +464,4 @@ It does not replace a visual check of the native popup in the Symcon console.
 ## Controlled heat-pump test — 0.3.23
 
 Start/cancel an eight-step 30–100% capacity test from the form or protected heating page; default 15 minutes per step. Master-bedroom flap stays closed. Raw readings, stable-point relationships and estimated COP persist. Occupied exchanger minimum is 40°C; holiday requirements follow configured room targets with an adjustable lower floor. See [test setup and local model limits](docs/heatpump-capacity-test.md).
+

@@ -25,17 +25,17 @@ final class HeatPumpSurface
             $raw=file_get_contents(__DIR__.'/../docs/data/heatpump-cop-surface-observations.json');
             if(hash('sha256',$raw)!==self::definition()['source_sha256'])throw new RuntimeException('COP surface observation provenance mismatch');
             $rows=HeatPumpMatrix::validate(json_decode($raw,true,64,JSON_THROW_ON_ERROR)['points']);
-            $points=array_values(array_filter($rows,static fn($p)=>$p['stable']&&$p['usable']));
+            $points=array_values(array_filter($rows,static fn($p)=>$p['stable']&&$p['usable']&&!isset($p['supersededBy'])));
             if(count($points)!==self::definition()['metrics']['accepted_points'])throw new RuntimeException('COP surface observation count mismatch');
         }
         return $points;
     }
-    /** Same basis and coefficients as the 45 x 71 analysis matrix. */
+    /** Established thin-plate basis, expanded 52 x 71 analysis matrix. */
     public static function evaluate(float $outside,int $power): array
     {
         $m=self::definition();$d=$m['domain'];$norm=$m['normalization'];
         if(!is_finite($outside)||$outside<$d['outside_min_C']||$outside>$d['outside_max_C']||$power<$d['power_min_percent']||$power>$d['power_max_percent'])
-            throw new InvalidArgumentException('COP surface supports 5–16°C outside and 30–100% power only');
+            throw new InvalidArgumentException('COP surface supports 3.25–16°C outside and 30–100% power only');
         self::observations();
         $x=($outside-$norm['outside_center_C'])/$norm['outside_scale_C'];
         $y=($power-$norm['power_center_percent'])/$norm['power_scale_percent'];
@@ -67,7 +67,12 @@ final class HeatPumpSurface
      * A nearest weather endpoint requires the existing temperature tolerance. */
     private static function capacity(int $power,float $outside,float $tolerance): ?array
     {
-        $runs=[];foreach(self::observations() as $p)$runs[$p['runID']][]=$p;
+        $thermal=json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-cop-surface-observations.json'),true,64,JSON_THROW_ON_ERROR)['thermalOnlyObservations']??[];
+        foreach($thermal as $p) {
+            foreach(['outside','incoming','outgoing','powerPercent'] as $key)if(!is_numeric($p[$key]??null)||!is_finite((float)$p[$key]))throw new RuntimeException('Invalid thermal-only observation');
+            if(($p['electricalQualified']??true)!==false||($p['estimatedSystemCOP']??null)!==null)throw new RuntimeException('Thermal-only observation must not invent COP');
+        }
+        $runs=[];foreach(array_merge(self::observations(),$thermal) as $p)$runs[$p['runID']][]=$p;
         $slices=[];
         foreach($runs as $run=>$points) {
             usort($points,static fn($a,$b)=>$a['powerPercent']<=>$b['powerPercent']);
@@ -118,7 +123,7 @@ final class HeatPumpSurface
             $best=$surface+['powerPercent'=>$power,'outside'=>$outside,'incoming'=>$incoming,'predictedOutgoing'=>$incoming+$surface['airRise'],
                 'requiredAirRise'=>max($minRise,$target+$margin-$incoming),'airflowM3h'=>$basis['airflow_m3h'],'configuredAirflowM3h'=>$airflow,'fanSpeed'=>$fan,'modeled'=>true,'copMethod'=>'surface','surfaceVersion'=>$m['version'],
                 'electricalMethod'=>$basis['electrical_method'],'electricalSourceMethods'=>$basis['electrical_source_methods'],
-                'meterScope'=>'reviewed fit: 20 historical house-baseline points and 7 dedicated heat-pump import points; modeled input, not a meter reading',
+                'meterScope'=>'reviewed fit: 23 historical house-baseline points and 16 dedicated heat-pump import points; modeled input, not a meter reading',
                 'modelValidationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],
                 'sourcePointIDs'=>array_column($observations,'pointID'),'capacitySourcePointIDs'=>$capacity['sourcePointIDs'],
                 'capacityReferenceIncoming'=>$capacity['referenceIncoming'],'capacityAirRise'=>$capacity['airRise'],'thermalSupport'=>$capacity['thermalSupport']];
@@ -128,8 +133,9 @@ final class HeatPumpSurface
     public static function unavailableReason(float $outside,float $incoming,float $target,float $margin,int $fan,float $airflow,int $flap): string
     {
         $m=self::definition();
-        if($outside<5||$outside>16)return sprintf('COP surface supports 5–16°C outside; current outside air %.1f°C',$outside);
+        if($outside<$m['domain']['outside_min_C']||$outside>$m['domain']['outside_max_C'])return sprintf('COP surface supports 3.25–16°C outside; current outside air %.1f°C',$outside);
         if($fan!==90)return 'COP surface requires tested fan command 90% (full physical speed)';
         return sprintf('No supported surface candidate meets modeled and observed air-rise requirements at %.1f°C intake, target %.1f°C + %.1f°C supply margin',$incoming,$target,$margin);
     }
 }
+

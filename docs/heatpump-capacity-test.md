@@ -1,3 +1,9 @@
+# Current calibration — 0.3.39 build 50
+
+The existing 30 measured rows are preserved and expanded with 13 reviewed additions. The current default contains 43 stored rows and 39 eligible COP observations, plus thermal-only evidence from the earliest run. Only evidenced event intervals are removed. See [current tables and event windows](heatpump-calibration-20261023.md) and [expanded surface](heatpump-cop-surface.md). Older release notes and tables below describe their historical snapshots.
+
+---
+
 # Dedicated heat-pump meter — 0.3.32, build 42
 
 ## Temperature-transient recovery - 0.3.36, build 46
@@ -404,3 +410,4 @@ as a transient observation, excluding it from steady normal-heating selection.
 A longer fixed-power test including complete defrost/recovery cycles is needed
 to measure cycle-inclusive efficiency and avoid treating normal-heating COP
 as a guarantee of cold-weather average performance.
+

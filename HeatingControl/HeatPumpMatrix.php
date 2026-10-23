@@ -13,7 +13,7 @@ final class HeatPumpMatrix
     {
         if(($point['electricalMethod']??'')!=='house-counter-minus-pretest-baseline'
             ||!is_bool($point['stable']??null)||!is_bool($point['usable']??null))return $point;
-        foreach(self::seed() as $review) {
+        foreach(json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-calibration-20261016.json'),true,64,JSON_THROW_ON_ERROR)['points'] as $review) {
             if(!isset($review['reviewedSourcePointID'])||$review['reviewedSourcePointID']!==($point['pointID']??''))continue;
             foreach(['powerPercent','outside','incoming','outgoing','coil','airRise','coilLift','systemInputKW','estimatedHeatKW','estimatedSystemCOP','fanSpeed','airflowM3h'] as $key)
                 if(!is_numeric($point[$key]??null)||abs((float)$point[$key]-(float)$review[$key])>0.00000001)return $point;
@@ -25,6 +25,18 @@ final class HeatPumpMatrix
             return $point;
         }
         return $point;
+    }
+    /** Annotate only the exact archived original, without changing its measurements. */
+    public static function applySupersessions(array $rows): array
+    {
+        $byID=[];foreach(self::seed() as $p)if(isset($p['supersededBy']))$byID[$p['pointID']]=$p;
+        foreach($rows as &$row) {
+            $p=$byID[$row['pointID']??'']??null;if(!$p)continue;
+            foreach(['powerPercent','outside','incoming','outgoing','systemInputKW','estimatedSystemCOP'] as $key)
+                if(!is_numeric($row[$key]??null)||abs($row[$key]-$p[$key])>1e-8)continue 2;
+            $row['supersededBy']=$p['supersededBy'];
+        }
+        unset($row);return $rows;
     }
     public static function validate(array $rows): array
     {
@@ -59,7 +71,7 @@ final class HeatPumpMatrix
         if($outside < -20||$outside>24)return null;
         $nearest=[];
         foreach(self::validate($rows) as $r) {
-            if(!$r['usable']||!$r['stable']||$r['fanSpeed']!==$fan
+            if(!$r['usable']||!$r['stable']||isset($r['supersededBy'])||$r['fanSpeed']!==$fan
                 ||abs($r['outside']-$outside)>$tolerance||abs($r['incoming']-$incoming)>$tolerance)continue;
             $r['distance']=abs($r['outside']-$outside)+abs($r['incoming']-$incoming);
             $key=$r['powerPercent'];
@@ -80,7 +92,7 @@ final class HeatPumpMatrix
     public static function unavailableReason(array $rows,float $outside,float $incoming,float $target,float $margin,float $minRise,int $fan,float $airflow,float $tolerance,int $excludedFlap=0): string
     {
         if($outside < -20||$outside>24)return sprintf('Outside air %.1f°C is outside the supported operating range (−20 to 24°C)',$outside);
-        $rows=array_values(array_filter(self::validate($rows),static fn($r)=>$r['usable']&&$r['stable']));
+        $rows=array_values(array_filter(self::validate($rows),static fn($r)=>$r['usable']&&$r['stable']&&!isset($r['supersededBy'])));
         if(!$rows)return 'No stable, usable electricity-meter calibration points are available';
         $steps=[
             [static fn($r)=>$r['fanSpeed']===$fan,static fn($r)=>sprintf('Requested fan speed %d%% does not match the tested fan speed(s): %s%%',$fan,implode('%, ',array_unique(array_column($r,'fanSpeed'))))],
@@ -111,7 +123,7 @@ final class HeatPumpMatrix
             'safetyMarginPercent'=>$safety,'hysteresisCt'=>$band,'currentPriceCt'=>$price,
             'electricalMethod'=>$point['electricalMethod']??'unknown','meterScope'=>$point['meterScope']??'household increment above baseline',
             'assumptions'=>($point['copMethod']??'')==='surface'
-                ?'Provisional modeled COP from 27 reviewed points including dedicated-meter and historical household increments; full-step heat/electric interpolation with observed capacity checks; estimated airflow; gas auxiliary electricity receives no credit.'
+                ?'Provisional modeled COP from 39 reviewed points including dedicated-meter and historical household increments; full-step heat/electric interpolation with observed capacity checks; estimated airflow; gas auxiliary electricity receives no credit.'
                 :(($point['electricalMethod']??'')==='dedicated-heatpump-import-counter'
                 ?'Estimated airflow; dedicated circuit only, no household/standby subtraction; shared fan and other equipment outside this circuit are excluded; gas auxiliary electricity receives no credit.'
                 :'Estimated airflow; gas auxiliary electricity receives no credit; changing other house loads affects baseline subtraction.')];
@@ -148,3 +160,4 @@ final class HeatPumpMatrix
         throw new RuntimeException('Electricity counter boundary missing, reset or gap exceeds 90 seconds');
     }
 }
+
