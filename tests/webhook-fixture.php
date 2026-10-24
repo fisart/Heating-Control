@@ -14,7 +14,7 @@ function IPS_GetVariableProfile($name) { return $GLOBALS['profiles'][$name]; }
 if (($argv[1] ?? '') !== '--no-archive-api') {
 function AC_GetLoggingStatus($archive,$id) { if (!empty($GLOBALS['archiveThrows'])) throw new RuntimeException('Archive unavailable'); return $GLOBALS['archiveLogging'][$archive][$id] ?? false; }
 function AC_GetAggregationType($archive,$id) { return $GLOBALS['archiveTypes'][$archive][$id] ?? 0; }
-function AC_GetLoggedValues($archive,$id,$from,$to,$limit) { $GLOBALS['historyCalls'][]=[$archive,$id,'recorded',$from,$to,$limit]; return $GLOBALS['loggedValues'][$id] ?? []; }
+function AC_GetLoggedValues($archive,$id,$from,$to,$limit) { $GLOBALS['historyCalls'][]=[$archive,$id,'recorded',$from,$to,$limit]; if(isset($GLOBALS['archiveReader']))return ($GLOBALS['archiveReader'])($archive,$id,$from,$to,$limit); return $GLOBALS['loggedValues'][$id] ?? []; }
 function AC_GetAggregatedValues($archive,$id,$level,$from,$to,$limit) { $GLOBALS['historyCalls'][]=[$archive,$id,$level,$from,$to,$limit]; return $GLOBALS['archiveValues'][$id] ?? []; }
 }
 if (($argv[1] ?? '') !== '--no-auth-api') {

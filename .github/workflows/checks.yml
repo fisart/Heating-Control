@@ -19,6 +19,8 @@ jobs:
           php -l HeatingControl/HeatPumpMatrix.php
           php -l HeatingControl/HeatPumpSurface.php
           php -l HeatingControl/HeatPumpEconomics.php
+          php -l HeatingControl/HeatPumpCostAnalysis.php
+          php -l HeatingControl/PeriodCosts.php
           php -l HeatingControl/SourceSelection.php
           php -l HeatingControl/Webhook.php
           php -l HeatingControl/Archive.php
@@ -59,6 +61,7 @@ jobs:
           php tests/heatpump-transients.php
           php tests/heatpump-reboot.php
           php tests/heatpump-economics.php
+          php tests/heatpump-period-cost.php
           php tests/heatpump-surface.php
           php tests/heatpump-expansion.php
           php tests/form-audit.php
@@ -85,6 +88,7 @@ jobs:
       - name: Page interactions
         run: |
           node tests/page-dom.cjs
+          node tests/heatpump-cost-page-dom.cjs
           node tests/lichtblick-page-dom.cjs
 
 

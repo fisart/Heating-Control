@@ -426,6 +426,13 @@ trait HeatingControlWebhook
             if (($query['view'] ?? '') === 'state') return $reply(200,array_merge($this->webState(),[
                 'csrf'=>$this->webCSRF($vault,(int)floor(time()/3600))]));
             if (($query['view'] ?? '') === 'history') return $reply(200,$this->webHistory($query));
+            if (in_array($query['view']??'',['heatpump-costs','heatpump-costs-csv'],true)) {
+                if(!is_string($query['from']??null)||!is_string($query['through']??null))throw new InvalidArgumentException('Select start and end dates for the cost analysis');
+                $report=$this->heatPumpPeriodCosts($query['from'],$query['through']);
+                if($query['view']==='heatpump-costs-csv')return $reply(200,$this->heatPumpPeriodCostCSV($report),[
+                    'Content-Type'=>'text/csv; charset=utf-8','Content-Disposition'=>'attachment; filename="heatpump-cost-comparison-'.$report['fromDate'].'-'.$report['throughDate'].'.csv"']);
+                return $reply(200,$report);
+            }
             if (($query['view'] ?? '') === 'heatpump-test-results') {
                 $report=$this->ReadAttributeString('HeatPumpTestLastReport');
                 if($report==='')return $reply(404,['error'=>'No heat-pump test has finished yet.']);

@@ -11,6 +11,7 @@ require_once __DIR__ . "/SourceSelection.php";
 require_once __DIR__ . "/HeatPumpTest.php";
 require_once __DIR__ . "/HeatPumpEconomics.php";
 require_once __DIR__ . "/FlapCalibration.php";
+require_once __DIR__ . "/PeriodCosts.php";
 
 class HeatingControl extends IPSModule
 {
@@ -20,6 +21,7 @@ class HeatingControl extends IPSModule
     use HeatingControlHeatPumpTest;
     use HeatingControlHeatPumpEconomics;
     use HeatingControlFlapCalibration;
+    use HeatingControlPeriodCosts;
 
     private const DEFAULT_IDS = [
         'MasterDisableID' => 11098,
