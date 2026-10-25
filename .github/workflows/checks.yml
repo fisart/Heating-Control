@@ -71,6 +71,7 @@ jobs:
           php tests/form-audit.php
           php tests/measured-links.php
           php tests/source-selection.php
+          php tests/price-rollover.php
           php tests/heatpump-transfer-fan.php
           php tests/flap-calibration.php
           php tests/room-editor.php

@@ -26,13 +26,14 @@ check(value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Acknowledged stop permit
 check(str_contains($m->values['SourceTransferStatus'],'no timed delay'),'No compressor/transfer countdown is applied');
 check(!commanded($m,'FanOnID',false)&&!commanded($m,'FanSpeedID',0),'A source transfer itself sends no fan stop');
 
-// Reproduce the supplied log: expired old quote, then a fresh cheap quote.
+// Reproduce the supplied log without its temporary gas switch at price rollover.
 $m->clock=strtotime('2026-10-23T10:30:02+02:00');run($m);
-check(value($m,'OperatingModeID')===2&&value($m,'FanOnID'),'Gas fallback does not stop warm-air delivery');
+check(value($m,'OperatingModeID')===1&&value($m,'FanOnID')&&value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Previous price keeps heating and airflow running during rollover');
+check(!commanded($m,'HeatPumpOnID',false)&&!commanded($m,'GasPumpID',true),'Rollover causes no unnecessary heat-source commands');
 $m->clock=strtotime('2026-10-23T10:30:42+02:00');
 plan($m,1,34,['priceCt'=>34.94,'safetyMarginPercent'=>5,'hysteresisCt'=>1,'validUntil'=>strtotime('2026-10-23T10:45:00+02:00')]);run($m);
-check(value($m,'OperatingModeID')===1&&value($m,'FanOnID'),'Retargeting to HP still retains warm-air delivery');
-check(value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Retargeting starts HP after stop acknowledgement without a timer');
+check(value($m,'OperatingModeID')===1&&value($m,'FanOnID'),'Fresh cheap price keeps warm-air delivery running');
+check(value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Replacement cheap quote requires no source transfer');
 
 $GLOBALS['variables'][$m->properties['HeatPumpTempID']]['value']=23.49;run($m);
 check(!value($m,'FanOnID')&&value($m,'FanSpeedID')===0,'Selected exchanger below the highest demanding-room target stops the fan');

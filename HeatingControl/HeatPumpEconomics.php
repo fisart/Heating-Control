@@ -19,7 +19,8 @@ trait HeatingControlHeatPumpEconomics
     private function recordEconomicDecision(array $snapshot): void
     {
         $record=array_intersect_key($snapshot,array_flip(['schema','updatedAt','validUntil','valid','source','previousEconomicSource',
-            'currentPriceCt','entryCt','exitCt','breakEvenCt','safetyMarginPercent','hysteresisCt','powerPercent','outside','incoming','target','reason']));
+            'currentPriceCt','entryCt','exitCt','breakEvenCt','safetyMarginPercent','hysteresisCt','powerPercent','outside','incoming','target','reason',
+            'priceHeld','quoteValidUntil']));
         if(isset($snapshot['point']['estimatedSystemCOP']))$record['point']=['estimatedSystemCOP'=>$snapshot['point']['estimatedSystemCOP']];
         $previous=json_decode((string)$this->GetValue('HeatPumpDecisionHistoryJSON'),true)??[];$compare=$record;
         unset($previous['updatedAt'],$compare['updatedAt']);
@@ -71,22 +72,43 @@ trait HeatingControlHeatPumpEconomics
         $rows=HeatPumpMatrix::validate(HeatPumpMatrix::applySupersessions($rows));
         return $rows;
     }
+    /** Refresh locally at a slot boundary; hold only an already accepted quote for at most two minutes. */
+    private function heatingPriceQuote(int $now): array
+    {
+        $instance=$this->ReadPropertyInteger('ElectricityPriceInstanceID');
+        $id=$this->priceQuoteID();
+        if(!$id)throw new RuntimeException('Select an updated LichtBlick instance');
+        $q=json_decode(GetValue($id),true,16,JSON_THROW_ON_ERROR);
+        $needsRefresh=is_array($q)&&($q['valid']??false)===true
+            &&(is_int($q['validUntil']??null)&&$q['validUntil']<=$now
+                ||is_int($q['updatedAt']??null)&&$now-$q['updatedAt']>180);
+        if($needsRefresh&&function_exists('LBEP_EvaluatePrices')) {
+            // Evaluates the downloaded schedule without a network request. It never commands heating.
+            try {LBEP_EvaluatePrices($instance);} catch(Throwable $error) {$this->debug('Price rollover refresh: '.$error->getMessage());}
+            $q=json_decode(GetValue($id),true,16,JSON_THROW_ON_ERROR);
+        }
+        if(!is_array($q)||($q['schema']??0)!==1||($q['valid']??false)!==true||($q['enabled']??false)!==true
+            ||!is_int($q['updatedAt']??null)||$q['updatedAt']>$now+30||$now-$q['updatedAt']>180
+            ||!is_int($q['validUntil']??null))throw new RuntimeException('Verified current electricity quote unavailable or expired');
+        foreach(['priceCt','gasPriceCt','safetyMarginPercent','hysteresisCt'] as $key)
+            if(!is_numeric($q[$key]??null)||!is_finite((float)$q[$key]))throw new RuntimeException('Missing economic quote input');
+        $accepted=json_decode($this->GetBuffer('AcceptedHeatingPriceQuote')?:'{}',true);
+        $held=$q['validUntil']<=$now;
+        if($held&&(($accepted['instanceID']??0)!==$instance||($accepted['quote']??null)!==$q||$now>=$q['validUntil']+120))
+            throw new RuntimeException('Verified current electricity quote unavailable or expired');
+        if(!$held)$this->SetBuffer('AcceptedHeatingPriceQuote',json_encode(['instanceID'=>$instance,'quote'=>$q],JSON_THROW_ON_ERROR));
+        $q['priceHeld']=$held;$q['quoteValidUntil']=$q['validUntil'];
+        if($held)$q['validUntil']=min($q['validUntil']+120,$q['updatedAt']+180);
+        if($q['validUntil']<=$now)throw new RuntimeException('Verified current electricity quote unavailable or expired');
+        return $q;
+    }
     private function measuredEconomicChoice(string &$reason): int
     {
-        foreach(['HeatPumpBreakEvenEuro','HeatPumpEntryEuro','HeatPumpExitEuro'] as $id)$this->SetValue($id,0.0);
         $conditions=['copMethod'=>$this->ReadPropertyString('HeatPumpCOPMethod')];
         try {
             $copMethod=$this->ReadPropertyString('HeatPumpCOPMethod');
             if(!in_array($copMethod,['measured','surface'],true))throw new RuntimeException('Invalid COP method; select measured or surface');
-            $instance=$this->ReadPropertyInteger('ElectricityPriceInstanceID');
-            if(!$this->priceQuoteID())throw new RuntimeException('Select an updated LichtBlick instance');
-            $id=IPS_GetObjectIDByIdent('PriceQuoteJSON',$instance);
-            if(!IPS_VariableExists($id)||IPS_GetVariable($id)['VariableType']!==3)throw new RuntimeException('Update LichtBlick for verified price snapshots');
-            $q=json_decode(GetValue($id),true,16,JSON_THROW_ON_ERROR);$now=$this->sourceClock();
-            if(($q['schema']??0)!==1||($q['valid']??false)!==true||($q['enabled']??false)!==true
-                ||!is_int($q['updatedAt']??null)||$q['updatedAt']>$now+30||$now-$q['updatedAt']>180
-                ||!is_int($q['validUntil']??null)||$q['validUntil']<=$now)throw new RuntimeException('Verified current electricity quote unavailable or expired');
-            foreach(['priceCt','gasPriceCt','safetyMarginPercent','hysteresisCt'] as $k)if(!is_numeric($q[$k]??null))throw new RuntimeException('Missing economic quote input');
+            $now=$this->sourceClock();$q=$this->heatingPriceQuote($now);
             $req=$this->heatPumpRequirement($this->rooms());
             $outside=$this->temperature($this->id('OutsideTempID'));$incoming=$this->temperature($this->id('IncomingAirTempID'));
             $tolerance=$this->ReadPropertyFloat('HeatPumpMatrixTemperatureToleranceC');
@@ -113,13 +135,16 @@ trait HeatingControlHeatPumpEconomics
             foreach(['HeatPumpBreakEvenEuro'=>'breakEvenEuro','HeatPumpEntryEuro'=>'entryEuro','HeatPumpExitEuro'=>'exitEuro'] as $ident=>$key)$this->SetValue($ident,(float)$e[$key]);
             $reason=sprintf(($copMethod==='surface'?'COP surface (modeled) ':'Measured ').'%d%%, estimated COP %.2f at %.1f°C outside / %.1f°C intake; break-even %.2f ct/kWh, entry < %.2f ct/kWh, exit ≥ %.2f ct/kWh; current %.2f ct/kWh; %s',
                 $point['powerPercent'],$point['estimatedSystemCOP'],$outside,$incoming,$e['breakEvenCt'],$e['entryCt'],$e['exitCt'],$q['priceCt'],$e['source']===1?'heat pump':'gas');
+            if($q['priceHeld'])$reason.='; retaining previous verified price during rollover (maximum 120 seconds)';
             $snapshot=['copMethod'=>$copMethod,'schema'=>1,'previousEconomicSource'=>$previousEconomicSource,'updatedAt'=>$now,'validUntil'=>$q['validUntil'],'valid'=>true,'powerPercent'=>$point['powerPercent'],
+                'priceHeld'=>$q['priceHeld'],'quoteValidUntil'=>$q['quoteValidUntil'],
                 'outside'=>$outside,'incoming'=>$incoming,'target'=>$req['target'],'targetMinusIncoming'=>$req['target']-$incoming,'point'=>$point,'reason'=>$reason]+$e+$conditions;
             $this->SetValue('HeatPumpEconomicsJSON',json_encode($snapshot,JSON_THROW_ON_ERROR));
             $this->recordEconomicDecision($snapshot);
             $this->SetValue('HeatPumpPerformanceStatus',$reason.'; estimated airflow; room demand still controls heating');
             return $e['source']===1?(int)$point['powerPercent']:0;
         } catch(Throwable $error) {
+            foreach(['HeatPumpBreakEvenEuro','HeatPumpEntryEuro','HeatPumpExitEuro'] as $id)$this->SetValue($id,0.0);
             $this->WriteAttributeString('HeatPumpEconomicSource','2');
             $reason='Automatic gas fallback: '.$error->getMessage();
             $snapshot=['schema'=>1,'updatedAt'=>$this->sourceClock(),'valid'=>false,'source'=>2,'reason'=>$reason]+$conditions;

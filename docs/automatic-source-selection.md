@@ -35,6 +35,31 @@ Safety margin is applied once; price hysteresis supplies entry/exit separation.
 Missing/unsupported measurements or invalid/expired prices use gas. There is no
 alternative provisional model to select. See [calibration and temperature tests](heatpump-capacity-test.md).
 
+From **0.3.48 build 59**, a successful recalculation replaces the previous
+thresholds directly, without publishing intermediate zeros. At a quarter-hour
+boundary Heating Control first asks LichtBlick to evaluate its already downloaded
+schedule synchronously; this does not download prices or command any equipment.
+If that evaluation is temporarily busy, the identical quote previously accepted
+from the same provider can bridge the rollover for at most 120 seconds after its
+original expiry, still subject to the existing 180-second quote issue-age limit.
+The deadline never moves forward with repeated calculations. A newly available
+quote takes effect immediately, including one that genuinely selects gas.
+
+This is retention of a price, **not a pause in heating or a source-transfer
+delay**. Existing room-demand and equipment rules keep running. Current sensors
+and COP qualification are checked on every evaluation. Disabled supply, explicit
+invalid quotes, changed expired quote contents, unsupported conditions or expiry
+of the bounded bridge still select gas. An expired quote cannot first be accepted
+during the bridge or recovered from a previous process after restart.
+`priceHeld` and `quoteValidUntil` in the full and compact decision snapshots make
+this use of an old price visible in the archive and backtest.
+
+LichtBlick also retains the last compatible controller comparison while waiting
+for evaluation of its new price, under the same rollover/issue-age bounds. Its
+reason states that recalculation is pending. Changed COP/gas/safety settings or
+an explicitly invalid controller result are not retained. Heating Control remains
+the sole source decision maker; the provider never operates pumps or valves.
+
 The Heating Control page separates actual selected source/power from price supply
 and measured thresholds. LichtBlick’s heating tab shows the same measured
 comparison, the current automatic/manual status and selected air source. Cross-page
@@ -78,7 +103,7 @@ Outgoing air is not the fan reference: without airflow that sensor can remain co
 
 The heat sources retain OFF/CLOSED command acknowledgement and break-before-make, without a mixer travel timer or compressor off-time timer. No-demand residual recovery/run-on, explicit shutdown, master/summer bypass and supervised calibration keep their existing controls.
 
-The supplied 23 October log switches from HP selection to gas fallback at 10:30:02 when a quote expires, then back to HP at 10:30:42 after the next quote. This release lets warm-air delivery continue through those source waits. It does not extend an expired price quote or change economic source-selection rules.
+The supplied 23 October log switches from HP selection to gas fallback at 10:30:02 when a quote expires, then back to HP at 10:30:42 after the next quote. Version 0.3.41 let warm-air delivery continue through those source waits. Version 0.3.48 additionally addresses the quote-rollover gap as described above.
 
 The gas flow target may be shared with other boiler services and still needs installation verification.
 

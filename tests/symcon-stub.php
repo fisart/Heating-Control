@@ -10,7 +10,7 @@ const KL_ERROR = 0;
 class IPSModule
 {
     public int $InstanceID = 1;
-    public array $properties = [], $attributes = [], $values = [], $messages = [], $formUpdates = [];
+    public array $properties = [], $attributes = [], $values = [], $messages = [], $formUpdates = [], $buffers = [];
     public function Create() {}
     public function ApplyChanges() {}
     public function RegisterPropertyBoolean($n, $v) { $this->properties[$n] = $v; }
@@ -40,6 +40,8 @@ class IPSModule
     public function WriteAttributeString($n, $v) { $this->attributes[$n] = $v; }
     public function SetValue($n, $v) { $this->values[$n] = $v; }
     public function GetValue($n) { return $this->values[$n]; }
+    public function GetBuffer($n) { return $this->buffers[$n] ?? ''; }
+    public function SetBuffer($n, $v) { $this->buffers[$n] = $v; }
     public function Translate($s) { return $s; }
     public function RegisterMessage($id, $message) { $this->messages[$id] = $message; }
     public function UnregisterMessage($id, $message) { unset($this->messages[$id]); }

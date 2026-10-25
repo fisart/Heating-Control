@@ -25,14 +25,24 @@ trait LichtBlickMeasuredHeating
             $valid=is_array($e)&&($e['schema']??0)===1&&($e['valid']??false)===true
                 &&is_int($e['updatedAt']??null)&&$e['updatedAt']<=$now+30&&$now-$e['updatedAt']<=180
                 &&is_int($e['powerPercent']??null)&&$e['powerPercent']>=1&&$e['powerPercent']<=100
-                &&is_int($e['validUntil']??null)&&$e['validUntil']>$now&&in_array($e['source']??0,[1,2],true);
+                &&is_int($e['validUntil']??null)&&in_array($e['source']??0,[1,2],true);
             foreach(['currentPriceCt','gasPriceCt','safetyMarginPercent','hysteresisCt','breakEvenCt','entryCt','exitCt'] as $k)
                 $valid=$valid&&is_numeric($e[$k]??null)&&is_finite((float)($e[$k]??NAN));
-            if($valid)$valid=($e['copMethod']??'measured')===$view['copMethod']&&abs($e['currentPriceCt']-(float)$this->GetValue('CurrentPriceCt'))<0.0001
+            if($valid)$valid=($e['copMethod']??'measured')===$view['copMethod']
                 &&abs($e['gasPriceCt']-$this->ReadPropertyFloat('GasPriceCt'))<0.0001
                 &&abs($e['safetyMarginPercent']-$this->ReadPropertyFloat('SafetyMarginPercent'))<0.0001
                 &&abs($e['hysteresisCt']-$this->ReadPropertyFloat('HysteresisCt'))<0.0001
                 &&$this->GetValue('PriceValid')===true;
+            // Keep the last controller result visible while it evaluates a newly published slot.
+            // Settings changes and actual invalid results still invalidate immediately.
+            if($valid) {
+                $pending=abs($e['currentPriceCt']-(float)$this->GetValue('CurrentPriceCt'))>=0.0001||$e['validUntil']<=$now;
+                $deadline=($e['priceHeld']??false)?$e['validUntil']:min($e['validUntil']+120,$e['updatedAt']+180);
+                if($pending&&$now<$deadline) {
+                    $e['recalculationPending']=true;$e['validUntil']=$deadline;
+                    $e['reason']='Retaining previous comparison while Heating Control recalculates (maximum 120 seconds after rollover). '.($e['reason']??'');
+                } elseif($pending)$valid=false;
+            }
             // Fresh environmental readings remain useful even when no economic point qualifies.
             $fresh=is_array($e)&&($e['schema']??0)===1&&is_int($e['updatedAt']??null)
                 &&$e['updatedAt']<=$now+30&&$now-$e['updatedAt']<=180;

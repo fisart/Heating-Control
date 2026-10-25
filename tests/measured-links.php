@@ -26,7 +26,15 @@ $GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/heating_10","TargetI
 $GLOBALS['instanceProperties'][10]['VaultInstanceID']=1;check(view($m)['path']==='/hook/heating_10','Symcon unselected-instance sentinel resolves the one eligible vault');$GLOBALS['instanceProperties'][10]['VaultInstanceID']=7;
 $GLOBALS['instanceProperties'][10]['VaultInstanceID']=8;check(view($m)['path']==='','Different authentication vault has no cross-page link');$GLOBALS['instanceProperties'][10]['VaultInstanceID']=7;
 $GLOBALS['instanceModules'][11]='{8B333AC9-EE67-4D24-8CE7-433BBB391E6C}';$GLOBALS['instanceProperties'][11]=['ElectricityPriceInstanceID'=>1];check(!view($m)['connected'],'Ambiguous multiple controllers never select an arbitrary source');unset($GLOBALS['instanceModules'][11]);
-foreach([['updatedAt'=>$now-181],['validUntil'=>$now],['gasPriceCt'=>99],['safetyMarginPercent'=>0],['currentPriceCt'=>100],['powerPercent'=>101]] as $bad){snapshot(array_replace($snapshot,$bad));check(view($m)['economics']===null,'Invalid/expired/mismatched measured comparison rejected');}
+foreach([['updatedAt'=>$now-181],['validUntil'=>$now-120],['gasPriceCt'=>99],['safetyMarginPercent'=>0],['powerPercent'=>101]] as $bad){snapshot(array_replace($snapshot,$bad));check(view($m)['economics']===null,'Invalid/expired/mismatched measured comparison rejected');}
+snapshot(array_replace($snapshot,['validUntil'=>$now-1]));$m->EvaluatePrices();$v=view($m);
+check($v['economics']['recalculationPending']===true&&$m->values['ThresholdCt']===37.8&&$m->values['RecommendedSource']===1,'Slot rollover retains previous thresholds and source rather than publishing temporary gas');
+snapshot(array_replace($snapshot,['currentPriceCt'=>18]));$m->EvaluatePrices();
+check(view($m)['economics']['recalculationPending']===true&&$m->values['RecommendedSource']===1,'New price waits for controller recalculation without discarding its last result');
+snapshot(array_replace($snapshot,['currentPriceCt'=>18,'validUntil'=>$now-120]));$m->EvaluatePrices();
+check(view($m)['economics']===null&&$m->values['RecommendedSource']===2,'Rollover retention has a fixed deadline');
+snapshot($snapshot);$m->EvaluatePrices();
+check(!isset(view($m)['economics']['recalculationPending']),'Fresh replacement replaces the retained result immediately');
 $fallback=['schema'=>1,'valid'=>false,'updatedAt'=>$now,'source'=>2,'reason'=>'No qualified point: outside air 16°C',
     'outside'=>16.0,'incoming'=>23.0,'target'=>23.0,'fanSpeed'=>90,'airflowM3h'=>2000,'temperatureToleranceC'=>3,'gasEfficiencyPercent'=>100];
 snapshot($fallback);$v=view($m);
