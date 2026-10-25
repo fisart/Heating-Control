@@ -59,11 +59,17 @@ Temperature and state changes are held until the next archived change, following
 Symcon's change-only archive semantics. Heating input while the fan is off
 delivers zero duct-air heat during that interval. Source flags and fan history,
 with up to two hours of preceding context, retain identifiable heat-pump fan
-run-on. Gas heat and gas run-on are excluded. Unclear overlapping/missing source
+run-on. From **0.3.45**, only positive residual heat is retained after shutdown,
+until the outlet-minus-inlet rise reaches zero. Once it has ended, later fan-only
+cooling or unrelated warming cannot continue the old heat-pump cycle. This rule
+also applies when replaying the two hours of pre-period source context. Gas heat
+and gas run-on are excluded. Unclear overlapping/missing source
 states cannot be treated as heat-pump heat. This is an air-side estimate; it does
 not use the COP surface or claim a heat-meter measurement.
 
-Signed temperature differences retain cooling during suspected defrost.
+Signed temperature differences retain cooling while the heat pump is enabled
+in heating mode, including suspected defrost. Cooling from an independently
+running fan after heat-pump shutdown is not a defrost deduction.
 Calibration's clean-window exclusions do not apply to this actual-cost report.
 The gas equivalent is `net delivered heat / gas efficiency × gas unit price`.
 A matched period with negative net heat does not show a gas saving. Source
@@ -90,6 +96,28 @@ matched energy/heat, savings, coverage, provisional status and data remarks.
 The CSV also exposes the known full-period electricity cost and its completeness.
 The gas cost remains an estimate throughout. The report does not mix whole-house
 gas used for radiators or hot water into the air-heating comparison.
+
+## Checking a suspicious result
+
+Expand **Calculation details** below the summary. The matched heat balance is
+positive enabled heating + positive residual run-on − enabled cooling = net heat.
+The electricity breakdown separates metered costs while the heat-pump command
+was enabled, off, or unknown; all three still sum to the actual comparison cost.
+The consumption-weighted electricity price is shown to check the euro/kWh basis.
+These are command-state labels, not additional compressor-feedback measurements.
+CSV includes the same audit columns and `calculationVersion` (currently 2).
+
+Version 0.3.44 could keep treating a continuously running shared fan as part of
+an old heat-pump cycle after shutdown. A later negative air-temperature difference
+could then cancel genuine heating output. A regression example uses 20 minutes
+of heating at 2,000 m³/h and a 15°C rise, followed by four hours of independent
+fan airflow at −1°C rise. True attributable heat is 3.35 kWh; the old report
+incorrectly reduced it to 0.67 kWh. With a 10.48 ct/kWh gas tariff and 100%
+efficiency assumption, that changed the gas estimate from €0.35108 to €0.070216.
+The example is a reproduction, not a claim about a particular installed report.
+After updating, calculate the selected period again; no historical readings need
+to be edited. If a discrepancy remains, the exported CSV exposes the actual
+energy, prices/assumptions, net heat, off-state costs and coverage for verification.
 
 ## Read-only API and verification
 

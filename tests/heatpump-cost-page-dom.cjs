@@ -5,8 +5,8 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  const errors=[],calls=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(fixture.page.body,{url:'https://heating.example:46900/hook/heating_1',runScripts:'outside-only',virtualConsole:vc});
  const w=dom.window,d=w.document;w.setInterval=()=>0;
- const totals={matchedSeconds:86400,comparisonCoveragePercent:100,comparisonHeatPumpCostEuro:4.8,equivalentGasCostEuro:8,savingEuro:3.2,savingPercent:40,matchedElectricityKWh:24,matchedNetHeatKWh:80,achievedCOP:3.333333,heatPumpCostEuro:4.8,knownHeatPumpCostEuro:4.8,costSeconds:86400,completeComparison:true,provisional:false};
- let report={schema:1,fromDate:'2026-10-23',throughDate:'2026-10-23',from:1792706400,to:1792792800,timezone:'Europe/Berlin',summary:totals,days:[{date:'2026-10-23',totals,issues:{}}],assumptions:{airflowM3h:2000,fanCommand:90,gasEfficiencyPercent:100},warnings:[],issues:{}};
+ const totals={matchedSeconds:86400,comparisonCoveragePercent:100,comparisonHeatPumpCostEuro:4.8,equivalentGasCostEuro:8,savingEuro:3.2,savingPercent:40,matchedElectricityKWh:24,matchedNetHeatKWh:80,matchedHeatingHeatKWh:77,matchedRunOnHeatKWh:5,matchedCoolingHeatKWh:2,matchedEnabledCostEuro:4.5,matchedOffCostEuro:.3,matchedUnknownStateCostEuro:0,achievedCOP:3.333333,heatPumpCostEuro:4.8,knownHeatPumpCostEuro:4.8,costSeconds:86400,completeComparison:true,provisional:false};
+ let report={schema:1,calculationVersion:2,fromDate:'2026-10-23',throughDate:'2026-10-23',from:1792706400,to:1792792800,timezone:'Europe/Berlin',summary:totals,days:[{date:'2026-10-23',totals,issues:{}}],assumptions:{airflowM3h:2000,fanCommand:90,gasEfficiencyPercent:100},warnings:[],issues:{}};
  let expired=false,pending=null;
  w.fetch=async(url,options={})=>{
   calls.push({url,options});const u=new URL(url,w.location.href);
@@ -30,6 +30,10 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#cost-saving-percent').textContent.includes('40.0% cheaper'));
  assert.ok(d.querySelector('#cost-details').textContent.includes('24.00 kWh'));
  assert.ok(d.querySelector('#cost-assumptions').textContent.includes('Shared fan electricity is excluded'));
+ assert.equal(d.querySelector('#cost-audit').hidden,false);
+ assert.ok(d.querySelector('#cost-heat-audit').textContent.includes('77.00 kWh enabled heating + 5.00 kWh positive run-on − 2.00 kWh enabled cooling = 80.00 kWh'));
+ assert.ok(d.querySelector('#cost-electricity-audit').textContent.includes('while off: 0.30 €'));
+ assert.ok(d.querySelector('#cost-electricity-audit').textContent.includes('20.00 ct/kWh'));
  assert.equal(d.querySelectorAll('#cost-chart rect').length,2);
  d.querySelector('#cost-chart rect').dispatchEvent(new w.Event('mouseenter'));
  assert.ok(d.querySelector('#cost-tooltip').textContent.includes('Heat pump 4.80'));
@@ -40,6 +44,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.equal(d.querySelectorAll('#cost-days tr').length,1);
  d.querySelector('#cost-period').value='custom';d.querySelector('#cost-period').dispatchEvent(new w.Event('change'));
  assert.equal(d.querySelector('#cost-from').disabled,false);assert.equal(d.querySelector('#cost-csv').hidden,true,'Changing dates clears the earlier report');
+ assert.equal(d.querySelector('#cost-audit').hidden,true,'Changing dates clears the calculation breakdown as well');
  d.querySelector('#cost-from').value='2026-10-20';d.querySelector('#cost-through').value='2026-10-23';
  report=structuredClone(report);Object.assign(report.summary,{comparisonCoveragePercent:50,completeComparison:false,savingEuro:-1.2,savingPercent:-15});report.warnings=['Unverified tariff <img src=x onerror=alert(1)>'];report.issues={'Meter boundary unavailable':60};
  d.querySelector('#cost-calculate').click();await settle();
@@ -58,6 +63,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  d.querySelector('#cost-from').value='2026-10-21';d.querySelector('#cost-from').dispatchEvent(new w.Event('change'));
  pending.resolve({ok:true,status:200,json:async()=>report});pending=null;await settle();
  assert.equal(d.querySelector('#cost-hp').textContent,'—');assert.equal(d.querySelector('#cost-csv').hidden,true);
+ assert.equal(d.querySelector('#cost-audit').hidden,true,'Late replies cannot restore a stale calculation audit');
  expired=true;d.querySelector('#cost-calculate').click();await settle();
  assert.ok(d.querySelector('#cost-status').textContent.includes('expired'));
  assert.equal(d.querySelector('#cost-hp').textContent,'—');assert.equal(d.querySelector('#cost-csv').hidden,true);

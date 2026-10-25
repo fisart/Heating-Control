@@ -26,6 +26,8 @@ final class HeatPumpCostAnalysis
         return ['seconds'=>0,'energySeconds'=>0,'costSeconds'=>0,'heatSeconds'=>0,'matchedSeconds'=>0,
             'knownElectricityKWh'=>0.0,'knownHeatPumpCostEuro'=>0.0,'knownNetHeatKWh'=>0.0,
             'matchedElectricityKWh'=>0.0,'matchedHeatPumpCostEuro'=>0.0,'matchedNetHeatKWh'=>0.0,
+            'matchedHeatingHeatKWh'=>0.0,'matchedRunOnHeatKWh'=>0.0,'matchedCoolingHeatKWh'=>0.0,
+            'matchedEnabledCostEuro'=>0.0,'matchedOffCostEuro'=>0.0,'matchedUnknownStateCostEuro'=>0.0,
             'matchedGasCostEuro'=>0.0,'unverifiedPriceSeconds'=>0,'assumedGasPriceSeconds'=>0];
     }
 
@@ -75,6 +77,13 @@ final class HeatPumpCostAnalysis
             elseif($state['hpOn']===true)$owner=$state['heating']===true?'hp':'other';
             elseif($state['hpOn']===null||$state['gasOn']===null)$owner='unknown';
             elseif($state['fanOn']===false)$owner='none';
+            // A shared fan is not evidence that the heat pump is still
+            // delivering heat. Retain only its positive residual heat after
+            // shutdown, and end that ownership when the air rise reaches zero.
+            // Do this during context replay too. Negative heat while the pump
+            // is enabled in heating mode remains in the defrost/cycle balance.
+            if($owner==='hp'&&$state['hpOn']===false&&$state['gasOn']===false
+                &&$state['incoming']!==null&&$state['outgoing']!==null&&$state['outgoing']<=$state['incoming'])$owner='none';
             if($at<$from)continue;
             $seconds=$end-$at;$totals['seconds']+=$seconds;
             $energy=null;$j=$cursor['counter'];
@@ -114,6 +123,9 @@ final class HeatPumpCostAnalysis
             if($cost!==null&&$heat!==null&&($gasPrice!==null||$heat===0.)) {
                 $totals['matchedSeconds']+=$seconds;$totals['matchedElectricityKWh']+=$energy;
                 $totals['matchedHeatPumpCostEuro']+=$cost;$totals['matchedNetHeatKWh']+=$heat;
+                if($heat<0)$totals['matchedCoolingHeatKWh']-=$heat;
+                elseif($heat>0)$totals[$state['hpOn']===true?'matchedHeatingHeatKWh':'matchedRunOnHeatKWh']+=$heat;
+                $totals[$state['hpOn']===true?'matchedEnabledCostEuro':($state['hpOn']===false?'matchedOffCostEuro':'matchedUnknownStateCostEuro')]+=$cost;
                 $totals['matchedGasCostEuro']+=$heat===0.?0.:$heat/($settings['gasEfficiencyPercent']/100)*$gasPrice/100;
                 if($assumed&&$heat!==0.)$totals['assumedGasPriceSeconds']+=$seconds;
             } elseif($heat!==null&&$heat!==0.&&$gasPrice===null)$issue('Gas tariff unavailable',$seconds);

@@ -62,6 +62,33 @@ check($r['totals']['savingEuro']===null&&near($r['totals']['heatPumpCostEuro'],.
 $s=series($t);foreach(['heating','gasOn','fanOn'] as $k)$s[$k]=[$t-7200=>array_values($s[$k])[0]];$s['hpOn']=[$t-600=>true,$t-60=>false];$v=HeatPumpCostAnalysis::day($t,$t+900,$s,[price($t)],$gas,$settings)['totals'];
 check(near($v['netHeatKWh'],1.675),'Pre-period context can identify residual heat at the period boundary');
 
+// The shared fan can continue independently of both heat sources. Once a
+// stopped heat pump's positive run-on has ended, later fan-only cooling is
+// not defrost and must never cancel its earlier delivered heat.
+$duration=15600;$s=series($t,$duration);
+$s['hpOn'][$t+1200]=false;$s['incoming']=[$t=>23.];$s['outgoing']=[$t=>38.,$t+1200=>22.];
+for($i=0;$i<=$duration;$i+=60)$s['counter'][$t+$i]=1000+min($i,1200)*3/3600+max(0,$i-1200)*.01/3600;
+$prices=[];for($at=$t;$at<$t+$duration;$at+=900)$prices[]=price($at,30.);
+$actual=HeatPumpCostAnalysis::day($t,$t+$duration,$s,$prices,[['start'=>0,'end'=>PHP_INT_MAX,'unitGrossCt'=>10.48]],array_replace($settings,['gasEfficiencyPercent'=>100.]));
+check(near($actual['totals']['netHeatKWh'],3.35),'Four hours of independent fan cooling cannot cancel the preceding 20 minutes of heat-pump output');
+check(near($actual['totals']['equivalentGasCostEuro'],.35108)&&near($actual['totals']['heatPumpCostEuro'],.312),'Idle-airflow fix restores equivalent gas cost without changing measured electricity cost');
+check(near($actual['totals']['matchedHeatingHeatKWh'],3.35)&&$actual['totals']['matchedRunOnHeatKWh']===0.&&$actual['totals']['matchedCoolingHeatKWh']===0.,'Heat audit exposes real enabled heating without a false idle-cooling deduction');
+check(near($actual['totals']['matchedEnabledCostEuro'],.3)&&near($actual['totals']['matchedOffCostEuro'],.012),'Off-period metered consumption is shown separately without hiding its actual cost');
+$s=series($t);$s['outgoing'][$t+600]=15.;$v=HeatPumpCostAnalysis::day($t,$t+900,$s,[price($t)],$gas,$settings)['totals'];
+check(near($v['matchedHeatingHeatKWh'],6.7/6)&&near($v['matchedCoolingHeatKWh'],3.35/12)&&near($v['matchedNetHeatKWh'],$v['matchedHeatingHeatKWh']+$v['matchedRunOnHeatKWh']-$v['matchedCoolingHeatKWh']),'Active heating/cooling audit reconciles exactly to net heat, including defrost');
+$s=series($t);$s['hpOn'][$t+600]=false;$v=HeatPumpCostAnalysis::day($t,$t+900,$s,[price($t)],$gas,$settings)['totals'];
+check(near($v['matchedRunOnHeatKWh'],6.7/12),'Positive residual recovery stays separately visible after shutdown');
+$s=series($t);$s['hpOn'][$t+300]=false;$s['outgoing'][$t+450]=20.;$s['outgoing'][$t+600]=24.;
+$v=HeatPumpCostAnalysis::day($t,$t+900,$s,[price($t)],$gas,$settings)['totals'];
+check(near($v['netHeatKWh'],.000335*2000*10*450/3600),'Unrelated later warming cannot revive a heat-pump run-on that already reached neutral');
+$s=series($t);$s['hpOn'][$t+300]=false;$s['outgoing'][$t+450]=15.;$s['hpOn'][$t+600]=true;
+$v=HeatPumpCostAnalysis::day($t,$t+900,$s,[price($t)],$gas,$settings)['totals'];
+check(near($v['netHeatKWh'],.000335*2000*(10*450-5*300)/3600),'A new enabled heating cycle still includes real negative heat, even after an idle-cooling period');
+$s=series($t);foreach(['heating','gasOn','fanOn','fanSpeed','incoming'] as $k)$s[$k]=[$t-7200=>array_values($s[$k])[0]];
+$s['hpOn']=[$t-600=>true,$t-300=>false];$s['outgoing']=[$t-7200=>30.,$t-180=>15.,$t=>24.];
+$v=HeatPumpCostAnalysis::day($t,$t+900,$s,[price($t)],$gas,$settings)['totals'];
+check($v['netHeatKWh']===0.,'Run-on ending before the chosen period is respected when replaying source context');
+
 $now=strtotime('2026-11-01T12:00:00+01:00');
 foreach(['2026-03-29'=>23,'2026-10-25'=>25] as $date=>$hours){[$a,$b]=HeatPumpCostAnalysis::dates($date,$date,$now);check($b-$a===$hours*3600,'Berlin DST day length: '.$date);}
 foreach([['2026-02-30','2026-02-30'],['2026-10-10','2026-10-01'],['2026-10-01','2026-11-01'],['2026-11-02','2026-11-02']] as [$a,$b]) {
@@ -93,12 +120,14 @@ $report=json_decode($m->GetHeatPumpCostAnalysis('2026-10-23','2026-10-23'),true)
 check(near($report['summary']['heatPumpCostEuro'],4.8)&&near($report['summary']['electricityKWh'],24.),'Public API reads the dedicated circuit counter and stored retail prices');
 check(near($report['summary']['netHeatKWh'],160.8)&&near($report['summary']['equivalentGasCostEuro'],16.08),'Read-only report values agree with an independent daily heat/gas calculation');
 check($report['assumptions']['fanCostIncluded']===false&&$report['assumptions']['fixedChargesIncluded']===false&&$report['assumptions']['baselineSubtracted']===false,'Report explicitly excludes fan/fixed costs and household baseline subtraction');
+check($report['calculationVersion']===2&&near($report['summary']['matchedHeatingHeatKWh'],160.8),'Public report includes the corrected calculation version and reconciled heat breakdown');
 check(near($report['assumptions']['gasPriceMinCt'],10.)&&near($report['assumptions']['gasPriceMaxCt'],10.),'Gas rate used by the comparison is exposed on the page');
 check($before===[$m->properties,$m->attributes,$m->values,$GLOBALS['variables'],$GLOBALS['archiveLogging']]&&!$GLOBALS['commands']&&!$GLOBALS['directWrites'],'Analysis does not alter controls, settings, logging or module state');
 $response=response($m,'GET',['view'=>'heatpump-costs','from'=>'2026-10-23','through'=>'2026-10-23']);
 check($response['status']===200&&json_decode($response['body'],true)['schema']===1,'Protected page receives the cost analysis');
 $csv=response($m,'GET',['view'=>'heatpump-costs-csv','from'=>'2026-10-23','through'=>'2026-10-23']);
 check($csv['status']===200&&str_starts_with($csv['headers']['Content-Type'],'text/csv')&&str_contains($csv['body'],'2026-10-23'),'CSV endpoint exports period figures with a safe dated filename');
+check(str_contains($csv['body'],'Positive run-on heat kWh')&&str_contains($csv['body'],'Electricity cost while off EUR')&&str_contains($csv['body'],'Calculation version'),'CSV carries the heat and off-period electricity audit needed to verify a suspicious comparison');
 $GLOBALS['authenticated']=false;
 check(response($m,'GET',['view'=>'heatpump-costs','from'=>'2026-10-23','through'=>'2026-10-23'])['status']===401,'Cost report cannot bypass passkey authentication');
 check(response($m,'GET',['view'=>'heatpump-costs-csv','from'=>'2026-10-23','through'=>'2026-10-23'])['status']===401,'CSV cannot bypass passkey authentication');

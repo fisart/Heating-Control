@@ -76,13 +76,13 @@ trait HeatingControlPeriodCosts
         if($totals['unverifiedPriceSeconds'])$warnings[]='Some historical electricity prices are unverified; those costs are provisional.';
         $gasPrices=[];foreach($tariffs as $rate)if($rate['start']<$b&&$rate['end']>$a)$gasPrices[]=$rate['unitGrossCt'];
         if($totals['assumedGasPriceSeconds']&&$settings['fallbackGasPriceCt']!==null)$gasPrices[]=$settings['fallbackGasPriceCt'];
-        return ['schema'=>1,'from'=>$a,'to'=>$b,'fromDate'=>$from,'throughDate'=>$through,'timezone'=>'Europe/Berlin',
+        return ['schema'=>1,'calculationVersion'=>2,'from'=>$a,'to'=>$b,'fromDate'=>$from,'throughDate'=>$through,'timezone'=>'Europe/Berlin',
             'updatedAt'=>$now,'summary'=>HeatPumpCostAnalysis::totals($totals),'days'=>$days,'issues'=>$issues,
             'warnings'=>array_values(array_unique($warnings)),
             'assumptions'=>$settings+['meterCounterID'=>$inputs['counter'][0],'archiveID'=>$archive,
                 'gasPriceMinCt'=>$gasPrices?min($gasPrices):null,'gasPriceMaxCt'=>$gasPrices?max($gasPrices):null,
                 'fanCostIncluded'=>false,'fixedChargesIncluded'=>false,'defrostElectricityIncluded'=>true,'baselineSubtracted'=>false],
-            'scope'=>'Dedicated heat-pump circuit electricity, including startup, defrost and standby. Fan electricity and fixed charges are excluded. Gas is estimated for the same net delivered air heat, only over intervals with matching data. Signed air-temperature differences retain cooling during defrost. Identifiable heat-pump fan run-on is included; gas heat and gas run-on are excluded. Airflow and gas efficiency use the existing configured assumptions. Unchanged archived temperature/state values are held; missing history is never replaced by current live values.'];
+            'scope'=>'Dedicated heat-pump circuit electricity, including startup, defrost and standby. Fan electricity and fixed charges are excluded. Gas is estimated for the same net delivered air heat, only over intervals with matching data. Signed air-temperature differences retain cooling while the heat pump is enabled in heating mode. After shutdown only positive identifiable heat-pump run-on is retained, until the air rise reaches zero; later independent fan cooling or warming is not heat-pump output. Gas heat and gas run-on are excluded. Airflow and gas efficiency use the existing configured assumptions. Unchanged archived temperature/state values are held; missing history is never replaced by current live values.'];
     }
 
     private function heatPumpPeriodCostCSV(array $report): string
@@ -90,13 +90,15 @@ trait HeatingControlPeriodCosts
         $stream=fopen('php://temp','r+');
         if($stream===false)throw new RuntimeException('Cannot prepare cost report download');
         try {
-            fputcsv($stream,['Date (Europe/Berlin)','Matched heat-pump electricity kWh','Matched net delivered heat kWh (estimated)','Matched heat-pump cost EUR','Equivalent gas cost EUR (estimated)','Saving EUR','Saving percent','Matched time percent','Known full-period heat-pump cost EUR','Full-period cost complete','Provisional tariff','Data remarks','Airflow assumption m3/h','Fan command','Gas efficiency percent','Period gas rate minimum ct/kWh','Period gas rate maximum ct/kWh'],',','"','');
+            fputcsv($stream,['Date (Europe/Berlin)','Matched heat-pump electricity kWh','Matched net delivered heat kWh (estimated)','Matched heat-pump cost EUR','Equivalent gas cost EUR (estimated)','Saving EUR','Saving percent','Matched time percent','Known full-period heat-pump cost EUR','Full-period cost complete','Provisional tariff','Data remarks','Airflow assumption m3/h','Fan command','Gas efficiency percent','Period gas rate minimum ct/kWh','Period gas rate maximum ct/kWh','Positive enabled heat kWh (estimated)','Positive run-on heat kWh (estimated)','Enabled cooling heat kWh (deduction)','Electricity cost while enabled EUR','Electricity cost while off EUR','Electricity cost with unknown on-state EUR','Calculation version'],',','"','');
             foreach($report['days'] as $day) {
                 $t=$day['totals'];$remarks=implode('; ',array_keys($day['issues']));
                 fputcsv($stream,[$day['date'],$t['matchedSeconds']?$t['matchedElectricityKWh']:null,
                     $t['matchedSeconds']?$t['matchedNetHeatKWh']:null,$t['comparisonHeatPumpCostEuro'],
                     $t['equivalentGasCostEuro'],$t['savingEuro'],$t['savingPercent'],$t['comparisonCoveragePercent'],
-                    $t['costSeconds']?$t['knownHeatPumpCostEuro']:null,$t['heatPumpCostEuro']!==null?'yes':'no',$t['provisional']?'yes':'no',$remarks,$report['assumptions']['airflowM3h'],$report['assumptions']['fanCommand'],$report['assumptions']['gasEfficiencyPercent'],$report['assumptions']['gasPriceMinCt'],$report['assumptions']['gasPriceMaxCt']],',','"','');
+                    $t['costSeconds']?$t['knownHeatPumpCostEuro']:null,$t['heatPumpCostEuro']!==null?'yes':'no',$t['provisional']?'yes':'no',$remarks,$report['assumptions']['airflowM3h'],$report['assumptions']['fanCommand'],$report['assumptions']['gasEfficiencyPercent'],$report['assumptions']['gasPriceMinCt'],$report['assumptions']['gasPriceMaxCt'],
+                    $t['matchedSeconds']?$t['matchedHeatingHeatKWh']:null,$t['matchedSeconds']?$t['matchedRunOnHeatKWh']:null,$t['matchedSeconds']?$t['matchedCoolingHeatKWh']:null,
+                    $t['matchedSeconds']?$t['matchedEnabledCostEuro']:null,$t['matchedSeconds']?$t['matchedOffCostEuro']:null,$t['matchedSeconds']?$t['matchedUnknownStateCostEuro']:null,$report['calculationVersion']],',','"','');
             }
             rewind($stream);return stream_get_contents($stream);
         } finally {fclose($stream);}
