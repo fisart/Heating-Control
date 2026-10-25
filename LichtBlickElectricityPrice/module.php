@@ -8,6 +8,7 @@ require_once __DIR__ . '/MeasuredHeating.php';
 require_once __DIR__ . '/PriceStore.php';
 require_once __DIR__ . '/PriceHistory.php';
 require_once __DIR__ . '/ConsumptionHistory.php';
+require_once __DIR__ . '/FixedPriceComparison.php';
 require_once __DIR__ . '/GasHistory.php';
 require_once __DIR__ . '/GasCosts.php';
 require_once __DIR__ . '/NoConsumption.php';
@@ -23,6 +24,7 @@ class LichtBlickElectricityPrice extends IPSModule
     use LichtBlickMeasuredHeating;
     use LichtBlickPriceHistory;
     use LichtBlickConsumptionHistoryAccess;
+    use LichtBlickFixedPriceAccess;
     use LichtBlickGasHistoryAccess;
     use LichtBlickWaterHistoryAccess;
     use LichtBlickTotalHistoryAccess;

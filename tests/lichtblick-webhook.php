@@ -24,6 +24,7 @@ check(response($m)['status']===303 && response($m)['headers']['Location']==='/ho
 check(response($m,'GET',['view'=>'state'])['status']===401,'Anonymous cannot read data');
 check(response($m,'GET',['view'=>'price-history','from'=>'2026-10-01','to'=>'2026-10-11'])['status']===401,'Anonymous history blocked');
 check(response($m,'GET',['view'=>'consumption-history','from'=>'2024-10-01','to'=>'2025-09-30'])['status']===401,'Anonymous consumption/cost history blocked');
+check(response($m,'GET',['view'=>'electricity-price-comparison','from'=>'2026-10-01','to'=>'2026-10-10','fixedCt'=>'34'])['status']===401,'Anonymous weighted comparison blocked');
 check(response($m,'GET',['view'=>'gas-history','from'=>'2024-10-26','to'=>'2024-10-28'])['status']===401,'Anonymous gas history blocked');
 check(response($m,'HEAD')['status']===401,'Anonymous HEAD blocked');
 check(response($m,'POST')['status']===405,'Read-only methods only');
@@ -36,6 +37,9 @@ check($page['headers']['Cache-Control']==='private, no-store, max-age=0','Privat
 check(response($m,'GET',[],'evil.example')['status']===403,'Wrong host rejected');
 check(response($m,'GET',[],'backup.example:46900')['status']===200,'Configured backup origin works');
 check(response($m,'GET',['view'=>'command'])['status']===404,'Unknown endpoint rejected');
+check(response($m,'GET',['view'=>'electricity-price-comparison','from'=>'2026-10-01','to'=>'2026-10-10','fixedCt'=>['34']])['status']===400,'Weighted comparison rejects array inputs');
+check(response($m,'GET',['view'=>'electricity-price-comparison','from'=>'2026-10-01','to'=>'2026-10-10','fixedCt'=>'-1'])['status']===400,'Weighted comparison rejects invalid fixed prices');
+check(response($m,'GET',['view'=>'electricity-price-comparison','from'=>'2026-10-01','to'=>'2026-10-10','fixedCt'=>'34'],'evil.example')['status']===403,'Weighted comparison enforces the portal origin');
 $m->properties['Enabled']=true;$m->properties['TariffVerified']=true;
 $m->properties['WeatherModelEnabled']=true;
 $GLOBALS['liveVariables'][25911]=['value'=>7.0,'VariableType'=>2,'VariableUpdated'=>time()];

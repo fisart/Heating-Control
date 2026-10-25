@@ -9,6 +9,8 @@ const state={updatedAt:now,enabled:true,recommendation:{source:1,valid:true,powe
  outside:{temperatureC:7,updatedAt:now-60},curve:[{outsideC:7,powerPercent:35,cop:5.78,heatPumpKW:1}],
  slots:[{start:now-300,end:now+600,price:19.25},{start:now+600,end:now+1500,price:25.84}],debug:'No errors'};
 const chart={from:now-86400,to:now+86400,resolution:'15-minute intervals',storedIntervals:2,expectedIntervals:192,retailIntervals:2,confirmedIntervals:1,missingIntervals:190,points:[{start:now-900,end:now,price:-2.5,marketCt:-5,source:'lichtblick-quote',verified:true},{start:now+900,end:now+1800,price:29.75,marketCt:10,source:'smard-reconstructed',verified:false}]};
+const fixedComparison={schema:1,from:now-86400,to:now,fromDate:'2026-10-24',throughDate:'2026-10-24',summary:{matchedSeconds:86400,matchedKWh:10,knownMeterKWh:10,dynamicCostEuro:2.17,weightedPriceCt:21.7,timeCoveragePercent:100,consumptionCoveragePercent:100,carriedPriceSeconds:0,missingMeterIntervals:0,missingPriceIntervals:0,unconfirmedPriceKWh:0,appEstimateKWh:0,complete:true,provisional:false},days:[],missingArchiveIntervals:0,warnings:['Supplier note <img src=x>'],errors:[]};
+fixedComparison.days=[{...fixedComparison.summary,date:'2026-10-24',start:now-86400,end:now,comparisonDynamicCostEuro:2.17}];
 const consumption={from:now-86400,to:now,resolution:'daily',preparedThrough:'2026-10-12T00:00:00+02:00',points:[{start:now-86400,end:now,cleanedKWh:10,referenceKWh:11,tariffCostEuro:3.3,qualityFlags:129}],references:[{invoice_number:'fixture',from:'2026-10-01',to_inclusive:'2026-10-10',billed_kwh:110,billed_gross_eur:40,dated_tariff_cost_on_reference_curve_eur:39,billing_reconciliation_eur:1,wholeReferenceSelected:false}],totals:{knownCleanedKWh:10,knownReferenceKWh:11,knownTariffCostEuro:3.3,fullPeriodReconciliationEuro:0,knownCostWithFullPeriodReconciliationEuro:3.3,missingEnergyIntervals:0,missingPriceIntervals:0,explicitResetEstimateKWh:.1,withoutConsumptionReferenceIntervals:0,unconfirmedPriceIntervals:0,coveredSeconds:86400,requestedSeconds:86400}};
 const gas={from:now-86400,to:now,resolution:'daily',preparedThrough:'2026-10-12T17:50:15+02:00',points:[{start:now-86400,end:now,observedM3:4,knownObservedM3:4,qualityFlags:32}],invoices:[{from:'2026-10-01',to:'2026-10-10',supplier_m3:12,cleaned_observed_m3:10,supplier_minus_cleaned_m3:2,supplier_kwh:133,supply_gross_eur:25,december_aid_gross_eur:0,price_brake_credit_eur:2,cost_after_aid_eur:23,wholeInvoiceSelected:false}],totals:{knownObservedM3:4,missingObservationDays:0,resetIntervalDays:0,laterUnreviewedDays:0,completeInvoices:0,invoicedM3:0,invoicedKWh:0,supplyGrossEuro:0,creditsEuro:0,costAfterAidEuro:0}};
 const water={from:now-86400,to:now,resolution:'daily',houseIncludesGarden:true,tariffs:[],streams:{},points:[{start:now-86400,end:now,streams:{}}]};
@@ -18,12 +20,12 @@ water.electronic.from=now-2*86400;water.electronic.points=[{start:now-2*86400,en
 const total={from:now-86400,to:now,resolution:'daily',streams:{},points:[{start:now-86400,end:now,streams:{}}],totals:{knownCostEuro:12,knownEnergyKWh:20,knownWaterM3:6,completeCost:false}};
 for(const key of ['electricity','gas','house','garden','well']){const volume=key==='electricity'?10:key==='gas'?10:key==='house'?2:key==='garden'?1:3,cost=key==='electricity'?-2:key==='gas'?4:key==='house'?8:key==='garden'?2:0;total.streams[key]={knownVolume:volume,knownCostEuro:cost,unit:key==='electricity'||key==='gas'?'kWh':'m³',incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0,error:''};total.points[0].streams[key]={knownVolume:volume,knownCostEuro:cost,incompleteVolumeDays:0,incompleteCostDays:key==='gas'?1:0};}
 state.heating={connected:true,instanceID:11543,path:'/hook/heating_11543',automatic:true,points:[{outside:12,incoming:23,powerPercent:50,systemInputKW:3.06,estimatedSystemCOP:3.61,usable:true}],reason:'Measured comparison',economics:{valid:true,source:1,powerPercent:50,validUntil:now+600,breakEvenEuro:.3786,entryEuro:.2639,exitEuro:.2839,breakEvenCt:37.86,entryCt:26.39,exitCt:28.39,gasEfficiencyPercent:100,outside:12,incoming:23,target:23,targetMinusIncoming:0,point:{estimatedSystemCOP:3.61,systemInputKW:3.06,airflowM3h:2000}}};
-let code=200,fail=false,invalidUtilityBody=false,payload=state,calls=[];
+let code=200,fail=false,invalidUtilityBody=false,payload=state,calls=[],fixedPending=null;
 let html=fs.readFileSync(__dirname+'/../LichtBlickElectricityPrice/page.html','utf8').replaceAll('{{NONCE}}','fixture').replaceAll('{{PATH}}','/hook/lichtblick_123').replaceAll('{{INSTANCE}}','123').replaceAll('{{PORTAL}}','/hook/alarm_portal_42').replaceAll('{{LOGIN}}','/hook/secrets_7?portal=1');
 const dom=new JSDOM(html,{url:'https://prices.example/hook/lichtblick_123',runScripts:'dangerously',beforeParse(w){
  w.AbortController=AbortController;
 total.waterDisplayMode='main-includes-garden';total.streams.house.knownVolume=3;total.streams.house.knownCostEuro=11;total.points[0].streams.house.knownVolume=3;total.points[0].streams.house.knownCostEuro=11;total.streams.garden.referenceOnlyVolume=true;total.streams.garden.knownCostEuro=-1;total.points[0].streams.garden.knownCostEuro=-1;
- w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');const data=url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:url.includes('view=gas-history')?gas:url.includes('view=water-history')?water:url.includes('view=total-consumption')?total:payload;return {status:code,ok:code===200,json:async()=>data,text:async()=>invalidUtilityBody?'Fatal error: fixture memory failure':JSON.stringify(data)};};
+ w.fetch=async(url,options)=>{calls.push({url,options});if(fail)throw new Error('Offline');if(url.includes('view=electricity-price-comparison')&&fixedPending)return new Promise(resolve=>fixedPending.resolve=resolve);const data=url.includes('view=electricity-price-comparison')?fixedComparison:url.includes('view=price-history')?chart:url.includes('view=consumption-history')?consumption:url.includes('view=gas-history')?gas:url.includes('view=water-history')?water:url.includes('view=total-consumption')?total:payload;return {status:code,ok:code===200,json:async()=>data,text:async()=>invalidUtilityBody?'Fatal error: fixture memory failure':JSON.stringify(data)};};
 }});
 const settle=()=>new Promise(r=>setImmediate(r));
 (async()=>{
@@ -32,6 +34,22 @@ const settle=()=>new Promise(r=>setImmediate(r));
  const hover=(id,t,model,left=75,right=975)=>{const root=d.querySelector('#'+id);root.getBoundingClientRect=()=>({left:100,top:50,width:1000,height:310,right:1100,bottom:360});root.dispatchEvent(new dom.window.MouseEvent('pointermove',{bubbles:true,clientX:100+left+(t-model.from)/(model.to-model.from)*(right-left),clientY:150}));const tip=d.querySelector('#chart-tooltip');assert.equal(tip.hidden,false,'Cursor tooltip is visible on '+id);return tip.textContent;};
 
  assert.equal(d.querySelector('#dashboard').hidden,false);
+ assert.equal(calls.some(c=>c.url.includes('view=electricity-price-comparison')),false,'Heavy fixed-price comparison is calculated on request');
+ d.querySelector('#fixed-show').click();await settle();
+ assert.equal(d.querySelector('#fixed-average').textContent,'21.700');
+ assert.equal(d.querySelector('#fixed-benchmark').textContent,'34.000');
+ assert.equal(d.querySelector('#fixed-saving').textContent,'1.23 EUR');
+ assert.ok(d.querySelector('#fixed-totals').textContent.includes('3.40 EUR'));
+ assert.equal(d.querySelectorAll('#fixed-quality img').length,0,'Comparison diagnostics are text, not executable markup');
+ assert.equal(d.querySelectorAll('#fixed-table tr').length,1);
+ assert.match(hover('fixed-chart',now-3600,fixedComparison,70,970),/21[.,]700/,'Weighted-price chart has cursor values');
+ const requests=calls.length;d.querySelector('#fixed-rate').value='40';d.querySelector('#fixed-rate').dispatchEvent(new dom.window.Event('change'));
+ assert.equal(d.querySelector('#fixed-saving').textContent,'1.83 EUR');assert.equal(calls.length,requests,'Editing the benchmark reuses the same measured energy without another archive read');
+ d.querySelector('#fixed-contract').click();assert.equal(d.querySelector('#fixed-rate').value,'35.479');assert.equal(d.querySelector('#fixed-saving').textContent,'1.38 EUR');
+ d.querySelector('#fixed-rate').value='34';d.querySelector('#fixed-rate').dispatchEvent(new dom.window.Event('change'));
+ d.querySelector('#fixed-range').value='custom';d.querySelector('#fixed-range').dispatchEvent(new dom.window.Event('change'));assert.equal(d.querySelector('#fixed-average').textContent,'—','Changing periods clears the old comparison');
+ fixedPending={};d.querySelector('#fixed-show').click();await settle();d.querySelector('#fixed-from').value='2026-10-02';d.querySelector('#fixed-from').dispatchEvent(new dom.window.Event('change'));
+ fixedPending.resolve({status:200,ok:true,json:async()=>fixedComparison});fixedPending=null;await settle();assert.equal(d.querySelector('#fixed-average').textContent,'—','Late comparison replies cannot restore a prior date selection');assert.equal(d.querySelector('#fixed-show').disabled,false);
  assert.equal(d.querySelector('#portal').getAttribute('href'),'/hook/alarm_portal_42');
  assert.equal(d.querySelector('#portal').hidden,false);
  assert.equal(d.querySelector('#price').textContent,'19.25 ct/kWh');

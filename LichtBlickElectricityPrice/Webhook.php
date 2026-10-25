@@ -170,6 +170,14 @@ trait LichtBlickElectricityPriceWebhook
             $origin = $this->webOrigin('https://'.($server['HTTP_HOST'] ?? ''));
             if ($origin === '' || !in_array($origin,$this->webOrigins($vault),true)) return $reply(403,['error'=>'Use the configured SecretsManager HTTPS portal origin.']);
             if (($query['view'] ?? '') === 'state') return $reply(200,$this->webState());
+            if (($query['view'] ?? '') === 'electricity-price-comparison') {
+                try {
+                    if(!is_string($query['from']??null)||!is_string($query['to']??null)||!is_string($query['fixedCt']??'34')
+                        ||!is_numeric($query['fixedCt']??'34'))throw new InvalidArgumentException('Select dates and a fixed price in ct/kWh');
+                    return $reply(200,$this->electricityPriceComparison($query['from'],$query['to'],(float)($query['fixedCt']??34)));
+                }catch(InvalidArgumentException $e){return $reply(400,['error'=>$e->getMessage()]);}
+                catch(RuntimeException $e){return $reply(503,['error'=>$e->getMessage()]);}
+            }
             if (($query['view'] ?? '') === 'price-history') {
                 try {
                     if (!is_string($query['from'] ?? null) || !is_string($query['to'] ?? null)) throw new InvalidArgumentException('Select from/to dates');

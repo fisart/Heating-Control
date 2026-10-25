@@ -47,12 +47,17 @@ trait LichtBlickPriceHistory
     /** Raw, read-only history contract for the future consumption module. End is exclusive. */
     public function GetPriceHistory(int $from, int $to): string
     {
-        if ($to - $from > 32 * 86400) throw new InvalidArgumentException('Request at most 31 calendar days of raw intervals');
+        return json_encode($this->storedPriceHistory($from,$to,32*86400),JSON_THROW_ON_ERROR);
+    }
+
+    private function storedPriceHistory(int $from,int $to,int $maximumSeconds): array
+    {
+        if ($to - $from > $maximumSeconds) throw new InvalidArgumentException('Requested price-history period exceeds its limit');
         if ($from < $this->historyStart()) throw new InvalidArgumentException('Period precedes electricity contract start');
         $rows=$this->priceStore()->query($this->historyIdentity(),$from,$to);$previous=null;$error=null;
         try{$previous=$this->priceStore()->lastKnown($this->historyIdentity(),$from);}catch(Throwable $e){$error=$e->getMessage();}
-        return json_encode(['schema' => 1, 'identity' => $this->historyIdentity(), 'from' => $from, 'to' => $to,
-            'intervals'=>$rows,'previousInterval'=>$previous,'previousIntervalError'=>$error],JSON_THROW_ON_ERROR);
+        return ['schema' => 1, 'identity' => $this->historyIdentity(), 'from' => $from, 'to' => $to,
+            'intervals'=>$rows,'previousInterval'=>$previous,'previousIntervalError'=>$error];
     }
 
     /** Attempt repair using original supplier quotes only. This does not
@@ -60,7 +65,7 @@ trait LichtBlickPriceHistory
      * The public supplier response may not include the requested older dates. */
     public function RecoverPriceHistory(int $from,int $to): string
     {
-        $before=json_decode($this->GetPriceHistory($from,$to),true,32,JSON_THROW_ON_ERROR);
+        $before=$this->storedPriceHistory($from,$to,367*86400);
         $missing=static function(array $rows) use ($from,$to): int {
             $count=0;$map=[];foreach($rows as $r)if(is_numeric($r['price']??null))$map[$r['start']]=true;
             for($t=intdiv($from,900)*900;$t<$to;$t+=900)if(!isset($map[$t]))$count++;
@@ -78,7 +83,7 @@ trait LichtBlickPriceHistory
             $slots=array_values(array_filter($slots,static fn($r)=>$r['start']<$to&&$r['end']>$from&&!isset($existing[$r['start']])));
             if($slots)$this->storeQuotes($slots,true);
         }catch(Throwable $e){$error=$e->getMessage();}
-        $after=json_decode($this->GetPriceHistory($from,$to),true,32,JSON_THROW_ON_ERROR);
+        $after=$this->storedPriceHistory($from,$to,367*86400);
         return json_encode($after+['recovery'=>['downloadAttempted'=>$attempted,'missingBefore'=>$wanted,
             'missingAfter'=>$missing($after['intervals']),'error'=>$error,
             'note'=>'Only dates present in the original supplier response can be downloaded; older holes may remain.']],JSON_THROW_ON_ERROR);

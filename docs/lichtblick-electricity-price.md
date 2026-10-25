@@ -45,6 +45,67 @@ for backup compatibility and cannot reactivate their old calculation paths.
 
 ## Persistent price history and manual import — 0.3.9
 
+## Consumption-weighted fixed-price comparison — 0.3.47
+
+The Strom tab now has **Dynamic electricity versus fixed price**. Choose since
+the LichtBlick contract start, yesterday, last seven days, this month, or custom
+dates up to 366 Berlin calendar days. Today includes completed quarters only.
+Periods before the provider's contract start and future dates are rejected.
+The comparison is calculated on demand, independently of the normal live-page
+refresh and the heating/fan analysis.
+
+Enter a gross fixed energy price in **ct/kWh**. The initial benchmark is the
+owner's requested **34 ct/kWh**, editable in 0.001 ct increments and retained in
+this browser. A separate preset uses **35.479 ct/kWh**, the gross work price in
+the owner's 123energie tariff-change document effective **1 October 2025**.
+That document is evidence of its specified rate, not confirmation that every
+later bill used that price. The input remains a user-selected comparison rate.
+
+The weighted average is **sum(physical kWh × gross ct/kWh) / sum(physical kWh)**.
+The dynamic euro cost and fixed alternative use exactly the same paired kWh.
+The physical cleaned house-meter series is used, rather than reference-normalized
+consumption. Prepared-history fixed costs, invoice residuals, bonuses and
+standing charges are not included. The comparison does not claim a complete
+bill comparison. Imported app-normalized prices may already absorb basic
+charges; their kWh are prominently identified as provisional and cannot be
+called independently verified energy-only prices.
+
+The panel shows the weighted price, entered fixed price, energy costs, saving
+or additional cost, time/known-energy coverage, daily results and a cursor chart
+with independently selectable dynamic/fixed series. Changing only the reference
+price recalculates from the same captured consumption immediately without
+another archive query or any heating-control change. Changing dates clears old
+results; late responses cannot restore a different period. Errors/session
+expiry clear the comparison. Overall savings percentages are withheld for
+incomplete time coverage; prices and differences then refer to covered energy.
+
+Original stored/reviewed interval prices are used first. Missing prices trigger
+one supplier recovery attempt, then chronological carry-forward from the last
+known preceding price. The absence of an earlier price remains explicit.
+Carried/other unconfirmed prices and estimated meter intervals qualify results.
+Zero and negative dynamic prices are supported. Zero consumption has no
+meaningful weighted unit price. Raw later-meter reads are processed one calendar
+day at a time, including 23/25-hour clock-change days, and preserve existing
+counter-gap/reset checks. No household consumption is excluded because a fan
+or heat pump was off.
+
+`LBEP_GetElectricityPriceComparison(instanceID, from, through, fixedPriceCt=34)`
+returns schema-1 JSON with summary, daily values, price-recovery status and
+coverage errors. The authenticated GET view is `electricity-price-comparison`
+with `from`, `to`, and `fixedCt`. Existing passkey/origin checks apply. It works
+with reviewed prepared history and later raw house-meter data, or raw data alone
+when prepared history is not connected. Supplier recovery accepts up to 366
+calendar days while the existing raw `GetPriceHistory` 31-day limit is retained.
+
+Run `php tests/lichtblick-fixed-comparison.php` and the existing consumption,
+price-history, webhook and page DOM suites. Tests verify energy weighting,
+identical cost scope, ignored reference/fixed costs, missing consumption/price
+denominators, zero/negative prices, chronological carry-forward, 25-hour days,
+all-hours meter integration, recovery failure, auth/origin checks, editable
+benchmarks, chart tooltips, escaping, clearing and browser persistence.
+
+### Persistent price history
+
 From **0.3.46**, `RecoverPriceHistory(from, to)` can attempt to refill missing
 original quotes from the existing supplier endpoint without changing live
 recommendations or the price cache. Older dates absent from that response stay

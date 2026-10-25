@@ -34,6 +34,7 @@ jobs:
           php -l LichtBlickElectricityPrice/PriceStore.php
           php -l LichtBlickElectricityPrice/PriceHistory.php
           php -l LichtBlickElectricityPrice/ConsumptionHistory.php
+          php -l LichtBlickElectricityPrice/FixedPriceComparison.php
           php -l LichtBlickElectricityPrice/GasHistory.php
           php -l LichtBlickElectricityPrice/GasCosts.php
           php -l LichtBlickElectricityPrice/NoConsumption.php
@@ -48,6 +49,7 @@ jobs:
           php tests/lichtblick.php
           php tests/lichtblick-price-history.php
           php tests/lichtblick-consumption-history.php
+          php tests/lichtblick-fixed-comparison.php
           php tests/lichtblick-gas-history.php
           php tests/lichtblick-gas-costs.php
           php tests/lichtblick-water-total.php
