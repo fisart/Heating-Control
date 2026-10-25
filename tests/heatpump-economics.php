@@ -49,6 +49,11 @@ function fixture():EconomicHeating {
 }
 $m=fixture();$m->properties['HeatPumpUseTestModel']=false;$reason='';$power=(new ReflectionMethod(HeatingControl::class,'measuredEconomicChoice'))->invokeArgs($m,[&$reason]);
 check($power===50,'Retired legacy switch cannot bypass the measured model');
+$compact=json_decode($m->values['HeatPumpDecisionHistoryJSON'],true);
+check($compact['previousEconomicSource']===2&&$compact['currentPriceCt']===20&&count($compact['point'])===1,'Compact decision history retains original price, prior source and expected COP without large calibration payload');
+$m->attributes['HeatPumpEconomicSource']='2';$m->clock+=10;$record=$m->values['HeatPumpDecisionHistoryJSON'];
+(new ReflectionMethod(HeatingControl::class,'measuredEconomicChoice'))->invokeArgs($m,[&$reason]);
+check($m->values['HeatPumpDecisionHistoryJSON']===$record,'Unchanged decision context does not publish a new archive record every ten seconds');
 // Exercise sourceChoice itself with gas and heat-pump source mappings and mirrored variables.
 $method=new ReflectionMethod(HeatingControl::class,'sourceChoice');$queue=[];$choice=$method->invokeArgs($m,[2,&$queue]);
 check($choice===[1,50]&&$queue[$m->properties['OperatingModeID']]===1,'Actual source path uses measured threshold and mirrors HP mode');

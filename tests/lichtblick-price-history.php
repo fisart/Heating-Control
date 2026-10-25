@@ -46,4 +46,16 @@ check($m->GetPriceHistory($from,$to)===$before,'Configuration restore preserves 
 check(!$m->properties['Enabled']&&$m->properties['PriceHistoryEnabled'],'Storage independent of heating recommendation');
 $form=json_decode(file_get_contents(__DIR__.'/../LichtBlickElectricityPrice/form.json'),true,64,JSON_THROW_ON_ERROR);$formText=json_encode($form);
 check(!str_contains($formText,'Retrieve historical prices')&&!str_contains($formText,'HistoricalFetchEnabled')&&!str_contains($formText,'HistoricalTariffs'),'Retired controls removed from form');
+$m->properties['PostalCode']='14167';$m->properties['PriceHistoryEnabled']=true;
+$m->response=quote(25.,$from+1800);
+$state=[$m->properties,$m->attributes,$m->values['RecommendedSource'],$m->values['PriceQuoteJSON']];
+$repaired=json_decode($m->RecoverPriceHistory($from,$to),true);
+check($repaired['recovery']['downloadAttempted']&&$repaired['recovery']['missingAfter']===$repaired['recovery']['missingBefore']-1,'Missing intervals trigger original supplier download and persistent repair');
+check($state===[$m->properties,$m->attributes,$m->values['RecommendedSource'],$m->values['PriceQuoteJSON']],'Recovery never changes live cache, recommendations or configuration');
+check($manual->query($id,$from,$from+900)[0]['price']===18.4,'Recovery preserves existing valid saved prices');
+check((float)$manual->lastKnown($id,$from+2700)['price']===25.&&$manual->lastKnown($id,$from)===null,'Last-known seed is chronological and excludes future quotes');
+$m->response='invalid';$complete=json_decode($m->RecoverPriceHistory($from+1800,$from+2700),true);
+check(!$complete['recovery']['downloadAttempted']&&$complete['recovery']['missingAfter']===0,'Complete histories do not trigger redundant network requests');
+$m->fail=true;$failed=json_decode($m->RecoverPriceHistory($from+3600,$from+4500),true);
+check($failed['recovery']['missingAfter']===1&&str_contains($failed['recovery']['error'],'outage'),'Network failure retains existing history and returns a recovery reason');
 echo "Persistent quotes/manual estimates, provenance, gaps, DST, legacy settings, no SMARD downloads and configuration restore checks passed.\n";

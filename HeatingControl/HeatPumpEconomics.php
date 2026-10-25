@@ -12,8 +12,18 @@ trait HeatingControlHeatPumpEconomics
         $this->RegisterPropertyString('HeatPumpMeasuredMatrix','[]');
         $this->RegisterAttributeString('HeatPumpEconomicSource','2');
         $this->RegisterVariableString('HeatPumpEconomicsJSON','Measured heat-pump price decision (JSON)','~TextBox',151);
+        $this->RegisterVariableString('HeatPumpDecisionHistoryJSON','Compact switchover decision history (JSON)','~TextBox',153);
         foreach(['HeatPumpBreakEvenEuro'=>'Electricity break-even price (EUR/kWh)',
             'HeatPumpEntryEuro'=>'Heat-pump entry below (EUR/kWh)','HeatPumpExitEuro'=>'Heat-pump exit at (EUR/kWh)'] as $ident=>$name)$this->RegisterVariableFloat($ident,$name,'',152);
+    }
+    private function recordEconomicDecision(array $snapshot): void
+    {
+        $record=array_intersect_key($snapshot,array_flip(['schema','updatedAt','validUntil','valid','source','previousEconomicSource',
+            'currentPriceCt','entryCt','exitCt','breakEvenCt','safetyMarginPercent','hysteresisCt','powerPercent','outside','incoming','target','reason']));
+        if(isset($snapshot['point']['estimatedSystemCOP']))$record['point']=['estimatedSystemCOP'=>$snapshot['point']['estimatedSystemCOP']];
+        $previous=json_decode((string)$this->GetValue('HeatPumpDecisionHistoryJSON'),true)??[];$compare=$record;
+        unset($previous['updatedAt'],$compare['updatedAt']);
+        if($previous!=$compare)$this->SetValue('HeatPumpDecisionHistoryJSON',json_encode($record,JSON_THROW_ON_ERROR));
     }
     public function SetHeatPumpCOPMethod(string $method): void
     {
@@ -96,21 +106,25 @@ trait HeatingControlHeatPumpEconomics
                 $point=HeatPumpMatrix::choose($matrix,$outside,$incoming,$req['target'],$margin,$minRise,$fan,$airflow,$tolerance,$flap);
                 if(!$point)throw new RuntimeException('No qualified point: '.HeatPumpMatrix::unavailableReason($matrix,$outside,$incoming,$req['target'],$margin,$minRise,$fan,$airflow,$tolerance,$flap).'. Repeat calibration at these conditions; heat-pump prices cannot be extrapolated from an unsupported test point.');
             }
+            $previousEconomicSource=(int)$this->ReadAttributeString('HeatPumpEconomicSource');
             $e=HeatPumpMatrix::economics($point,(float)$q['gasPriceCt'],$this->ReadPropertyFloat('HeatPumpGasEfficiencyPercent'),
-                (float)$q['safetyMarginPercent'],(float)$q['hysteresisCt'],(float)$q['priceCt'],(int)$this->ReadAttributeString('HeatPumpEconomicSource'));
+                (float)$q['safetyMarginPercent'],(float)$q['hysteresisCt'],(float)$q['priceCt'],$previousEconomicSource);
             $this->WriteAttributeString('HeatPumpEconomicSource',(string)$e['source']);
             foreach(['HeatPumpBreakEvenEuro'=>'breakEvenEuro','HeatPumpEntryEuro'=>'entryEuro','HeatPumpExitEuro'=>'exitEuro'] as $ident=>$key)$this->SetValue($ident,(float)$e[$key]);
             $reason=sprintf(($copMethod==='surface'?'COP surface (modeled) ':'Measured ').'%d%%, estimated COP %.2f at %.1f°C outside / %.1f°C intake; break-even %.2f ct/kWh, entry < %.2f ct/kWh, exit ≥ %.2f ct/kWh; current %.2f ct/kWh; %s',
                 $point['powerPercent'],$point['estimatedSystemCOP'],$outside,$incoming,$e['breakEvenCt'],$e['entryCt'],$e['exitCt'],$q['priceCt'],$e['source']===1?'heat pump':'gas');
-            $snapshot=['copMethod'=>$copMethod,'schema'=>1,'updatedAt'=>$now,'validUntil'=>$q['validUntil'],'valid'=>true,'powerPercent'=>$point['powerPercent'],
+            $snapshot=['copMethod'=>$copMethod,'schema'=>1,'previousEconomicSource'=>$previousEconomicSource,'updatedAt'=>$now,'validUntil'=>$q['validUntil'],'valid'=>true,'powerPercent'=>$point['powerPercent'],
                 'outside'=>$outside,'incoming'=>$incoming,'target'=>$req['target'],'targetMinusIncoming'=>$req['target']-$incoming,'point'=>$point,'reason'=>$reason]+$e+$conditions;
             $this->SetValue('HeatPumpEconomicsJSON',json_encode($snapshot,JSON_THROW_ON_ERROR));
+            $this->recordEconomicDecision($snapshot);
             $this->SetValue('HeatPumpPerformanceStatus',$reason.'; estimated airflow; room demand still controls heating');
             return $e['source']===1?(int)$point['powerPercent']:0;
         } catch(Throwable $error) {
             $this->WriteAttributeString('HeatPumpEconomicSource','2');
             $reason='Automatic gas fallback: '.$error->getMessage();
-            $this->SetValue('HeatPumpEconomicsJSON',json_encode(['schema'=>1,'updatedAt'=>$this->sourceClock(),'valid'=>false,'source'=>2,'reason'=>$reason]+$conditions,JSON_THROW_ON_ERROR));
+            $snapshot=['schema'=>1,'updatedAt'=>$this->sourceClock(),'valid'=>false,'source'=>2,'reason'=>$reason]+$conditions;
+            $this->SetValue('HeatPumpEconomicsJSON',json_encode($snapshot,JSON_THROW_ON_ERROR));
+            $this->recordEconomicDecision($snapshot);
             $this->SetValue('HeatPumpPerformanceStatus',$reason);return 0;
         }
     }

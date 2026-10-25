@@ -87,6 +87,21 @@ final class LichtBlickPriceStore
         return $rows;
     }
 
+    public function lastKnown(string $identity,int $before): ?array
+    {
+        $files=glob($this->directory.'/*-*.json')?:[];rsort($files,SORT_STRING);
+        if(count($files)>1200)throw new RuntimeException('Too many price-history month files');
+        foreach($files as $file) {
+            $month=basename($file,'.json');if(!preg_match('/^\d{4}-\d{2}$/D',$month)||$month>gmdate('Y-m',$before))continue;
+            $last=null;
+            foreach($this->read($month) as $key=>$r)if(str_starts_with((string)$key,$identity.':')
+                &&($r['end']??PHP_INT_MAX)<=$before&&is_numeric($r['price']??null)
+                &&is_finite((float)$r['price'])&&(!$last||$r['start']>$last['start']))$last=$r;
+            if($last)return $last;
+        }
+        return null;
+    }
+
     public static function chart(array $rows, int $from, int $to): array
     {
         $covered = 0; $retail = 0; $confirmed = 0; $wholesaleOnly = 0; $estimated = 0;

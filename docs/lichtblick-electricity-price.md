@@ -45,6 +45,15 @@ for backup compatibility and cannot reactivate their old calculation paths.
 
 ## Persistent price history and manual import — 0.3.9
 
+From **0.3.46**, `RecoverPriceHistory(from, to)` can attempt to refill missing
+original quotes from the existing supplier endpoint without changing live
+recommendations or the price cache. Older dates absent from that response stay
+unrecovered; arbitrary-date supplier downloads are not assumed. Raw
+`GetPriceHistory` includes `previousInterval` for the last known preceding price.
+The Heating Control report then uses carried-forward prices as explicitly
+provisional estimates, never persisting them as original quotes. Wholesale
+reconstruction remains retired. See [backtesting rules](heatpump-period-costs.md).
+
 The contract starts **1 October 2026**. `PriceHistoryStartDate` defaults to
 **2026-10-01**; chart and raw-history requests before that date are rejected.
 **PriceHistoryEnabled=true** retains every actual interval in the live public

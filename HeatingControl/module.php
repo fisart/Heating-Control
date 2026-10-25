@@ -163,6 +163,7 @@ class HeatingControl extends IPSModule
         $active = $this->ReadPropertyBoolean('Enabled') && IPS_GetKernelRunlevel() === KR_READY;
         $this->SetTimerInterval('RecoveryRunOnTimer', $active && $this->ReadAttributeString('RecoveryBelowSince') !== '{}' ? 1000 : 0);
         $this->SetTimerInterval('HeatingTimer', $active ? max(5, $this->ReadPropertyInteger('IntervalSeconds')) * 1000 : 0);
+        if(IPS_GetKernelRunlevel()===KR_READY)$this->ensureCostArchiveLogging();
     }
 
     public function MessageSink($timeStamp, $senderID, $message, $data)

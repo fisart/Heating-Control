@@ -1,136 +1,168 @@
-# Heat-pump cost versus gas
+# Heat-pump cost versus gas and recorded switching decisions
 
-Available from **0.3.44, build 55**, on the existing passkey-protected Heating
-Control page. Select **Today**, **Yesterday**, **Last 7 days** (including today),
-or **Custom dates**, then **Calculate**. Custom periods cover up to 31 inclusive
-Berlin calendar days. Today stops at calculation time; future dates are rejected.
-Normal ten-second status refresh does not repeatedly query historical archives.
+Version **0.3.46, build 57** applies the owner's four backtesting guidelines.
+Open the existing passkey-protected Heating Control page, select Today,
+Yesterday, Last 7 days or up to 31 Berlin calendar days, and Calculate.
+Today stops at calculation time. The regular status refresh does not rerun
+archive analysis.
 
-The three main figures compare the **same covered intervals**:
+## Agreed calculation rules
 
-* Heat-pump cost from the dedicated consumed-energy counter and the historical
-  electricity price for each interval.
-* Estimated gas cost for the same net delivered air heat, using the configured
-  useful gas-to-air efficiency and the applicable stored gas unit tariff.
-* Saving versus gas, or additional heat-pump cost, in euros and percent. The
-  percentage denominator is the equivalent gas cost; it is unavailable if zero.
+1. Include **only fan-ON periods** in heat, electricity, cost, COP and gas
+   comparisons. Exclude fan-OFF periods completely. Unknown fan state is
+   excluded and reported, not interpreted as OFF.
+2. At identical archive timestamps, use the **last entry returned by Archive
+   Control**. Keep the rest of the day. The detailed download lists variable
+   IDs and duplicate timestamps. This is a deterministic tie rule, not a claim
+   of subsecond physical ordering.
+3. Attempt to download missing original supplier prices. Fill unresolved
+   intervals with the **last known preceding historical price**, including
+   zero and negative prices. Show carried-price durations and provisional
+   costs. Never use a future price to fill an earlier gap. If no preceding
+   price exists, that interval remains explicitly unavailable.
+4. Use **2,000 m³/h whenever the fan is ON**. Fan-speed records are not read or
+   validated. The 90% label selects full transformer speed and does not scale
+   airflow by 0.9.
 
-The shared fan operates with either heat source, so **fan electricity is
-excluded**. Fixed connection/standing charges are also excluded. The heat-pump
-counter is not reduced by a household baseline or a standby allowance. Actual
-startup, suspected defrost and standby electricity stay in the consumption.
-Switching safety margin and hysteresis do not enter retrospective costs.
+Dedicated import counter **22365**, with its configured kWh scale, supplies
+heat-pump consumption. No household baseline is subtracted. Fan electricity,
+fixed charges and radiator/hot-water gas are excluded. Startup, standby and
+defrost electricity are included only where they overlap eligible fan-ON time.
+The gas equivalent uses the same covered intervals and the configured useful
+gas-to-air efficiency. A dated gas unit tariff takes precedence; current gas
+price fallback is explicitly provisional. Switching margin and hysteresis
+affect the decision audit, not retrospective energy costs.
 
-## Existing links and assumptions
+## Source heat and coverage
 
-No additional form inputs are required. The report reuses:
+Air-side heat is integrated as
+`0.000335 × 2000 × (outlet − inlet) °C × hours`.
+States and temperatures are held until their next recorded change.
+A positive configured sensor-age limit remains respected. Missing temperature
+history is not replaced by today's values.
 
-| Existing setting/link | Use |
-| --- | --- |
-| `HeatPumpTestArchiveID` | Read-only Archive Control access |
-| `HeatPumpTestDedicatedCounterID` / `HeatPumpTestDedicatedCounterScale` | Dedicated heat-pump kWh; default counter 22365, scale 1 |
-| `ElectricityPriceInstanceID` | `LBEP_GetPriceHistory`, stored `GasHistoryTariffs`, configured `GasPriceCt` |
-| `IncomingAirTempID` / `OutgoingAirTempID` | Archived inlet/outlet air temperatures |
-| `HeatPumpOnID` / `HeatPumpHeatModeID` / `GasPumpID` | Attribution to heat-pump or gas air heating |
-| `FanOnID` / `FanSpeedID` | Whether air moves and the configured airflow is applicable; **not fan electricity cost** |
-| `HeatPumpTestFanSpeed` / `HeatPumpTestAirflowM3h` | Existing airflow assumption at the recorded matching fan command |
-| `HeatPumpGasEfficiencyPercent` | Existing useful gas-to-air efficiency assumption |
-| `MaxSensorAgeSeconds` | Positive configured temperature-age limit, or 0 for legitimate held change-only archive values |
+Negative heat while the heat pump is enabled in heating mode remains in the
+balance, including defrost. Positive residual heat after shutdown is attributed
+to the heat pump until the air rise reaches zero. Later independent fan cooling
+or warming cannot revive that cycle. Gas heat/run-on are excluded. Exact
+separation of stored heat from both exchangers during a handover is not claimed.
 
-The report always uses the dedicated meter, independently of a legacy test's
-selected meter mode. Missing dedicated-meter history does not silently fall
-back to a whole-house estimate. The current configured airflow and efficiency
-are applied to the selected dates and shown explicitly. At the default 90%
-fan command, the 2,000 m³/h assumption is **not multiplied by 0.9**: the label
-selects the full-speed transformer tap. Other recorded fan commands are marked
-as unknown airflow instead of inventing a linear airflow curve.
+Coverage is **matched time / eligible fan-ON time**, not a fraction of all
+calendar hours. Fan-OFF time, unknown fan time, tests and carried-price minutes
+are shown separately. Missing values display as unavailable. Incomplete reports
+show a difference on matched intervals and suppress the headline overall
+savings percentage. COP is the ratio of summed heat to summed electricity.
 
-If a date has no stored gas tariff, the current configured gas unit price can
-be used, explicitly marked as an assumption/provisional result. A missing
-historical electricity price is never replaced by today's price. Unverified
-stored retail prices retain their provisional label. Missing/invalid gas
-configuration cannot silently invent a rate. The page shows the gas rate/range.
+Monotonic meter brackets up to 180 seconds support interval interpolation.
+Long flat brackets establish zero consumption. A nonzero longer bracket cannot
+prove fan state or tariff allocation within a shutdown. Its **whole counter
+increase** is retained separately in meter-gap diagnostics, never added to
+daily/fan-ON totals or summed twice across days. Counter resets, implausible
+increments and absent boundaries remain excluded. Recovering aggregate kWh
+does not recover missing heat measurements.
 
-## Heat estimate and defrost
+## Intentional tests
 
-For identified heat-pump air delivery, integrate
-`0.000335 × airflow m³/h × (outlet − inlet) °C × hours`.
-Temperature and state changes are held until the next archived change, following
-Symcon's change-only archive semantics. Heating input while the fan is off
-delivers zero duct-air heat during that interval. Source flags and fan history,
-with up to two hours of preceding context, retain identifiable heat-pump fan
-run-on. From **0.3.45**, only positive residual heat is retained after shutdown,
-until the outlet-minus-inlet rise reaches zero. Once it has ended, later fan-only
-cooling or unrelated warming cannot continue the old heat-pump cycle. This rule
-also applies when replaying the two hours of pre-period source context. Gas heat
-and gas run-on are excluded. Unclear overlapping/missing source
-states cannot be treated as heat-pump heat. This is an air-side estimate; it does
-not use the COP surface or claim a heat-meter measurement.
+Saved `*.summary.json` test files, the latest saved report, active test state and
+archived capacity/flap-test flags identify exclusions. Automatic exclusion only
+covers records actually available on the current Symcon system. Missing old
+test flags are explained; no complete historical test inventory is assumed.
 
-Signed temperature differences retain cooling while the heat pump is enabled
-in heating mode, including suspected defrost. Cooling from an independently
-running fan after heat-pump shutdown is not a defrost deduction.
-Calibration's clean-window exclusions do not apply to this actual-cost report.
-The gas equivalent is `net delivered heat / gas efficiency × gas unit price`.
-A matched period with negative net heat does not show a gas saving. Source
-attribution and configured airflow remain estimates, especially around handover.
+Add manual tests in the page's exclusion box, one Berlin period per line:
 
-## Coverage, graph and export
+```text
+2026-10-23 10:00 / 2026-10-23 13:00
+```
 
-Counter readings must form monotonic brackets. Linear interpolation is limited
-to 180 seconds for nonzero consumption; a long equal-counter bracket establishes
-zero energy. Resets, implausible increments, absent boundaries and unreadable
-logging are not reconstructed. Only actual archived values are used, with no
-current-value substitution for missing historical data. A final meter poll can
-lag the current time, making Today's last moments incomplete.
+Up to 16 manual periods are accepted. Exclusions affect costs and decision
+review and accompany export links; original measurements and calibration
+points are never deleted. Local times in the autumn repeated hour follow PHP's
+Europe/Berlin interpretation; use periods outside that ambiguous hour when
+possible. Exclusions are page inputs, not changes to heating control settings.
 
-When data is incomplete, the cards and saving compare only matching intervals,
-with **Partial comparison**, matched-time percentage and named reasons. The
-separate full-period measured electricity cost or known subtotal remains visible.
-Missing amounts display as unavailable, not zero. Achieved COP is the ratio of
-matched net heat to matched electricity; ratios are not averaged across days.
+## Price recovery
 
-The daily bar chart has separate heat-pump/gas series toggles and values on
-hover, keyboard focus or tap. The daily table and **Download CSV** contain costs,
-matched energy/heat, savings, coverage, provisional status and data remarks.
-The CSV also exposes the known full-period electricity cost and its completeness.
-The gas cost remains an estimate throughout. The report does not mix whole-house
-gas used for radiators or hot water into the air-heating comparison.
+The updated LichtBlick module exposes
+`LBEP_RecoverPriceHistory($instanceID, $from, $to)`.
+It attempts one download from the existing postcode-specific supplier endpoint
+only when stored intervals are missing. Only original quotes present in that
+response can be repaired. Arbitrary older-date access is **not assumed**.
+Network/storage errors and remaining hole counts are returned explicitly.
 
-## Checking a suspicious result
+Recovery fills holes without overwriting valid stored prices. It does not
+evaluate recommendations, replace the live price cache, change configuration
+or command heating equipment. Original recovered prices are persisted through
+the existing history semaphore. Carried-forward prices are calculated for the
+report and never saved as original supplier quotes. Raw history now includes
+the last known interval preceding the query, even across UTC month files.
 
-Expand **Calculation details** below the summary. The matched heat balance is
-positive enabled heating + positive residual run-on − enabled cooling = net heat.
-The electricity breakdown separates metered costs while the heat-pump command
-was enabled, off, or unknown; all three still sum to the actual comparison cost.
-The consumption-weighted electricity price is shown to check the euro/kWh basis.
-These are command-state labels, not additional compressor-feedback measurements.
-CSV includes the same audit columns and `calculationVersion` (currently 2).
+Both modules must be updated for supplier recovery and the preceding-price
+seed contract. If the updated recovery API is unavailable, the page says so.
+Wholesale-price tariff reconstruction remains retired. Neither today's tariff
+nor the old app-normalized model silently fills missing prices.
 
-Version 0.3.44 could keep treating a continuously running shared fan as part of
-an old heat-pump cycle after shutdown. A later negative air-temperature difference
-could then cancel genuine heating output. A regression example uses 20 minutes
-of heating at 2,000 m³/h and a 15°C rise, followed by four hours of independent
-fan airflow at −1°C rise. True attributable heat is 3.35 kWh; the old report
-incorrectly reduced it to 0.67 kWh. With a 10.48 ct/kWh gas tariff and 100%
-efficiency assumption, that changed the gas estimate from €0.35108 to €0.070216.
-The example is a reproduction, not a claim about a particular installed report.
-After updating, calculate the selected period again; no historical readings need
-to be edited. If a discrepancy remains, the exported CSV exposes the actual
-energy, prices/assumptions, net heat, off-state costs and coverage for verification.
+## Recorded decision review
 
-## Read-only API and verification
+The new **Recorded switchover decisions** table shows fan-ON selection changes,
+period-start context and fan-start context. It uses archived automatic/manual
+state, the selected mode, and the original compact economic snapshot. It shows
+recorded price, entry/exit limits, expected COP, expected source and the reason.
 
-`HC_GetHeatPumpCostAnalysis($instanceID, '2026-10-20', '2026-10-23')` returns JSON.
-The page uses authenticated `view=heatpump-costs` and `view=heatpump-costs-csv`
-requests with `from` and `through` dates. Access follows the existing passkey and
-HTTPS-origin checks. There are no control, property, archive-writing or logging
-commands; the report also works when heating is disabled or in dry run.
+The threshold check uses the original previous economic source. Below entry
+selects heat pump; at/above exit selects gas. Inside the hysteresis band the
+previous economic source matters. Legacy snapshots missing that state remain
+unverifiable in the band. Fresh recorded gas fallback is distinguished from an
+economic gas choice. A later recovered price does not rewrite what the
+controller knew then. Manual/test selections are not judged as automatic errors.
 
-Run `php tests/heatpump-period-cost.php` and
-`node tests/heatpump-cost-page-dom.cjs` (with jsdom). Tests cover independently
-calculated tariff weighting, gas efficiency, signed defrost heat, standby and
-residual heat, matched subsets, meter gaps/resets, missing/negative/zero prices,
-gas fallback labels, changed-value temperatures, DST and date bounds, bounded
-archive pagination, passkey/CSV access, immutable controls, charts/toggles,
-escaping, stale request replies and session expiry.
+This is a review of **recorded thresholds and selection**, not a reconstruction
+with today's COP surface or proof that a modeled alternative would have
+performed identically. Daily measured cost/COP results remain separate.
+Complete per-run thermal outcome association, model-vs-achieved COP analysis,
+and gas-period heat-pump counterfactual simulation are not yet implemented.
+Older decisions without archived inputs cannot be fully verified.
+
+New compact `HeatPumpDecisionHistoryJSON` snapshots include price, prior source,
+thresholds and expected COP; unchanged context is not archived every ten
+seconds. Full legacy status JSON can still supply old records where logged.
+The report reads only snapshots at relevant events rather than loading a
+whole day's large JSON status stream.
+
+## Diagnostics, storage and API
+
+The page exposes exact issue intervals and duplicate resolutions, with up to
+200 visible rows. Download CSV for daily values plus interval/gap JSON cells,
+or **Download detailed data** for the complete structured report, input variable
+IDs, exclusions, read failures, duplicates, price recovery and decision rows.
+Per-day issue intervals are bounded at 2,000 with an explicit truncation warning;
+aggregate issue durations remain complete. Decisions are bounded at 2,000
+events per day. Failed channel reads identify the channel, ID and day.
+
+`HC_GetHeatPumpCostAnalysis($id, $fromDate, $throughDate, $excludedPeriods = '')`
+returns schema 1 with **calculationVersion 3**. Authenticated GET views are
+`heatpump-costs`, `heatpump-costs-csv` and `heatpump-costs-json`, with `from`,
+`through` and optional `excluded` text. The existing passkey/origin checks apply.
+
+Applying the module enables logging of the linked dedicated counter, source,
+fan on/off, temperatures, mode, compact decisions and test/automatic flags in
+the configured test Archive Control. Newly enabled channels receive a present-time
+baseline where Archive Control supports it; no current values are backdated
+into old gaps. Existing logging/records are preserved. Logging failures are
+reported in debug and historical deficiencies remain visible on the page.
+Calculating reports changes no heating controls, configuration or raw sensor
+history. Supplier-price recovery can add original prices to the persistent
+LichtBlick history and update its history-storage status.
+
+## Verification and remaining limits
+
+The regression suite covers fan-only inclusion and coverage, ignored fan speeds,
+same-second toggles, price recovery success/failure, chronological carry-forward,
+zero/negative prices, missing first prices, meter gaps, tests/exclusions, defrost,
+residual heat, DST, bounded reads, exports/authentication, immutable controls,
+compact decision logging, hysteresis/fallback review and page interactions.
+
+The changes correct report handling, not hardware performance. Missing
+temperature/source records, unexplained fan-ON meter consumption with an OFF
+heat-pump command, source handover attribution and unrecorded old decisions
+still need real archive evidence. The previous seven-day CSV contains daily
+aggregates and cannot be retroactively recalculated into exact fan-ON results.

@@ -7,6 +7,10 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  const w=dom.window,d=w.document;w.setInterval=()=>0;
  const totals={matchedSeconds:86400,comparisonCoveragePercent:100,comparisonHeatPumpCostEuro:4.8,equivalentGasCostEuro:8,savingEuro:3.2,savingPercent:40,matchedElectricityKWh:24,matchedNetHeatKWh:80,matchedHeatingHeatKWh:77,matchedRunOnHeatKWh:5,matchedCoolingHeatKWh:2,matchedEnabledCostEuro:4.5,matchedOffCostEuro:.3,matchedUnknownStateCostEuro:0,achievedCOP:3.333333,heatPumpCostEuro:4.8,knownHeatPumpCostEuro:4.8,costSeconds:86400,completeComparison:true,provisional:false};
  let report={schema:1,calculationVersion:2,fromDate:'2026-10-23',throughDate:'2026-10-23',from:1792706400,to:1792792800,timezone:'Europe/Berlin',summary:totals,days:[{date:'2026-10-23',totals,issues:{}}],assumptions:{airflowM3h:2000,fanCommand:90,gasEfficiencyPercent:100},warnings:[],issues:{}};
+ Object.assign(totals,{eligibleSeconds:86400,fanOffSeconds:0,unknownFanSeconds:0,testSeconds:0,carriedPriceSeconds:0});
+ report.decisions=[{at:1792706400,rowType:'Fan-on start',selectedSource:1,expectedSource:1,priceCt:20,entryCt:30,exitCt:31,expectedCOP:3.5,status:'Matches recorded thresholds',reason:'Recorded decision <img src=x>'}];
+ report.days[0].issueIntervals=[{from:1792706400,to:1792706460,reason:'Last known price carried forward'}];
+ report.archiveDuplicates=[{timestamp:1792706400,variableID:46921}];
  let expired=false,pending=null;
  w.fetch=async(url,options={})=>{
   calls.push({url,options});const u=new URL(url,w.location.href);
@@ -42,15 +46,24 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  d.querySelector('#cost-toggle-gas').click();assert.equal(d.querySelectorAll('#cost-chart rect').length,2);
  assert.ok(d.querySelector('#cost-csv').href.includes('view=heatpump-costs-csv&from=2026-10-23&through=2026-10-23'));
  assert.equal(d.querySelectorAll('#cost-days tr').length,1);
+ assert.equal(d.querySelectorAll('#cost-decisions tr').length,1);
+ assert.ok(d.querySelector('#cost-decisions').textContent.includes('Matches recorded thresholds'));
+ assert.equal(d.querySelectorAll('#cost-decisions img').length,0,'Recorded decision reasons are escaped');
+ assert.ok(d.querySelector('#cost-gap-rows').textContent.includes('#46921'));
+ assert.equal(d.querySelector('#cost-json').hidden,false,'Detailed gap/decision download is available');
+ assert.ok(d.querySelector('#cost-assumptions').textContent.includes('fan-speed records ignored'));
  d.querySelector('#cost-period').value='custom';d.querySelector('#cost-period').dispatchEvent(new w.Event('change'));
  assert.equal(d.querySelector('#cost-from').disabled,false);assert.equal(d.querySelector('#cost-csv').hidden,true,'Changing dates clears the earlier report');
  assert.equal(d.querySelector('#cost-audit').hidden,true,'Changing dates clears the calculation breakdown as well');
  d.querySelector('#cost-from').value='2026-10-20';d.querySelector('#cost-through').value='2026-10-23';
+ d.querySelector('#cost-excluded').value='2026-10-23 10:00 / 2026-10-23 13:00';
  report=structuredClone(report);Object.assign(report.summary,{comparisonCoveragePercent:50,completeComparison:false,savingEuro:-1.2,savingPercent:-15});report.warnings=['Unverified tariff <img src=x onerror=alert(1)>'];report.issues={'Meter boundary unavailable':60};
  d.querySelector('#cost-calculate').click();await settle();
- assert.equal(d.querySelector('#cost-saving-label').textContent,'Additional heat-pump cost');
+ assert.equal(d.querySelector('#cost-saving-label').textContent,'Difference on matched intervals');
+ assert.ok(d.querySelector('#cost-saving-percent').textContent.includes('no overall savings percentage'));
  assert.ok(d.querySelector('#cost-saving').textContent.includes('1.20'));
  assert.ok(d.querySelector('#cost-status').textContent.includes('Partial comparison'));
+ assert.equal(new URL(calls.filter(c=>c.url.includes('view=heatpump-costs')).at(-1).url,w.location.href).searchParams.get('excluded'),d.querySelector('#cost-excluded').value,'Manual test exclusions accompany the calculation');
  assert.equal(d.querySelectorAll('#cost-issues img').length,0,'Warnings are escaped as text');
  assert.ok(d.querySelector('#cost-issues').textContent.includes('onerror=alert'));
  // Zero values remain visible and the chart stays within its coordinate box.
