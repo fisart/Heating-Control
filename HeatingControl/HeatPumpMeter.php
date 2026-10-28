@@ -96,6 +96,9 @@ trait HeatingControlHeatPumpMeter
                     $records=AC_GetLoggedValues($s['settings']['HeatPumpTestArchiveID'],$s['settings'][$key],$start-90,min($end+75,$this->sourceClock()),0);
                     if(!is_array($records))throw new RuntimeException('Dedicated-meter history unavailable');
                     $records=array_values(array_filter($records,fn($r)=>$r['TimeStamp']>=$start-90&&$r['TimeStamp']<=min($end+75,$this->sourceClock())));
+                    $archiveRecords=[];
+                    foreach($records as $record)if(!isset($archiveRecords[$record['TimeStamp']]))$archiveRecords[$record['TimeStamp']]=$record;
+                    $records=array_values($archiveRecords);
                     // Export may be unchanged for an entire step. Actual polled
                     // timestamps establish held values without inventing counter updates.
                     $boundaries=$point['meterBoundaries']??[];
@@ -111,7 +114,9 @@ trait HeatingControlHeatPumpMeter
                     foreach($records as $record) {
                         if(!is_numeric($record['Value'])||!is_finite((float)$record['Value'])||$record['Value']<0)throw new RuntimeException('Invalid dedicated-meter counter history');
                         $stamp=(int)$record['TimeStamp'];
-                        if(isset($ordered[$stamp])&&abs($ordered[$stamp]['Value']-$record['Value'])>1e-8)throw new RuntimeException('Conflicting dedicated-meter counter timestamp');
+                        // Archive entries take precedence over separate polled boundary samples.
+                        if(isset($archiveRecords[$stamp])&&isset($ordered[$stamp]))continue;
+                        if(isset($ordered[$stamp])&&abs($ordered[$stamp]['Value']-$record['Value'])>1e-8)throw new RuntimeException('Conflicting dedicated-meter boundary samples');
                         $ordered[$stamp]=['TimeStamp'=>$stamp,'Value'=>(float)$record['Value']];
                     }
                     ksort($ordered);$previous=null;

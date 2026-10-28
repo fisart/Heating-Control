@@ -39,8 +39,7 @@ final class LichtBlickHistory
                 throw new RuntimeException('Invalid archive record ' . $id);
             }
             $time = (int)$row['TimeStamp'];
-            if (isset($unique[$time]) && $unique[$time]['Value'] != $row['Value']) throw new RuntimeException('Ambiguous timestamp ' . $id);
-            $unique[$time] = $row;
+            if (!isset($unique[$time])) $unique[$time] = $row;
         }
         return $this->cache[$id] = array_values($unique);
     }

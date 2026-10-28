@@ -11,10 +11,9 @@ archive analysis.
 1. Include **only fan-ON periods** in heat, electricity, cost, COP and gas
    comparisons. Exclude fan-OFF periods completely. Unknown fan state is
    excluded and reported, not interpreted as OFF.
-2. At identical archive timestamps, use the **last entry returned by Archive
-   Control**. Keep the rest of the day. The detailed download lists variable
-   IDs and duplicate timestamps. This is a deterministic tie rule, not a claim
-   of subsecond physical ordering.
+2. At identical archive timestamps, use the **first entry returned by Archive
+   Control**. Keep the rest of the day. This is a deterministic tie rule,
+   not a claim of subsecond physical ordering.
 3. Attempt to download missing original supplier prices. Fill unresolved
    intervals with the **last known preceding historical price**, including
    zero and negative prices. Show carried-price durations and provisional
@@ -130,10 +129,10 @@ whole day's large JSON status stream.
 
 ## Diagnostics, storage and API
 
-The page exposes exact issue intervals and duplicate resolutions, with up to
+The page exposes exact issue intervals, with up to
 200 visible rows. Download CSV for daily values plus interval/gap JSON cells,
 or **Download detailed data** for the complete structured report, input variable
-IDs, exclusions, read failures, duplicates, price recovery and decision rows.
+IDs, exclusions, read failures, price recovery and decision rows.
 Per-day issue intervals are bounded at 2,000 with an explicit truncation warning;
 aggregate issue durations remain complete. Decisions are bounded at 2,000
 events per day. Failed channel reads identify the channel, ID and day.

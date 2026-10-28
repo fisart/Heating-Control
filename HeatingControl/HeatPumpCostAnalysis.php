@@ -199,11 +199,9 @@ final class HeatPumpCostArchive
                     $v=(float)$v;
                     if(($kind==='temperature'&&($v< -40||$v>100))||($kind==='counter'&&$v<0)||($kind==='fan'&&($v<0||$v>100)))throw new RuntimeException('Implausible archived '.$kind.' reading');
                 }
-                // Guideline 2: keep the last entry in the archive response for
+                // Keep the first (newest) entry in the archive response for
                 // a timestamp. Do not reject the rest of the day's history.
-                if(array_key_exists($t,$out)&&$out[$t]!==$v&&count($this->duplicates)<2000)
-                    $this->duplicates[$id.':'.$t]=['variableID'=>$id,'timestamp'=>$t,'kind'=>$kind,'rule'=>'Last returned entry at identical timestamp wins'];
-                $out[$t]=$v;
+                if(!array_key_exists($t,$out))$out[$t]=$v;
             }
         };
         $seed=AC_GetLoggedValues($this->archive,$id,0,$from,1);

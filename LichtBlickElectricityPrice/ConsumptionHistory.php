@@ -23,7 +23,7 @@ final class LichtBlickConsumptionHistory
         return $data;
     }
 
-    /** Adaptive bounded queries also retain conflicting same-second records. */
+    /** Adaptive bounded queries keep the first returned value at each second. */
     public function rows(int $id, int $from, int $to): array
     {
         if ($id <= 0 || !IPS_VariableExists($id) || !AC_GetLoggingStatus($this->archive, $id)) throw new RuntimeException('Consumption archive variable is unavailable or unlogged: ' . $id);
@@ -41,8 +41,7 @@ final class LichtBlickConsumptionHistory
         foreach ($read($from, $to) as $r) {
             if (!is_int($r['TimeStamp'] ?? null) || !is_numeric($r['Value'] ?? null) || !is_finite((float)$r['Value'])) throw new RuntimeException('Invalid consumption archive value');
             $t = $r['TimeStamp']; $v = (float)$r['Value'];
-            if (isset($result[$t]) && abs($result[$t] - $v) > 1e-9) throw new RuntimeException('Ambiguous consumption archive timestamp');
-            $result[$t] = $v;
+            if (!array_key_exists($t, $result)) $result[$t] = $v;
         }
         ksort($result, SORT_NUMERIC);
         return $result;
@@ -69,14 +68,13 @@ final class LichtBlickConsumptionHistory
                     || !is_numeric($r['Value'] ?? null) || !is_finite((float)$r['Value'])) throw new RuntimeException('Invalid consumption archive value');
             }
             usort($part, static fn($a,$b) => $a['TimeStamp'] <=> $b['TimeStamp']);
-            $lastTime = null; $lastValue = null;
+            $lastTime = null;
             foreach ($part as $r) {
                 $t = $r['TimeStamp']; $v = (float)$r['Value'];
                 if ($t === $lastTime) {
-                    if (abs($lastValue - $v) > 1e-9) throw new RuntimeException('Ambiguous consumption archive timestamp');
                     continue;
                 }
-                $lastTime = $t; $lastValue = $v;
+                $lastTime = $t;
                 yield $t => $v;
             }
         };

@@ -67,11 +67,11 @@ final class LichtBlickDailyHeatingUsage
                     if(!is_int($at)||$at<$a||$at>$b||(!is_bool($v)&&(!is_numeric($v)||!is_finite((float)$v)||!in_array((float)$v,[0.,1.],true))))
                         throw new RuntimeException('Invalid archived heating state');
                     $v=is_bool($v)?$v:(float)$v===1.;
-                    if(array_key_exists($at,$values)&&$values[$at]!==$v)throw new RuntimeException('Conflicting heating states at the same timestamp');
-                    $values[$at]=$v;
+                    // Archive returns newest first; retain the first value at each second.
+                    if(!array_key_exists($at,$values))$values[$at]=$v;
                 }
             };
-            // Check the full boundary second too; a one-row seed alone could hide a conflict.
+            // Read the boundary second in the same order as the rest of the archive.
             $boundary=AC_GetLoggedValues($archive,$id,$start,$start,10000);
             if(!is_array($boundary)||!$boundary||count($boundary)>=10000)throw new RuntimeException('Heating boundary state is unavailable or ambiguous');
             $normalise($boundary,$start,$start);

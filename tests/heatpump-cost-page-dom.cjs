@@ -10,7 +10,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  Object.assign(totals,{eligibleSeconds:86400,fanOffSeconds:0,unknownFanSeconds:0,testSeconds:0,carriedPriceSeconds:0});
  report.decisions=[{at:1792706400,rowType:'Fan-on start',selectedSource:1,expectedSource:1,priceCt:20,entryCt:30,exitCt:31,expectedCOP:3.5,status:'Matches recorded thresholds',reason:'Recorded decision <img src=x>'}];
  report.days[0].issueIntervals=[{from:1792706400,to:1792706460,reason:'Last known price carried forward'}];
- report.archiveDuplicates=[{timestamp:1792706400,variableID:46921}];
+
  let expired=false,pending=null;
  w.fetch=async(url,options={})=>{
   calls.push({url,options});const u=new URL(url,w.location.href);

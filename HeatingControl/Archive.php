@@ -73,7 +73,7 @@ trait HeatingControlArchive
             : AC_GetAggregatedValues($archive, $id, $daily ? 1 : 0, $queryStart, $end, self::HISTORY_LIMIT + 1);
         if (!is_array($values)) throw new RuntimeException('Archive returned an invalid history response.');
         $truncated = count($values) > self::HISTORY_LIMIT;
-        $points = [];
+        $points = []; $seenRaw = [];
         foreach (array_slice($values, 0, self::HISTORY_LIMIT) as $row) {
             if ($raw && is_array($row)) {
                 $row['Avg'] = $row['Value'] ?? null;
@@ -82,6 +82,8 @@ trait HeatingControlArchive
             if (!is_array($row) || !is_int($row['TimeStamp'] ?? null)
                 || $row['TimeStamp'] < $queryStart || $row['TimeStamp'] > $end
                 || (!is_float($row['Avg'] ?? null) && !is_int($row['Avg'] ?? null)) || !is_finite((float)$row['Avg'])) continue;
+            if ($raw && isset($seenRaw[$row['TimeStamp']])) continue;
+            if ($raw) $seenRaw[$row['TimeStamp']] = true;
             $avg = (float)$row['Avg'];
             $min = $row['Min'] ?? $avg;
             $max = $row['Max'] ?? $avg;
