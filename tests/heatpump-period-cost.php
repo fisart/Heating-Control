@@ -122,7 +122,7 @@ $report=json_decode($m->GetHeatPumpCostAnalysis('2026-10-23','2026-10-23'),true)
 check(near($report['summary']['heatPumpCostEuro'],4.8)&&near($report['summary']['electricityKWh'],24.),'Public API reads the dedicated circuit counter and stored retail prices');
 check(near($report['summary']['netHeatKWh'],160.8)&&near($report['summary']['equivalentGasCostEuro'],16.08),'Read-only report values agree with an independent daily heat/gas calculation');
 check($report['assumptions']['fanCostIncluded']===false&&$report['assumptions']['fixedChargesIncluded']===false&&$report['assumptions']['baselineSubtracted']===false,'Report explicitly excludes fan/fixed costs and household baseline subtraction');
-check($report['calculationVersion']===3&&near($report['summary']['matchedHeatingHeatKWh'],160.8),'Public report includes guideline calculation version 3 and reconciled heat breakdown');
+check($report['calculationVersion']===4&&near($report['summary']['matchedHeatingHeatKWh'],160.8),'Public report includes guideline calculation version 4 and reconciled heat breakdown');
 check(near($report['assumptions']['gasPriceMinCt'],10.)&&near($report['assumptions']['gasPriceMaxCt'],10.),'Gas rate used by the comparison is exposed on the page');
 check($before===[$m->properties,$m->attributes,$m->values,$GLOBALS['variables'],$GLOBALS['archiveLogging']]&&!$GLOBALS['commands']&&!$GLOBALS['directWrites'],'Analysis does not alter controls, settings, logging or module state');
 $response=response($m,'GET',['view'=>'heatpump-costs','from'=>'2026-10-23','through'=>'2026-10-23']);
