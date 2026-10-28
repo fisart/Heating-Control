@@ -425,6 +425,9 @@ trait HeatingControlHeatPumpTest
                 // Never read through a shutdown or use another segment's reset.
                 $lastRecordAt=min($end+75,$this->sourceClock());
                 $records=array_values(array_filter($records,static fn($r)=>$r['TimeStamp']>=$start-90&&$r['TimeStamp']<=$lastRecordAt));
+                $unique=[];
+                foreach($records as $record)if(!isset($unique[$record['TimeStamp']]))$unique[$record['TimeStamp']]=$record;
+                $records=array_values($unique);
                 $scale=$s['settings']['HeatPumpTestHouseCounterScale'];
                 usort($records,static fn($a,$b)=>$a['TimeStamp']<=>$b['TimeStamp']);
                 foreach($records as $i=>$record)if($i&&$record['Value']<$records[$i-1]['Value'])throw new RuntimeException('House counter reset in test segment');

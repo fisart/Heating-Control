@@ -125,9 +125,8 @@ trait HeatingControlPeriodCosts
         $gasPrices=[];foreach($tariffs as $rate)if($rate['start']<$b&&$rate['end']>$a)$gasPrices[]=$rate['unitGrossCt'];
         if($totals['assumedGasPriceSeconds']&&$settings['fallbackGasPriceCt']!==null)$gasPrices[]=$settings['fallbackGasPriceCt'];
         if($totals['carriedPriceSeconds'])$warnings[]='Missing supplier prices use the last preceding known price and are marked as estimates; no carried prices are written as original quotes.';
-        if(count($reader->duplicates)>=2000)$warnings[]='Duplicate timestamp diagnostics reached the 2000-entry limit; last-entry resolution still applies to all records.';
         if($recovery&&($recovery['missingAfter']??0)>0)$warnings[]='Supplier download could not recover all older intervals. '.($recovery['error']??$recovery['note']??'');
-        return ['schema'=>1,'calculationVersion'=>3,'from'=>$a,'to'=>$b,'fromDate'=>$from,'throughDate'=>$through,'timezone'=>'Europe/Berlin',
+        return ['schema'=>1,'calculationVersion'=>4,'from'=>$a,'to'=>$b,'fromDate'=>$from,'throughDate'=>$through,'timezone'=>'Europe/Berlin',
             'updatedAt'=>$now,'summary'=>HeatPumpCostAnalysis::totals($totals),'days'=>$days,'issues'=>$issues,
             'excludedPeriods'=>$excludedPeriods,'exclusions'=>$settings['exclusions'],'priceRecovery'=>$recovery,
             'inputVariables'=>array_map(static fn($input)=>$input[0],$inputs),
@@ -136,7 +135,7 @@ trait HeatingControlPeriodCosts
             'assumptions'=>$settings+['meterCounterID'=>$inputs['counter'][0],'archiveID'=>$archive,
                 'gasPriceMinCt'=>$gasPrices?min($gasPrices):null,'gasPriceMaxCt'=>$gasPrices?max($gasPrices):null,
                 'fanCostIncluded'=>false,'fixedChargesIncluded'=>false,'defrostElectricityIncluded'=>true,'baselineSubtracted'=>false,'fanOnOnly'=>true,'fanSpeedIgnored'=>true],
-            'scope'=>'Only fan-ON periods outside known tests are analysed. Airflow is fixed at 2000 m3/h; fan-speed records are ignored. Dedicated heat-pump meter import is used without a household baseline. Fan-OFF periods, fan electricity and fixed charges are excluded. Duplicate timestamps use the last archive-response entry. Supplier prices are recovered where available, otherwise the preceding historical price is carried forward as an estimate. Meter shutdown gaps are not allocated across time; their whole measured counter increases are exposed separately. Cooling during enabled heating remains signed. Positive heat-pump run-on ends at zero air rise. Source transitions can contain residual heat from both exchangers; exact separation is not claimed.'];
+            'scope'=>'Only fan-ON periods outside known tests are analysed. Airflow is fixed at 2000 m3/h; fan-speed records are ignored. Dedicated heat-pump meter import is used without a household baseline. Fan-OFF periods, fan electricity and fixed charges are excluded. Duplicate timestamps use the first archive-response entry. Supplier prices are recovered where available, otherwise the preceding historical price is carried forward as an estimate. Meter shutdown gaps are not allocated across time; their whole measured counter increases are exposed separately. Cooling during enabled heating remains signed. Positive heat-pump run-on ends at zero air rise. Source transitions can contain residual heat from both exchangers; exact separation is not claimed.'];
     }
 
     private function costExclusions(string $text,int $from,int $to,array &$warnings): array

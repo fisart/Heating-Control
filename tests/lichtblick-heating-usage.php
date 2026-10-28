@@ -37,7 +37,10 @@ $before=serialize([$GLOBALS['history'],$GLOBALS['liveVariables']]);$actual=Licht
 verify($actual===$usage,'Archive integration includes prior boundary, excludes next day and ignores misleading current values.');
 verify($before===serialize([$GLOBALS['history'],$GLOBALS['liveVariables']]),'Daily usage never mutates archives or live states.');
 $GLOBALS['unlogged'][102]=true;throws(fn()=>LichtBlickDailyHeatingUsage::read(14817,$ids,$a,$b),'Unlogged states must be unavailable.');unset($GLOBALS['unlogged'][102]);
-$GLOBALS['history'][101][]=['TimeStamp'=>$a+3600,'Value'=>0];throws(fn()=>LichtBlickDailyHeatingUsage::read(14817,$ids,$a,$b),'Conflicting same-second events must be unavailable.');array_pop($GLOBALS['history'][101]);
+array_unshift($GLOBALS['history'][101],['TimeStamp'=>$a+3600,'Value'=>0]);
+verify(LichtBlickDailyHeatingUsage::read(14817,$ids,$a,$b)['heatPumpSeconds']===0,'First returned same-second event is used.');array_shift($GLOBALS['history'][101]);
+array_unshift($GLOBALS['history'][103],['TimeStamp'=>$a-100,'Value'=>1]);
+verify(LichtBlickDailyHeatingUsage::read(14817,$ids,$a,$b)['gasSeconds']===6*3600,'First returned same-second baseline is used.');array_shift($GLOBALS['history'][103]);
 $GLOBALS['history'][102][]=['TimeStamp'=>$a+2,'Value'=>2];throws(fn()=>LichtBlickDailyHeatingUsage::read(14817,$ids,$a,$b),'Invalid Boolean state must be unavailable.');array_pop($GLOBALS['history'][102]);
 $GLOBALS['history'][102][0]['Value']='1.0';$GLOBALS['history'][103][0]['Value']='0.0';verify(LichtBlickDailyHeatingUsage::read(14817,$ids,$a,$b)['heatPumpPercent']===29.2,'Numeric Boolean strings retain their numeric meaning.');
 $GLOBALS['history'][102]=[];throws(fn()=>LichtBlickDailyHeatingUsage::read(14817,$ids,$a,$b),'No baseline is not measured zero.');$GLOBALS['history'][102]=[['TimeStamp'=>$a-7200,'Value'=>1]];

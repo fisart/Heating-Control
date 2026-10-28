@@ -228,7 +228,6 @@ function renderCosts(report){
  const gaps=document.querySelector('#cost-gap-rows');
  const addGap=(from,to,why)=>{const tr=node('tr');[stamp(from),to?stamp(to):'—',why].forEach(x=>tr.append(node('td',x)));gaps.append(tr);};
  let shown=0;for(const day of report.days){for(const gap of day.issueIntervals||[]){if(shown++<200)addGap(gap.from,gap.to,gap.reason);}for(const gap of day.meterGaps||[]){if(shown++<200)addGap(gap.from,gap.to,'Whole counter increase '+fmt(gap.electricityKWh,3)+' kWh; not allocated to fan-ON time or a tariff');}}
- for(const duplicate of report.archiveDuplicates||[])if(shown++<200)addGap(duplicate.timestamp,null,'#'+duplicate.variableID+': last entry at identical timestamp selected');
  for(const failure of report.archiveReadFailures||[])if(shown++<200)addGap(failure.from,failure.to,failure.channel+' #'+failure.variableID+': '+failure.reason);
  if(shown>200){const tr=node('tr');tr.append(node('td','First 200 rows shown; download detailed data for the rest.'));gaps.append(tr);}
  const decisions=document.querySelector('#cost-decisions'),source=v=>v===1?'Heat pump':v===2?'Gas':'—';

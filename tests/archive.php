@@ -62,9 +62,13 @@ $GLOBALS['archiveValues'][25911]=[];
 for ($i=0;$i<=720;$i++) $GLOBALS['archiveValues'][25911][]=['TimeStamp'=>$t-$i*3600,'Avg'=>20,'Duration'=>3600];
 $h=json_decode(history($m,'25911','30d','hourly')['body'],true);
 check(count($h['points'])===721&&!$h['truncated'],'Full 30-day hourly history fits without truncation');
-$GLOBALS['loggedValues'][25911]=array_fill(0,801,['TimeStamp'=>time()-10,'Value'=>20]);
+$GLOBALS['loggedValues'][25911]=[];
+for($i=0;$i<801;$i++)$GLOBALS['loggedValues'][25911][]=['TimeStamp'=>time()-10-$i,'Value'=>20];
 $h=json_decode(history($m,'25911','1h','recorded')['body'],true);
 check(count($h['points'])===800&&$h['truncated'],'Raw history is bounded and truncation is explicit');
+$GLOBALS['loggedValues'][25911]=[['TimeStamp'=>time()-10,'Value'=>23],['TimeStamp'=>time()-10,'Value'=>20]];
+$h=json_decode(history($m,'25911','1h','recorded')['body'],true);
+check(count($h['points'])===1&&$h['points'][0]['value']==23.,'Recorded chart retains the first returned value at the same second');
 foreach (['12345','12594','29718','57844','1','-1','25911abc',['25911']] as $id) {
     $before=count($GLOBALS['historyCalls']);check(history($m,$id)['status']===422&&count($GLOBALS['historyCalls'])===$before,'Arbitrary/non-sensor IDs never reach archive');
 }

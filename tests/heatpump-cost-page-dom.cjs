@@ -10,7 +10,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  Object.assign(totals,{eligibleSeconds:86400,fanOffSeconds:0,unknownFanSeconds:0,testSeconds:0,carriedPriceSeconds:0});
  report.decisions=[{at:1792706400,rowType:'Fan-on start',selectedSource:1,expectedSource:1,priceCt:20,entryCt:30,exitCt:31,expectedCOP:3.5,status:'Matches recorded thresholds',reason:'Recorded decision <img src=x>'}];
  report.days[0].issueIntervals=[{from:1792706400,to:1792706460,reason:'Last known price carried forward'}];
- report.archiveDuplicates=[{timestamp:1792706400,variableID:46921}];
+
  let expired=false,pending=null;
  w.fetch=async(url,options={})=>{
   calls.push({url,options});const u=new URL(url,w.location.href);
@@ -49,7 +49,6 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.equal(d.querySelectorAll('#cost-decisions tr').length,1);
  assert.ok(d.querySelector('#cost-decisions').textContent.includes('Matches recorded thresholds'));
  assert.equal(d.querySelectorAll('#cost-decisions img').length,0,'Recorded decision reasons are escaped');
- assert.ok(d.querySelector('#cost-gap-rows').textContent.includes('#46921'));
  assert.equal(d.querySelector('#cost-json').hidden,false,'Detailed gap/decision download is available');
  assert.ok(d.querySelector('#cost-assumptions').textContent.includes('fan-speed records ignored'));
  d.querySelector('#cost-period').value='custom';d.querySelector('#cost-period').dispatchEvent(new w.Event('change'));

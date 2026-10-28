@@ -28,6 +28,6 @@ $GLOBALS['history'][9001]=[['TimeStamp'=>10,'Value'=>1],['TimeStamp'=>10,'Value'
 $reader=new LichtBlickConsumptionHistory(14817,[]);
 check(iterator_to_array($reader->events(9001,0,20))===[10=>1.,11=>2.],'Streaming deduplicates equal same-second events');
 $GLOBALS['history'][9001][]=['TimeStamp'=>10,'Value'=>3];
-throws(fn()=>iterator_to_array($reader->events(9001,0,20)),'Conflicting same-second events still rejected');
+check(iterator_to_array($reader->events(9001,0,20))===[10=>1.,11=>2.] && $reader->rows(9001,0,20)===[10=>1.,11=>2.],'Streaming and batch readers select the first archive-returned value at a conflicting timestamp');
 $GLOBALS['saturated']=true;throws(fn()=>iterator_to_array($reader->events(9001,10,10)),'Saturated one-second range still rejected');unset($GLOBALS['saturated']);
 echo 'Dense water year and total consumption passed with '.round(memory_get_peak_usage(true)/1048576,1).' MiB peak memory; '.$queries." bounded archive queries.\n";
