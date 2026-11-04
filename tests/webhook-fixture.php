@@ -53,7 +53,10 @@ function heatingFixture(string $class = HeatingControl::class): HeatingControl {
 }
 function webInvoke($m,$method,...$args) { return (new ReflectionMethod(HeatingControl::class,$method))->invoke($m,...$args); }
 function response($m,$method='GET',$query=[],$payload=null,$overrides=[]): array {
-    $server=array_replace(['REQUEST_METHOD'=>$method,'HTTP_HOST'=>'heating.example:46900','HTTP_ORIGIN'=>'https://heating.example:46900','HTTP_SEC_FETCH_SITE'=>'same-origin','CONTENT_TYPE'=>'application/json','HTTP_X_HEATING_CSRF'=>webInvoke($m,'webCSRF',7,(int)floor(time()/3600))],$overrides);
+    $server=array_replace(['REQUEST_METHOD'=>$method,'HTTP_HOST'=>'heating.example:46900','HTTP_ORIGIN'=>'https://heating.example:46900','HTTP_SEC_FETCH_SITE'=>'same-origin','CONTENT_TYPE'=>'application/json'],$overrides);
+    if ($method === 'POST' && !array_key_exists('HTTP_X_HEATING_CSRF', $server)) {
+        $server['HTTP_X_HEATING_CSRF'] = webInvoke($m, 'webCSRF', $server, 7, (int)floor(time()/3600));
+    }
     return webInvoke($m,'webResponse',$server,$query,is_string($payload)?$payload:($payload===null?'':json_encode($payload)));
 }
 

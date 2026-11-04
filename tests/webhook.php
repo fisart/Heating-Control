@@ -131,6 +131,31 @@ $view=json_decode(response($m,'GET',['view'=>'state'])['body'],true);
 check($view['flapCalibration']['active']&&$view['flapCalibration']['waitSeconds']===5&&$view['flapCalibration']['status']!=='','HTML state includes progress and dwell');
 check(response($m,'POST',[],['control'=>'FlapCalibrationCancel','value'=>true])['status']===200&&!$m->values['FlapCalibrationActive'],'HTML cancels calibration');
 
+if (!function_exists('SEC_GetReplacementInfo')) {
+    function SEC_GetReplacementInfo(int $id): string {
+        return json_encode(['engine'=>'native-only','ready'=>$id===7,'backend'=>18], JSON_THROW_ON_ERROR);
+    }
+}
+$m=heatingFixture();
+$GLOBALS['authenticated']=true;
+$_COOKIE=[];
+$nativeCookie='__Host-SECB_18='.str_repeat('A',43);
+$nativeRequest=['HTTP_COOKIE'=>'__Host-SECB_19='.str_repeat('B',43).'; '.$nativeCookie];
+check(response($m,'GET',[],null,$nativeRequest)['status']===200,'Native portal opens heating without a legacy cookie');
+$r=response($m,'GET',['view'=>'state'],null,$nativeRequest);
+check($r['status']===200,'Native portal can refresh heating state');
+$nativeRequest['HTTP_X_HEATING_CSRF']=json_decode($r['body'],true)['csrf'];
+$payload=['control'=>'WinterID','value'=>false];
+check(response($m,'POST',[],$payload,$nativeRequest)['status']===200,'Native session and CSRF allow same-origin control');
+$rotated=$nativeRequest;
+$rotated['HTTP_COOKIE']=str_replace(str_repeat('A',43),str_repeat('C',43),$rotated['HTTP_COOKIE']);
+check(response($m,'POST',[],$payload,$rotated)['status']===403,'Previous native session CSRF cannot control heating');
+$_COOKIE=['SEC_PORTAL_V2_7'=>'old-legacy-session'];
+check(response($m,'GET',[],null,['HTTP_COOKIE'=>'__Host-SECB_19='.str_repeat('B',43)])['status']===503,'Native session cannot fall back to an unrelated backend or legacy cookie');
+check(response($m,'GET',[],null,['HTTP_COOKIE'=>$nativeCookie.'; '.$nativeCookie])['status']===503,'Duplicate native cookie fails closed');
+$GLOBALS['authenticated']=false;
+check(response($m,'POST',[],$payload,$nativeRequest)['status']===401,'Native session still requires authentication on every write');
+
 echo "Heating webhook: $checks assertions passed.\n";
 
 

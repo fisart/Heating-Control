@@ -121,10 +121,25 @@ trait HeatingControlWebhook
         }
     }
 
-    private function webCSRF(int $vault, int $slot): string
+    private function webCSRF(array $server, int $vault, int $slot): string
     {
-        $cookie = (string)($_COOKIE['SEC_PORTAL_V2_' . $vault] ?? '');
-        if ($cookie === '' || strlen($cookie) > 1024) throw new RuntimeException('Portal session cookie missing.');
+        if (function_exists('SEC_GetReplacementInfo')) {
+            // The migration adapter authenticates the session for its pinned native backend.
+            $info = json_decode(SEC_GetReplacementInfo($vault), true, 32, JSON_THROW_ON_ERROR);
+            $backend = $info['backend'] ?? null;
+            if (($info['engine'] ?? null) !== 'native-only' || ($info['ready'] ?? false) !== true
+                || !is_int($backend) || $backend <= 0) {
+                throw new RuntimeException('Native portal backend binding unavailable.');
+            }
+            $pattern = '/(?:^|;\s*)__Host-SECB_' . $backend . '=([A-Za-z0-9_-]{43})(?=;|$)/';
+            if (preg_match_all($pattern, (string)($server['HTTP_COOKIE'] ?? ''), $matches) !== 1) {
+                throw new RuntimeException('Native portal session cookie missing or ambiguous.');
+            }
+            $cookie = $matches[1][0];
+        } else {
+            $cookie = (string)($_COOKIE['SEC_PORTAL_V2_' . $vault] ?? '');
+            if ($cookie === '' || strlen($cookie) > 1024) throw new RuntimeException('Portal session cookie missing.');
+        }
         return $slot . ':' . hash_hmac('sha256',
             $this->webPath() . '|' . $vault . '|' . $cookie . '|' . $slot,
             $this->ReadAttributeString('WebCSRFKey'));
@@ -138,9 +153,8 @@ trait HeatingControlWebhook
             || ($server['HTTP_SEC_FETCH_SITE'] ?? 'same-origin') !== 'same-origin') return false;
         $token = (string)($server['HTTP_X_HEATING_CSRF'] ?? '');
         $slot = (int)floor(time() / 3600);
-        return $token !== '' && (
-            hash_equals($this->webCSRF($vault, $slot), $token)
-            || hash_equals($this->webCSRF($vault, $slot - 1), $token));
+        if (str_starts_with($token, ($slot - 1) . ':')) $slot--;
+        return str_starts_with($token, $slot . ':') && hash_equals($this->webCSRF($server, $vault, $slot), $token);
     }
 
     private function webOrigins(int $vault): array
@@ -424,7 +438,7 @@ trait HeatingControlWebhook
                 return $reply(200,$this->webCommand($payload));
             }
             if (($query['view'] ?? '') === 'state') return $reply(200,array_merge($this->webState(),[
-                'csrf'=>$this->webCSRF($vault,(int)floor(time()/3600))]));
+                'csrf'=>$this->webCSRF($server,$vault,(int)floor(time()/3600))]));
             if (($query['view'] ?? '') === 'history') return $reply(200,$this->webHistory($query));
             if (in_array($query['view']??'',['heatpump-costs','heatpump-costs-csv','heatpump-costs-json'],true)) {
                 if(!is_string($query['from']??null)||!is_string($query['through']??null))throw new InvalidArgumentException('Select start and end dates for the cost analysis');
@@ -455,7 +469,7 @@ trait HeatingControlWebhook
             $template = file_get_contents(__DIR__.'/page.html');
             if ($template === false) throw new RuntimeException('Page template missing.');
             return $reply(200,strtr($template,['{{NONCE}}'=>$escape($nonce),'{{PATH}}'=>$escape($this->webPath()),
-                '{{CSRF}}'=>$escape($this->webCSRF($vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape($this->webPortalPath($vault))]),[
+                '{{CSRF}}'=>$escape($this->webCSRF($server,$vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape($this->webPortalPath($vault))]),[
                 'Content-Type'=>'text/html; charset=utf-8',
                 'Content-Security-Policy'=>"default-src 'none'; script-src 'nonce-$nonce'; style-src 'nonce-$nonce'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"]);
         } catch (JsonException|InvalidArgumentException $e) { return $reply(422,['error'=>$e->getMessage()]); }
