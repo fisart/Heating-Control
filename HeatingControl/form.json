@@ -116,32 +116,32 @@
             {
               "caption": "Power %",
               "name": "power",
-              "width": 70
+              "width": "70px"
             },
             {
               "caption": "Outside °C",
               "name": "outside",
-              "width": 85
+              "width": "85px"
             },
             {
               "caption": "Intake °C",
               "name": "intake",
-              "width": 85
+              "width": "85px"
             },
             {
               "caption": "Net input kW",
               "name": "input",
-              "width": 100
+              "width": "100px"
             },
             {
               "caption": "COP (estimate)",
               "name": "cop",
-              "width": 100
+              "width": "100px"
             },
             {
               "caption": "Eligible",
               "name": "eligible",
-              "width": 80
+              "width": "80px"
             }
           ],
           "values": []
