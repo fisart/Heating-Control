@@ -1,10 +1,10 @@
-# Room climate — RoomClimate v1 / heating library 0.3.53
+# Room climate — RoomClimate v1 / heating library 0.3.54
 
 RoomClimate is an independent, read-only room-climate module in the Heating-Control library. It displays every mapped measured temperature, target temperature and relative-humidity source separately, grouped by floor and room. It does not average away differences, write targets, operate heating, or alter archive logging.
 
 ## Install and open
 
-1. Update Heating-Control to 0.3.53, build 64, then create a **RoomClimate / Room Climate** instance.
+1. Update Heating-Control to 0.3.54, build 65, then create a **RoomClimate / Room Climate** instance.
 2. Select the **new native SecretsBackend** in `BackendInstanceID`. Automatic selection works when exactly one eligible backend/frontend pair exists. Legacy SecretsManager authentication is not accepted. The backend must expose `SECB_IsNativePortalAuthenticated` and `SECB_GetNativePortalLoginURL`; these are supplied by the native backend's LegacyRuntime integration bridge. No old vault is accessed.
 3. Apply changes. Open the child **Room climate page** path `/hook/room_climate_<instanceID>` using the native Secrets HTTPS address. Anonymous access redirects to the new SecretsFrontend passkey login. Primary and approved backup-origin/transport checks are delegated to the native backend. Sessions are checked on every request, including cached history. No custom passkey store or browser token is created.
 4. Update **Portal to 1.6** for automatic discovery under **Smart Home → Room climate**. The page offers Portal and Documentation return links. If multiple instances exist, select the intended Portal/Documentation in the module form.
@@ -12,11 +12,11 @@ RoomClimate is an independent, read-only room-climate module in the Heating-Cont
 
 The supplied Berlin template has **21 rooms and 103 source mappings**, derived from settings(4).json (10 October 2026) and Produktion.ipsView (9 October). It includes HomeMatic room temperature/humidity, KNX presence-sensor temperatures, Shelly and FRITZ radiator actuals/targets, HomeMatic wall targets, four shared air targets, the explicitly faulty Shelly H&T and identified FRITZ socket thermometers. Shared targets appear in both constituent rooms. Device-mounted thermometer labels distinguish them from reference room sensors. These are mappings, not saved temperature readings. Current values are read locally at request time. Other installations must replace Berlin-specific IDs.
 
-## Room summary tiles — 0.3.53, build 64
+## Room summary tiles — 0.3.54, build 65
 
-The default **Room summary** view shows one tile per room, grouped by floor. The main number is the arithmetic mean of every valid current temperature source mapped to the room, with each source counted once. All source types participate, including device-mounted thermometers. The tile shows the contributing source count and temperature range. Measurements with no update for at least 86,400 seconds, no update recorded, invalid values or missing/unavailable variables are excluded. No qualifying data displays an em dash, never a fabricated zero.
+The default **Room summary** view shows one tile per room, grouped by floor. The main number is the arithmetic mean of every valid current temperature source mapped to the room, with each source counted once. All source types participate, including device-mounted thermometers. Tiles show the average temperature, target values and differences. Source names, IDs, counts, ranges and inactive-sensor counts are omitted from the tile view; full source information remains available in the source views and history charts. Measurements with no update for at least 86,400 seconds, no update recorded, invalid values or missing/unavailable variables are excluded. No qualifying data displays an em dash, never a fabricated zero.
 
-Every configured target is shown separately with its source label. For each available target, **Target − average** compares that setpoint with the unrounded measured mean: positive means the target is above the measured average; negative means the room average is above that target. Targets are not averaged together and are not removed just because they have not changed for a day. Missing/invalid targets and differences are explicitly unavailable.
+Every configured target is shown separately as Target, or Target 1, Target 2 and so on when a room has several targets. For each available target, **Target − average** compares that setpoint with the unrounded measured mean: positive means the target is above the measured average; negative means the room average is above that target. Targets are not averaged together and are not removed just because they have not changed for a day. Missing/invalid targets and differences are explicitly unavailable.
 
 **All active sources** shows current measured values, humidity and every target. **Inactive sensors** groups older/unupdated temperature and humidity sources by floor and room, retaining their last reading and update timestamp. The tab includes a count of inactive room-source mappings. Invalid readings that have updated recently remain identifiable in the active-source view but are excluded from means. A recovered sensor returns to the active view and mean on the next normal delta refresh. Click a room tile or source-view heading to open the same all-source history charts; archived history remains accessible for inactive sensors.
 
