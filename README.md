@@ -1,3 +1,7 @@
+# Room tile history and outside conditions — 0.3.56, build 67
+
+RoomClimate adds compact 24-hour temperature charts to each room tile and shows outside temperature/humidity at the top. Visible tile charts load in small batches with five-minute caches; current values retain the incremental two-second feed. The ground-floor guest bathroom now uses verified FRITZ temperature 52709 and target 24196, including existing mappings. Small master-bathroom radiator IDs 32551/48034 remain correct. See [Room climate guide](docs/room-climate.md).
+
 # One target per room — 0.3.55, build 66
 
 RoomClimate now shows one associated thermostat target per room, falling back to the shared air target for rooms without a mapped radiator thermostat. HomeMatic setpoints and redundant older thermostat targets are excluded. Existing mappings and configuration imports are normalized automatically; heating controls are unchanged. See [Room climate guide](docs/room-climate.md).

@@ -29,6 +29,16 @@
       "caption": "Documentation (automatic when unique)"
     },
     {
+      "type": "SelectVariable",
+      "name": "OutsideTemperatureID",
+      "caption": "Outside temperature (Berlin Tempest by default)"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "OutsideHumidityID",
+      "caption": "Outside humidity (Berlin Tempest by default)"
+    },
+    {
       "type": "NumberSpinner",
       "name": "PollSeconds",
       "caption": "Update interval (seconds)",

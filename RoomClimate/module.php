@@ -2,10 +2,12 @@
 declare(strict_types=1);
 require_once __DIR__.'/Security.php';
 require_once __DIR__.'/History.php';
+require_once __DIR__.'/Sparklines.php';
 class RoomClimate extends IPSModule
 {
-    use RoomClimateSecurity, RoomClimateHistory;
+    use RoomClimateSecurity, RoomClimateHistory, RoomClimateSparklines;
     private const STALE_AFTER=86400;
+    private const OUTSIDE_DEFAULTS=['OutsideTemperatureID'=>17059,'OutsideHumidityID'=>38406];
     public const MODULE='{A1D8059C-4B7F-4A75-89D7-B8245397DC60}';
     public function Create()
     {
@@ -13,6 +15,7 @@ class RoomClimate extends IPSModule
         $this->RegisterPropertyBoolean('WebEnabled',true);
         $this->RegisterPropertyBoolean('DebugEnabled',false);
         foreach(['BackendInstanceID'=>0,'PortalInstanceID'=>0,'DocumentationInstanceID'=>0,'PollSeconds'=>2,'StaleSeconds'=>86400] as $k=>$v) $this->RegisterPropertyInteger($k,$v);
+        foreach(self::OUTSIDE_DEFAULTS as $k=>$v)$this->RegisterPropertyInteger($k,$v);
         $this->RegisterPropertyString('Rooms',file_get_contents(__DIR__.'/rooms.json'));
         $this->RegisterVariableString('WebPath','Room climate page','',10);
         $this->RegisterVariableString('Status','Room climate status','~TextBox',20);
@@ -71,10 +74,11 @@ class RoomClimate extends IPSModule
     }
     private static function validate(array $p): array
     {
-        $expected=['WebEnabled'=>'boolean','DebugEnabled'=>'boolean','BackendInstanceID'=>'integer','PortalInstanceID'=>'integer','DocumentationInstanceID'=>'integer','PollSeconds'=>'integer','StaleSeconds'=>'integer','Rooms'=>'string'];
+        $p+=self::OUTSIDE_DEFAULTS;
+        $expected=['OutsideTemperatureID'=>'integer','OutsideHumidityID'=>'integer','WebEnabled'=>'boolean','DebugEnabled'=>'boolean','BackendInstanceID'=>'integer','PortalInstanceID'=>'integer','DocumentationInstanceID'=>'integer','PollSeconds'=>'integer','StaleSeconds'=>'integer','Rooms'=>'string'];
         if(array_diff(array_keys($p),array_keys($expected))||array_diff(array_keys($expected),array_keys($p)))throw new InvalidArgumentException('Configuration fields do not match RoomClimate v1.');
         foreach($expected as $key=>$type)if(gettype($p[$key])!==$type)throw new InvalidArgumentException('Invalid type: '.$key);
-        foreach(['BackendInstanceID','PortalInstanceID','DocumentationInstanceID'] as $k)if($p[$k]<0)throw new InvalidArgumentException('Invalid instance ID.');
+        foreach(['BackendInstanceID','PortalInstanceID','DocumentationInstanceID','OutsideTemperatureID','OutsideHumidityID'] as $k)if($p[$k]<0)throw new InvalidArgumentException('Invalid instance ID.');
         if($p['PollSeconds']<1||$p['PollSeconds']>60||$p['StaleSeconds']<60||$p['StaleSeconds']>604800)throw new InvalidArgumentException('Invalid update/freshness interval.');
         if(strlen($p['Rooms'])>262144)throw new InvalidArgumentException('Room mapping is too large.');
         $rooms=json_decode($p['Rooms'],true,32,JSON_THROW_ON_ERROR);
@@ -98,6 +102,14 @@ class RoomClimate extends IPSModule
     {
         $homeMaticIDs=[10232,16991,26861,27558,28554,38934,39084,40482,42211,58174];
         foreach($rooms as &$room){
+            // Confirmed production screenshot: FRITZ Bathroom Groundfloor / device 24829.
+            // Correct only the supplied legacy Shelly mapping; preserve a different custom target.
+            if($room['key']==='guest-bathroom-gf'){
+                $targets=array_values(array_filter($room['sources'],static fn($v)=>$v['kind']==='target'));
+                $hasFritz=(bool)array_filter($targets,static fn($v)=>preg_match('/FRITZ/i',$v['label']));
+                if(!$hasFritz)foreach($room['sources'] as &$source)if($source['kind']==='target'&&$source['id']===54714)$source=['id'=>24196,'kind'=>'target','label'=>'FRITZ radiator'];unset($source);
+                if(array_filter($room['sources'],static fn($v)=>$v['id']===24196&&$v['kind']==='target')&&!array_filter($room['sources'],static fn($v)=>$v['id']===52709))$room['sources'][]=['id'=>52709,'kind'=>'temperature','label'=>'FRITZ radiator'];
+            }
             $best=null;$rank=PHP_INT_MAX;
             foreach($room['sources'] as $source){
                 if($source['kind']!=='target'||in_array($source['id'],$homeMaticIDs,true)||preg_match('/home[\s-]*matic/i',$source['label']))continue;
@@ -113,6 +125,7 @@ class RoomClimate extends IPSModule
     private function configuration(): array {return self::singleTargets(self::validate(json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR)));}
     private static function normalizedProperties(array $properties): array
     {
+        $properties+=self::OUTSIDE_DEFAULTS;
         $properties['Rooms']=json_encode(self::singleTargets(self::validate($properties)),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);return $properties;
     }
     private static function canonical($v): string
@@ -152,17 +165,18 @@ class RoomClimate extends IPSModule
     }
     private function state(string $cursor): array
     {
-        $rooms=$this->configuration();$layout=hash('sha256',self::canonical($rooms));
+        $rooms=$this->configuration();$outside=['temperature'=>$this->ReadPropertyInteger('OutsideTemperatureID'),'humidity'=>$this->ReadPropertyInteger('OutsideHumidityID')];$layout=hash('sha256',self::canonical([$rooms,$outside]));
         if(!IPS_SemaphoreEnter('RCL.State.'.$this->InstanceID,1000))throw new RuntimeException('State is busy; retry shortly.');
         try{
             $cache=json_decode($this->GetBuffer('Snapshot'),true)??[];
             if(($cache['layout']??'')!==$layout)$cache=['layout'=>$layout,'epoch'=>bin2hex(random_bytes(8)),'revision'=>0,'values'=>[],'versions'=>[]];
             $readings=[];foreach($rooms as $r)foreach($r['sources'] as $s)$readings[(string)$s['id']]=$this->reading($s['id'],$s['kind']);
+            foreach($outside as $kind=>$id)if($id>1)$readings[(string)$id]=$this->reading($id,$kind);
             foreach($readings as $id=>$value)if(($cache['values'][$id]??null)!=$value){$cache['values'][$id]=$value;$cache['versions'][$id]=++$cache['revision'];}
             $parts=explode(':',$cursor,2);$full=count($parts)!==2||$parts[0]!==$cache['epoch']||!ctype_digit($parts[1])||(int)$parts[1]>$cache['revision'];$since=$full?-1:(int)$parts[1];$delta=[];
             foreach($cache['values'] as $id=>$value)if($full||$cache['versions'][$id]>$since)$delta[$id]=$value;
             $this->SetBuffer('Snapshot',json_encode($cache,JSON_THROW_ON_ERROR));
-            return ['cursor'=>$cache['epoch'].':'.$cache['revision'],'full'=>$full,'rooms'=>$full?$rooms:null,'values'=>(object)$delta,'now'=>time(),'poll'=>$this->ReadPropertyInteger('PollSeconds'),'navigation'=>$full?$this->navigation():null];
+            $response=['cursor'=>$cache['epoch'].':'.$cache['revision'],'full'=>$full,'rooms'=>$full?$rooms:null,'values'=>(object)$delta,'now'=>time(),'poll'=>$this->ReadPropertyInteger('PollSeconds'),'navigation'=>$full?$this->navigation():null];if($full)$response['outside']=$outside;return $response;
         }finally{IPS_SemaphoreLeave('RCL.State.'.$this->InstanceID);}
     }
     protected function ProcessHookData()
@@ -185,6 +199,7 @@ class RoomClimate extends IPSModule
             }
             $action=$query['action']??'page';if(!is_string($action))return $reply(400,['error'=>'Invalid action.']);
             if($action==='state')return $reply(200,$this->state(is_string($query['cursor']??null)?substr($query['cursor'],0,80):''));
+            if($action==='sparklines')return $reply(200,$this->sparklines($query));
             if($action==='history')return $reply(200,$this->history($query));
             if($action!=='page')return $reply(404,['error'=>'Unknown action.']);
             $nonce=base64_encode(random_bytes(18));$headers['Content-Type']='text/html; charset=utf-8';$headers['Content-Security-Policy']="default-src 'none'; script-src 'nonce-".$nonce."'; style-src 'nonce-".$nonce."'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";

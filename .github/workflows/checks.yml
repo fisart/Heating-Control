@@ -12,6 +12,7 @@ jobs:
           php -l RoomClimate/module.php
           php -l RoomClimate/Security.php
           php -l RoomClimate/History.php
+          php -l RoomClimate/Sparklines.php
           php -l HeatingControl/FlapCalibration.php
           php -l HeatingControl/module.php
           php -l HeatingControl/HeatPumpTest.php

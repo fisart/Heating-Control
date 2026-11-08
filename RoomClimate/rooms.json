@@ -401,9 +401,14 @@
         "label": "Shelly radiator"
       },
       {
-        "id": 54714,
+        "id": 52709,
+        "kind": "temperature",
+        "label": "FRITZ radiator"
+      },
+      {
+        "id": 24196,
         "kind": "target",
-        "label": "Shelly radiator"
+        "label": "FRITZ radiator"
       }
     ]
   },
