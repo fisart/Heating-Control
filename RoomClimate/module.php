@@ -7,6 +7,7 @@ class RoomClimate extends IPSModule
 {
     use RoomClimateSecurity, RoomClimateHistory, RoomClimateSparklines;
     private const STALE_AFTER=86400;
+    private const SOURCE_DEFAULTS=['SourceSettings'=>'{}'];
     private const OUTSIDE_DEFAULTS=['OutsideTemperatureID'=>17059,'OutsideHumidityID'=>38406];
     public const MODULE='{A1D8059C-4B7F-4A75-89D7-B8245397DC60}';
     public function Create()
@@ -17,6 +18,8 @@ class RoomClimate extends IPSModule
         foreach(['BackendInstanceID'=>0,'PortalInstanceID'=>0,'DocumentationInstanceID'=>0,'PollSeconds'=>2,'StaleSeconds'=>86400] as $k=>$v) $this->RegisterPropertyInteger($k,$v);
         foreach(self::OUTSIDE_DEFAULTS as $k=>$v)$this->RegisterPropertyInteger($k,$v);
         $this->RegisterPropertyString('Rooms',file_get_contents(__DIR__.'/rooms.json'));
+        $this->RegisterPropertyString('SourceSettings','{}');
+        $this->RegisterAttributeString('SourceCSRFKey',bin2hex(random_bytes(32)));
         $this->RegisterVariableString('WebPath','Room climate page','',10);
         $this->RegisterVariableString('Status','Room climate status','~TextBox',20);
         $this->RegisterVariableString('Debug','Debug log','~TextBox',90);
@@ -74,12 +77,13 @@ class RoomClimate extends IPSModule
     }
     private static function validate(array $p): array
     {
-        $p+=self::OUTSIDE_DEFAULTS;
-        $expected=['OutsideTemperatureID'=>'integer','OutsideHumidityID'=>'integer','WebEnabled'=>'boolean','DebugEnabled'=>'boolean','BackendInstanceID'=>'integer','PortalInstanceID'=>'integer','DocumentationInstanceID'=>'integer','PollSeconds'=>'integer','StaleSeconds'=>'integer','Rooms'=>'string'];
+        $p+=self::OUTSIDE_DEFAULTS+self::SOURCE_DEFAULTS;
+        $expected=['OutsideTemperatureID'=>'integer','OutsideHumidityID'=>'integer','WebEnabled'=>'boolean','DebugEnabled'=>'boolean','BackendInstanceID'=>'integer','PortalInstanceID'=>'integer','DocumentationInstanceID'=>'integer','PollSeconds'=>'integer','StaleSeconds'=>'integer','Rooms'=>'string','SourceSettings'=>'string'];
         if(array_diff(array_keys($p),array_keys($expected))||array_diff(array_keys($expected),array_keys($p)))throw new InvalidArgumentException('Configuration fields do not match RoomClimate v1.');
         foreach($expected as $key=>$type)if(gettype($p[$key])!==$type)throw new InvalidArgumentException('Invalid type: '.$key);
         foreach(['BackendInstanceID','PortalInstanceID','DocumentationInstanceID','OutsideTemperatureID','OutsideHumidityID'] as $k)if($p[$k]<0)throw new InvalidArgumentException('Invalid instance ID.');
         if($p['PollSeconds']<1||$p['PollSeconds']>60||$p['StaleSeconds']<60||$p['StaleSeconds']>604800)throw new InvalidArgumentException('Invalid update/freshness interval.');
+        self::sourceOverrides($p['SourceSettings']);
         if(strlen($p['Rooms'])>262144)throw new InvalidArgumentException('Room mapping is too large.');
         $rooms=json_decode($p['Rooms'],true,32,JSON_THROW_ON_ERROR);
         if(!is_array($rooms)||!array_is_list($rooms)||count($rooms)>100)throw new InvalidArgumentException('Use at most 100 rooms.');
@@ -123,9 +127,71 @@ class RoomClimate extends IPSModule
         }unset($room);return $rooms;
     }
     private function configuration(): array {return self::singleTargets(self::validate(json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR)));}
+
+    /** Overrides are sparse: absent keys use the migration defaults. */
+    private static function sourceOverrides(string $raw): array
+    {
+        if(strlen($raw)>65536||!str_starts_with(ltrim($raw),'{'))throw new InvalidArgumentException('Invalid source settings.');
+        $map=json_decode($raw,true,32,JSON_THROW_ON_ERROR);
+        if(!is_array($map)||count($map)>1000)throw new InvalidArgumentException('Invalid source settings.');
+        foreach($map as $key=>$enabled)if(!is_string($key)||!preg_match('/^[a-z0-9-]{1,64}:[1-9][0-9]{0,9}$/D',$key)||!is_bool($enabled))throw new InvalidArgumentException('Invalid source setting.');
+        return $map;
+    }
+    private function sourceConfiguration(): array
+    {
+        $properties=json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR);
+        $rooms=self::singleTargets(self::validate($properties));$overrides=self::sourceOverrides($properties['SourceSettings']??'{}');
+        foreach($rooms as &$room){
+            $fritz=(bool)array_filter($room['sources'],static fn($s)=>$s['kind']==='target'&&preg_match('/FRITZ/i',$s['label']));
+            foreach($room['sources'] as &$source){
+                $key=$room['key'].':'.$source['id'];
+                $default=!($fritz&&$room['key']!=='master-bathroom'&&preg_match('/Shelly/i',$source['label']));
+                $source['enabled']=$overrides[$key]??$default;
+            }unset($source);
+        }unset($room);
+        return $rooms;
+    }
+    private function activeConfiguration(): array
+    {
+        $rooms=$this->sourceConfiguration();
+        foreach($rooms as &$room){$room['sources']=array_values(array_filter($room['sources'],static fn($s)=>$s['enabled']));foreach($room['sources'] as &$source)unset($source['enabled']);unset($source);}unset($room);
+        return $rooms;
+    }
+    private function sourceRevision(): string
+    {
+        $p=json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR);
+        return hash('sha256',self::canonical([$p['Rooms'],$p['SourceSettings']??'{}']));
+    }
+    private function sourceCSRF(array $server,int $backend,int $slot): string
+    {
+        preg_match_all('/(?:^|;\s*)__Host-SECB_'.preg_quote((string)$backend,'/').'=([A-Za-z0-9_-]{43})(?=;|$)/',(string)($server['HTTP_COOKIE']??''),$matches);
+        if(count($matches[1])!==1)throw new RuntimeException('Native session cookie unavailable.');
+        return hash_hmac('sha256',$this->InstanceID.'|'.$backend.'|'.$matches[1][0].'|'.$slot,$this->ReadAttributeString('SourceCSRFKey'));
+    }
+    private static function requestOrigin(string $origin): string
+    {
+        $p=parse_url($origin);if(!is_array($p)||($p['scheme']??'')!=='https'||empty($p['host'])||isset($p['user'])||isset($p['pass'])||isset($p['query'])||isset($p['fragment'])||!in_array($p['path']??'',['','/'],true))return '';
+        return 'https://'.strtolower($p['host']).((int)($p['port']??443)===443?'':':'.$p['port']);
+    }
+    private function saveSourceSettings(array $body): array
+    {
+        if(!is_string($body['revision']??null)||!is_array($body['updates']??null)||count($body['updates'])>1000)throw new InvalidArgumentException('Invalid source settings request.');
+        if(!IPS_SemaphoreEnter('RCL.SourceSettings.'.$this->InstanceID,1000))throw new RuntimeException('Source settings are busy; retry shortly.');
+        try{
+            if(IPS_HasChanges($this->InstanceID))throw new InvalidArgumentException('Apply or discard pending console edits before saving.');
+            if(!hash_equals($this->sourceRevision(),$body['revision']))throw new InvalidArgumentException('Source settings changed elsewhere. Reload this tab before saving.');
+            $allowed=[];foreach($this->sourceConfiguration() as $room)foreach($room['sources'] as $source)$allowed[$room['key'].':'.$source['id']]=true;
+            $p=json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR);$map=self::sourceOverrides($p['SourceSettings']??'{}');
+            foreach($body['updates'] as $key=>$value){if(!is_string($key)||!isset($allowed[$key])||!is_bool($value))throw new InvalidArgumentException('Unknown source or invalid on/off value.');$map[$key]=$value;}
+            $p['SourceSettings']=json_encode((object)$map,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR);self::validate($p);
+            IPS_SetConfiguration($this->InstanceID,json_encode($p,JSON_THROW_ON_ERROR));IPS_ApplyChanges($this->InstanceID);
+            $this->debug('Source visibility settings updated.');return ['message'=>'Source settings saved.','revision'=>$this->sourceRevision()];
+        }finally{IPS_SemaphoreLeave('RCL.SourceSettings.'.$this->InstanceID);}
+    }
+
     private static function normalizedProperties(array $properties): array
     {
-        $properties+=self::OUTSIDE_DEFAULTS;
+        $properties+=self::OUTSIDE_DEFAULTS+self::SOURCE_DEFAULTS;
         $properties['Rooms']=json_encode(self::singleTargets(self::validate($properties)),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);return $properties;
     }
     private static function canonical($v): string
@@ -145,7 +211,7 @@ class RoomClimate extends IPSModule
     public function ExportConfigurationBackup(): string
     {
         $p=json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR);self::validate($p);
-        return json_encode(['schema'=>'Symcon.ConfigurationBackup.v1','moduleID'=>self::MODULE,'format'=>'RoomClimate.v1','payload'=>json_decode($this->ExportConfig(),true),'sourceHash'=>hash('sha256',self::canonical(['properties'=>$p,'attributes'=>[]])),'attributeNames'=>[],'restoreMode'=>'manual-native-import','exclusions'=>['Sessions','Live readings','History cache','Debug log'],'notes'=>['Use ImportConfig; restored web access is disabled.']],JSON_THROW_ON_ERROR);
+        return json_encode(['schema'=>'Symcon.ConfigurationBackup.v1','moduleID'=>self::MODULE,'format'=>'RoomClimate.v1','payload'=>json_decode($this->ExportConfig(),true),'sourceHash'=>hash('sha256',self::canonical(['properties'=>$p,'attributes'=>[]])),'attributeNames'=>[],'restoreMode'=>'manual-native-import','exclusions'=>['Sessions','CSRF key','Live readings','History cache','Debug log'],'notes'=>['Use ImportConfig; restored web access is disabled.','Source switches require RoomClimate 0.3.58 or later.']],JSON_THROW_ON_ERROR);
     }
     public function ValidateConfigurationBackup(string $JSON): string
     {
@@ -165,7 +231,7 @@ class RoomClimate extends IPSModule
     }
     private function state(string $cursor): array
     {
-        $rooms=$this->configuration();$outside=['temperature'=>$this->ReadPropertyInteger('OutsideTemperatureID'),'humidity'=>$this->ReadPropertyInteger('OutsideHumidityID')];$layout=hash('sha256',self::canonical([$rooms,$outside]));
+        $rooms=$this->activeConfiguration();$outside=['temperature'=>$this->ReadPropertyInteger('OutsideTemperatureID'),'humidity'=>$this->ReadPropertyInteger('OutsideHumidityID')];$layout=hash('sha256',self::canonical([$rooms,$outside]));
         if(!IPS_SemaphoreEnter('RCL.State.'.$this->InstanceID,1000))throw new RuntimeException('State is busy; retry shortly.');
         try{
             $cache=json_decode($this->GetBuffer('Snapshot'),true)??[];
@@ -181,14 +247,15 @@ class RoomClimate extends IPSModule
     }
     protected function ProcessHookData()
     {
-        $r=$this->response($_SERVER,$_GET);http_response_code($r['status']);foreach($r['headers'] as $k=>$v)header($k.': '.$v);echo $r['body'];
+        $body=($_SERVER['REQUEST_METHOD']??'GET')==='POST'?(string)file_get_contents('php://input',false,null,0,131073):'';
+        $r=$this->response($_SERVER,$_GET,$body);http_response_code($r['status']);foreach($r['headers'] as $k=>$v)header($k.': '.$v);echo $r['body'];
     }
-    private function response(array $server,array $query): array
+    private function response(array $server,array $query,string $body=''): array
     {
         $headers=['Cache-Control'=>'no-store','X-Content-Type-Options'=>'nosniff','Referrer-Policy'=>'no-referrer','Content-Type'=>'application/json; charset=utf-8'];
         $reply=static fn(int $status,$data)=>['status'=>$status,'headers'=>$headers,'body'=>json_encode($data,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)];
         if(!$this->ReadPropertyBoolean('WebEnabled'))return $reply(404,['error'=>'Page disabled.']);
-        if(($server['REQUEST_METHOD']??'GET')!=='GET')return $reply(405,['error'=>'GET required.']);
+        $method=$server['REQUEST_METHOD']??'GET';if(!in_array($method,['GET','POST'],true))return $reply(405,['error'=>'GET or POST required.']);
         try{
             $backend=$this->backend();if(!$backend)throw new RuntimeException('Select an enabled native Secrets backend and frontend.');
             // Validates current HTTPS transport, primary or approved backup origin in the native backend.
@@ -198,13 +265,24 @@ class RoomClimate extends IPSModule
                 if(!isset($query['action'])){$r['status']=303;$r['headers']['Location']=$login;}return $r;
             }
             $action=$query['action']??'page';if(!is_string($action))return $reply(400,['error'=>'Invalid action.']);
+            if($method==='POST'){
+                if(IPS_GetKernelRunlevel()!==KR_READY)return $reply(503,['error'=>'Symcon is starting; retry when ready.']);
+                if($action!=='source-settings')return $reply(405,['error'=>'Unknown write action.']);
+                $origin=parse_url($login);$trusted=self::requestOrigin('https://'.($origin['host']??'').(isset($origin['port'])?':'.$origin['port']:''));
+                if(!$trusted||self::requestOrigin((string)($server['HTTP_ORIGIN']??''))!==$trusted||($server['HTTP_SEC_FETCH_SITE']??'same-origin')!=='same-origin')return $reply(403,['error'=>'Same-origin access required.']);
+                if(!preg_match('~^application/json(?:\s*;|$)~i',(string)($server['CONTENT_TYPE']??$server['HTTP_CONTENT_TYPE']??''))||strlen($body)>131072)return $reply(400,['error'=>'Use a bounded JSON request.']);
+                $data=json_decode($body,true,32,JSON_THROW_ON_ERROR);if(!is_array($data)||!is_string($data['csrf']??null))return $reply(403,['error'=>'Reload source settings to verify your session.']);
+                $slot=(int)floor(time()/900);if(!hash_equals($this->sourceCSRF($server,$backend,$slot),$data['csrf'])&&!hash_equals($this->sourceCSRF($server,$backend,$slot-1),$data['csrf']))return $reply(403,['error'=>'Session verification expired. Reload source settings.']);
+                return $reply(200,$this->saveSourceSettings($data));
+            }
+            if($action==='source-settings')return $reply(200,['rooms'=>$this->sourceConfiguration(),'revision'=>$this->sourceRevision(),'csrf'=>$this->sourceCSRF($server,$backend,(int)floor(time()/900))]);
             if($action==='state')return $reply(200,$this->state(is_string($query['cursor']??null)?substr($query['cursor'],0,80):''));
             if($action==='sparklines')return $reply(200,$this->sparklines($query));
             if($action==='history')return $reply(200,$this->history($query));
             if($action!=='page')return $reply(404,['error'=>'Unknown action.']);
             $nonce=base64_encode(random_bytes(18));$headers['Content-Type']='text/html; charset=utf-8';$headers['Content-Security-Policy']="default-src 'none'; script-src 'nonce-".$nonce."'; style-src 'nonce-".$nonce."'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
             return ['status'=>200,'headers'=>$headers,'body'=>str_replace('{{NONCE}}',$nonce,file_get_contents(__DIR__.'/page.html'))];
-        }catch(InvalidArgumentException $e){return $reply(400,['error'=>$e->getMessage()]);}
+        }catch(InvalidArgumentException|JsonException $e){return $reply(400,['error'=>$e->getMessage()]);}
         catch(Throwable $e){$this->debug('Request failed: '.get_class($e));return $reply(503,['error'=>'Room climate unavailable. Check the instance status, native Secrets connection and debug log.']);}
     }
 }

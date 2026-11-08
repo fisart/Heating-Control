@@ -6,7 +6,7 @@ trait RoomClimateHistory
     {
         $key=$query['room']??'';$range=$query['range']??'24h';
         if(!is_string($key)||!is_string($range)||!in_array($range,['1h','6h','24h','7d','30d'],true))throw new InvalidArgumentException('Choose a room and supported period.');
-        $matches=array_values(array_filter($this->configuration(),static fn($r)=>$r['key']===$key));
+        $matches=array_values(array_filter($this->activeConfiguration(),static fn($r)=>$r['key']===$key));
         if(count($matches)!==1)throw new InvalidArgumentException('Room is not configured.');$room=$matches[0];
         $cache=json_decode($this->GetBuffer('History'),true)??[];$cacheKey=hash('sha256',self::canonical([$room,$range]));
         if(($cache['key']??'')===$cacheKey&&time()-($cache['time']??0)<30)return $cache['data'];

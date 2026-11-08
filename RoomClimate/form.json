@@ -9,6 +9,10 @@
       "caption": "One target per room: use its associated radiator thermostat, otherwise the shared air target. HomeMatic target setpoints are excluded."
     },
     {
+      "type": "Label",
+      "caption": "Use the Source settings tab on the protected page to enable or disable individual readings. A saved selection is included in configuration export and backup."
+    },
+    {
       "type": "CheckBox",
       "name": "WebEnabled",
       "caption": "Enable passkey-protected page"

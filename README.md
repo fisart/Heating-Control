@@ -1,3 +1,7 @@
+# Per-source room climate settings — 0.3.58, build 69
+
+RoomClimate has a **Source settings** tab with on/off switches grouped by floor and room. Selections affect readings, averages and charts and are included in configuration backup. By default Shelly sources are disabled where a FRITZ thermostat is mapped, except in the first-floor master bathroom; they can be re-enabled. See [Room climate guide](docs/room-climate.md).
+
 # Room tile history and outside conditions — 0.3.56, build 67
 
 RoomClimate adds compact 24-hour temperature charts to each room tile and shows outside temperature/humidity at the top. Visible tile charts load in small batches with five-minute caches; current values retain the incremental two-second feed. The ground-floor guest bathroom now uses verified FRITZ temperature 52709 and target 24196, including existing mappings. Small master-bathroom radiator IDs 32551/48034 remain correct. See [Room climate guide](docs/room-climate.md).

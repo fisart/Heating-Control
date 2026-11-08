@@ -50,7 +50,7 @@ jobs:
           php -l LichtBlickElectricityPrice/DailyHeatingUsage.php
       - name: Heating behavior and web security
         run: |
-          php tests/room-climate.php
+          php tests/room-climate-source-settings.php
           php tests/lichtblick.php
           php tests/lichtblick-price-history.php
           php tests/lichtblick-consumption-history.php

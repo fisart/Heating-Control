@@ -9,7 +9,7 @@ trait RoomClimateSparklines
         if(!is_string($keys)||strlen($keys)>260)throw new InvalidArgumentException('Choose up to four configured rooms.');
         $keys=explode(',',$keys);
         if(count($keys)>4||count(array_unique($keys))!==count($keys))throw new InvalidArgumentException('Choose up to four different rooms.');
-        $rooms=[];foreach($this->configuration() as $room)$rooms[$room['key']]=$room;
+        $rooms=[];foreach($this->activeConfiguration() as $room)$rooms[$room['key']]=$room;
         foreach($keys as $key)if(!isset($rooms[$key]))throw new InvalidArgumentException('Room is not configured.');
         $results=[];foreach($keys as $key)$results[$key]=$this->sparkline($rooms[$key]);
         return ['rooms'=>(object)$results,'refresh'=>300];
