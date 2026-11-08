@@ -30,6 +30,10 @@ $r=callPrivate($m,'response',$server,['action'=>'state']);$d=json_decode($r['bod
 $r=callPrivate($m,'response',$server,['action'=>'state','cursor'=>$d['cursor']]);$same=json_decode($r['body'],true);check(!$same['full']&&!$same['values'],'Unchanged state retransmitted');check(strlen($r['body'])<160,'Idle delta too large');
 $GLOBALS['variables'][123]['value']=22.1;$r=callPrivate($m,'response',$server,['action'=>'state','cursor'=>$d['cursor']]);$changed=json_decode($r['body'],true);check(count($changed['values'])===1&&isset($changed['values'][123]),'Delta failed');
 $GLOBALS['variables'][123]['VariableUpdated']=time()-90000;$d=callPrivate($m,'state',$changed['cursor']);check($d['values']->{123}['status']==='stale','Old reading not marked stale');
+$m->properties['StaleSeconds']=3600; // Existing installations retain the former field on import.
+$GLOBALS['variables'][123]['VariableUpdated']=time()-86399;check(callPrivate($m,'reading',123,'temperature')['status']==='ok','23-hour measurement classified as inactive');
+$GLOBALS['variables'][123]['VariableUpdated']=time()-86400;check(callPrivate($m,'reading',123,'temperature')['status']==='stale','24-hour boundary not stale');
+$GLOBALS['variables'][125]['VariableUpdated']=time()-864000;check(callPrivate($m,'reading',125,'target')['status']==='ok','Unchanged target classified as stale');
 $GLOBALS['variables'][124]['value']=110;$d=callPrivate($m,'state','');check($d['values']->{124}['status']==='invalid','Invalid humidity accepted');
 check(callPrivate($m,'response',$server,['action'=>'history','room'=>'other'])['status']===400,'Arbitrary room history allowed');
 $d=callPrivate($m,'history',['room'=>'test','range'=>'1h']);check(count($d['series'])===3,'Not all room series loaded');check(count($d['series'][0]['points'])===2&&$d['series'][0]['points'][1][1]===21.2,'Duplicate archive timestamps changed source precedence');

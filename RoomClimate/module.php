@@ -5,13 +5,14 @@ require_once __DIR__.'/History.php';
 class RoomClimate extends IPSModule
 {
     use RoomClimateSecurity, RoomClimateHistory;
+    private const STALE_AFTER=86400;
     public const MODULE='{A1D8059C-4B7F-4A75-89D7-B8245397DC60}';
     public function Create()
     {
         parent::Create();
         $this->RegisterPropertyBoolean('WebEnabled',true);
         $this->RegisterPropertyBoolean('DebugEnabled',false);
-        foreach(['BackendInstanceID'=>0,'PortalInstanceID'=>0,'DocumentationInstanceID'=>0,'PollSeconds'=>2,'StaleSeconds'=>3600] as $k=>$v) $this->RegisterPropertyInteger($k,$v);
+        foreach(['BackendInstanceID'=>0,'PortalInstanceID'=>0,'DocumentationInstanceID'=>0,'PollSeconds'=>2,'StaleSeconds'=>86400] as $k=>$v) $this->RegisterPropertyInteger($k,$v);
         $this->RegisterPropertyString('Rooms',file_get_contents(__DIR__.'/rooms.json'));
         $this->RegisterVariableString('WebPath','Room climate page','',10);
         $this->RegisterVariableString('Status','Room climate status','~TextBox',20);
@@ -124,7 +125,7 @@ class RoomClimate extends IPSModule
             if(!IPS_VariableExists($id)||!in_array(IPS_GetVariable($id)['VariableType'],[1,2],true))return ['value'=>null,'updated'=>0,'changed'=>0,'status'=>'missing'];
             $v=IPS_GetVariable($id);$n=GetValue($id);$updated=(int)($v['VariableUpdated']??0);
             if(!is_numeric($n)||!is_finite((float)$n)||($kind==='humidity'?($n<0||$n>100):($n< -50||$n>100)))return ['value'=>null,'updated'=>$updated,'changed'=>(int)($v['VariableChanged']??0),'status'=>'invalid'];
-            return ['value'=>(float)$n,'updated'=>$updated,'changed'=>(int)($v['VariableChanged']??0),'status'=>$kind!=='target'&&(!$updated||time()-$updated>$this->ReadPropertyInteger('StaleSeconds'))?'stale':'ok'];
+            return ['value'=>(float)$n,'updated'=>$updated,'changed'=>(int)($v['VariableChanged']??0),'status'=>$kind!=='target'&&(!$updated||time()-$updated>=self::STALE_AFTER)?'stale':'ok'];
         }catch(Throwable $e){return ['value'=>null,'updated'=>0,'changed'=>0,'status'=>'unavailable'];}
     }
     private function state(string $cursor): array

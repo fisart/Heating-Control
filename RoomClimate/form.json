@@ -32,13 +32,6 @@
       "maximum": 60
     },
     {
-      "type": "NumberSpinner",
-      "name": "StaleSeconds",
-      "caption": "Reading stale after (seconds)",
-      "minimum": 60,
-      "maximum": 604800
-    },
-    {
       "type": "List",
       "name": "Rooms",
       "caption": "Floors, rooms and sources",

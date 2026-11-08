@@ -1,3 +1,7 @@
+# Room summary tiles — 0.3.53, build 64
+
+RoomClimate opens with floor-grouped room tiles showing the average of valid temperatures updated within 24 hours, every target and target-minus-average differences. Inactive sensors move to a separate view and rejoin the averages when updates resume. Unchanged setpoints remain visible. Summary calculations use the existing delta feed. See [Room climate guide](docs/room-climate.md).
+
 # Room climate — 0.3.52, build 63
 
 Adds **RoomClimate**, an independent native-Secrets-passkey-protected overview of 21 rooms and 103 temperature/target/humidity mappings. Includes floor/room editor, multi-source history plots with tooltips, incremental live updates, debug below the instance and native configuration backup/import/export. See [Room climate installation and guide](docs/room-climate.md). Update Portal to 1.6 for automatic discovery.
