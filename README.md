@@ -1,3 +1,7 @@
+# Room climate — 0.3.52, build 63
+
+Adds **RoomClimate**, an independent native-Secrets-passkey-protected overview of 21 rooms and 103 temperature/target/humidity mappings. Includes floor/room editor, multi-source history plots with tooltips, incremental live updates, debug below the instance and native configuration backup/import/export. See [Room climate installation and guide](docs/room-climate.md). Update Portal to 1.6 for automatic discovery.
+
 # HeatingControl for IP-Symcon
 
 Version **0.3.49, build 60** applies the first archive-returned value at identical timestamps throughout raw archive readers. Version **0.3.48, build 59** keeps heating running through price recalculation: successful calculations replace thresholds without intermediate zeros, quarter-hour rollover evaluates the cached price schedule immediately, and a briefly delayed replacement can retain the previous verified price for up to two minutes. This does not pause heating or command a source transfer. Retained prices are identified in decision history; actual invalid conditions still use gas. See [automatic switchover](docs/automatic-source-selection.md#decision-and-validity).

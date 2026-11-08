@@ -9,6 +9,9 @@ jobs:
         run: php tests/library-structure.php
       - name: PHP syntax
         run: |
+          php -l RoomClimate/module.php
+          php -l RoomClimate/Security.php
+          php -l RoomClimate/History.php
           php -l HeatingControl/FlapCalibration.php
           php -l HeatingControl/module.php
           php -l HeatingControl/HeatPumpTest.php
@@ -46,6 +49,7 @@ jobs:
           php -l LichtBlickElectricityPrice/DailyHeatingUsage.php
       - name: Heating behavior and web security
         run: |
+          php tests/room-climate.php
           php tests/lichtblick.php
           php tests/lichtblick-price-history.php
           php tests/lichtblick-consumption-history.php
@@ -98,3 +102,14 @@ jobs:
 
 
 
+
+  room-climate-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/room-climate-ui.cjs

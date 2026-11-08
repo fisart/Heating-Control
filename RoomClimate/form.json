@@ -1,0 +1,179 @@
+{
+  "elements": [
+    {
+      "type": "Label",
+      "caption": "Room climate — all readings and targets by floor and room. Click a room to compare its recorded history."
+    },
+    {
+      "type": "CheckBox",
+      "name": "WebEnabled",
+      "caption": "Enable passkey-protected page"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "BackendInstanceID",
+      "caption": "Native Secrets backend (automatic when unique)"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "PortalInstanceID",
+      "caption": "Portal (automatic when unique)"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "DocumentationInstanceID",
+      "caption": "Documentation (automatic when unique)"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "PollSeconds",
+      "caption": "Update interval (seconds)",
+      "minimum": 1,
+      "maximum": 60
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "StaleSeconds",
+      "caption": "Reading stale after (seconds)",
+      "minimum": 60,
+      "maximum": 604800
+    },
+    {
+      "type": "List",
+      "name": "Rooms",
+      "caption": "Floors, rooms and sources",
+      "rowCount": 12,
+      "add": true,
+      "delete": true,
+      "columns": [
+        {
+          "caption": "Key",
+          "name": "key",
+          "width": "150px",
+          "add": "new-room",
+          "edit": {
+            "type": "ValidationTextBox"
+          }
+        },
+        {
+          "caption": "Floor",
+          "name": "floor",
+          "width": "150px",
+          "add": "Ground floor",
+          "edit": {
+            "type": "ValidationTextBox"
+          }
+        },
+        {
+          "caption": "Room",
+          "name": "name",
+          "width": "200px",
+          "add": "New room",
+          "edit": {
+            "type": "ValidationTextBox"
+          }
+        },
+        {
+          "caption": "Sources",
+          "name": "sources",
+          "width": "auto",
+          "add": [],
+          "edit": {
+            "type": "List",
+            "rowCount": 12,
+            "add": true,
+            "delete": true,
+            "columns": [
+              {
+                "caption": "Variable",
+                "name": "id",
+                "width": "160px",
+                "add": 0,
+                "edit": {
+                  "type": "SelectVariable"
+                }
+              },
+              {
+                "caption": "Reading",
+                "name": "kind",
+                "width": "150px",
+                "add": "temperature",
+                "edit": {
+                  "type": "Select",
+                  "options": [
+                    {
+                      "caption": "Temperature",
+                      "value": "temperature"
+                    },
+                    {
+                      "caption": "Target",
+                      "value": "target"
+                    },
+                    {
+                      "caption": "Humidity",
+                      "value": "humidity"
+                    }
+                  ]
+                }
+              },
+              {
+                "caption": "Source",
+                "name": "label",
+                "width": "250px",
+                "add": "Sensor",
+                "edit": {
+                  "type": "ValidationTextBox"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "CheckBox",
+      "name": "DebugEnabled",
+      "caption": "Write debug log below instance"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Button",
+      "caption": "Register / repair page",
+      "onClick": "RCL_Setup($id);"
+    },
+    {
+      "type": "Button",
+      "caption": "Export configuration",
+      "onClick": "RCL_ExportToForm($id);"
+    },
+    {
+      "type": "ValidationTextBox",
+      "name": "BackupJSON",
+      "caption": "Configuration import / export",
+      "multiline": true
+    },
+    {
+      "type": "Button",
+      "caption": "Import configuration",
+      "onClick": "echo RCL_ImportConfig($id, $BackupJSON);"
+    }
+  ],
+  "status": [
+    {
+      "code": 102,
+      "icon": "active",
+      "caption": "Configured"
+    },
+    {
+      "code": 104,
+      "icon": "inactive",
+      "caption": "Web page disabled"
+    },
+    {
+      "code": 200,
+      "icon": "error",
+      "caption": "Invalid room configuration"
+    }
+  ]
+}

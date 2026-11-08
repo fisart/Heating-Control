@@ -1,0 +1,13 @@
+{
+  "id": "{A1D8059C-4B7F-4A75-89D7-B8245397DC60}",
+  "name": "RoomClimate",
+  "type": 3,
+  "vendor": "Artur Fischer",
+  "aliases": [
+    "Room Climate / Raumklima"
+  ],
+  "parentRequirements": [],
+  "childRequirements": [],
+  "implemented": [],
+  "prefix": "RCL"
+}
