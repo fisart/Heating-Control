@@ -272,7 +272,7 @@ document.querySelector('#chart-close').addEventListener('click',()=>chartDialog.
 document.querySelector('#refresh').addEventListener('click',()=>{document.activeElement?.blur();refresh();});
 // Return to the actual portal path supplied by the module; never accept a query redirect.
 const portal=document.querySelector('#portal'),portalBack=document.querySelector('#portal-back');
-if(/^\/hook\/alarm_portal_\d+$/.test(portal.getAttribute('href')||'')){portal.hidden=false;}else{portal.removeAttribute('href');portalBack.hidden=false;}
+if(/^\/hook\/portal$/.test(portal.getAttribute('href')||'')){portal.hidden=false;}else{portal.removeAttribute('href');portalBack.hidden=false;}
 portalBack.addEventListener('click',()=>history.back());
 refresh();setInterval(()=>{if(!document.hidden)refresh();if(lastFetch&&Date.now()-lastFetch>30000){disableControls();document.querySelector('#status').textContent='Status stale — refresh';}},10000);
 </script></body></html>

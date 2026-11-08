@@ -159,7 +159,7 @@ keeps the last selected source and uses the retained manual desired percentage. 
 
 Version **0.3.6**, build 16 corrects **Back to portal** on the heating page.
 It links to the single registered, enabled AlarmPortal using the heating page's
-SecretsManager vault, at `/hook/alarm_portal_<instanceID>`. If no unambiguous
+SecretsManager vault, at `/hook/portal`. If no unambiguous
 matching portal is available, a browser **Back** button is shown. The
 SecretsManager login redirect remains separate from this navigation link.
 

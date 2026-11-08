@@ -80,13 +80,13 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#test-status').textContent.includes('next step 50%'));
  state.heatPumpTest.active=false;d.querySelector('#refresh').click();await settle();
 
- assert.equal(d.querySelector('#portal').getAttribute('href'),'/hook/alarm_portal_10');
+ assert.equal(d.querySelector('#portal').getAttribute('href'),'/hook/portal');
  assert.equal(d.querySelector('#portal').hidden,false,'Actual portal backlink visible');
  assert.equal(d.querySelector('#portal').getAttribute('target'),'_top','Portal link opens the top-level context');
  assert.equal(d.querySelector('#portal').textContent,'← System portal');
  assert.equal(d.querySelector('#portal-back').hidden,true,'Browser fallback hidden when portal is available');
- for(const href of ['', 'javascript:alert(1)','https://evil.example/hook/alarm_portal_10']){
-  const html=fixture.page.body.replace('href="/hook/alarm_portal_10"','href="'+href+'"');
+ for(const href of ['', 'javascript:alert(1)','https://evil.example/hook/portal']){
+  const html=fixture.page.body.replace('href="/hook/portal"','href="'+href+'"');
   const fallback=new JSDOM(html,{url:w.location.href+'?return=https://evil.example',runScripts:'outside-only',virtualConsole:vc});
   let backs=0;fallback.window.history.back=()=>{backs++;};fallback.window.setInterval=()=>0;fallback.window.fetch=w.fetch;
   fallback.window.HTMLDialogElement.prototype.showModal=function(){this.open=true;};

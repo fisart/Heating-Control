@@ -18,9 +18,9 @@ trait RoomClimateSecurity
     private function navigation(): array
     {
         $out=[];
-        foreach(['portal'=>['{922E5A10-A048-463D-A973-97B4BBD9096B}','PortalInstanceID','alarm_portal_'],'documentation'=>['{FBEB2EF6-8D23-49D7-A256-6D0C8D973B24}','DocumentationInstanceID','alarm_documentation_']] as $key=>[$module,$property,$prefix]){
+        foreach(['portal'=>['{922E5A10-A048-463D-A973-97B4BBD9096B}','PortalInstanceID','portal'],'documentation'=>['{FBEB2EF6-8D23-49D7-A256-6D0C8D973B24}','DocumentationInstanceID','alarm_documentation_']] as $key=>[$module,$property,$prefix]){
             $selected=$this->ReadPropertyInteger($property);$ids=$selected>0?[$selected]:IPS_GetInstanceListByModuleID($module);$paths=[];
-            foreach($ids as $id)try{if(IPS_InstanceExists($id)&&strtoupper(IPS_GetInstance($id)['ModuleInfo']['ModuleID']??'')===$module&&IPS_GetProperty($id,'Enabled')===true)$paths[]='/hook/'.$prefix.$id;}catch(Throwable $e){}
+            foreach($ids as $id)try{if(IPS_InstanceExists($id)&&strtoupper(IPS_GetInstance($id)['ModuleInfo']['ModuleID']??'')===$module&&IPS_GetProperty($id,'Enabled')===true)$paths[]=$key==='portal'?'/hook/portal':'/hook/'.$prefix.$id;}catch(Throwable $e){}
             if(count($paths)===1)$out[$key]=$paths[0].($key==='documentation'?'#room-climate':'');
         }return $out;
     }
