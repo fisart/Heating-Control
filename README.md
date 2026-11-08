@@ -1,3 +1,7 @@
+# One target per room — 0.3.55, build 66
+
+RoomClimate now shows one associated thermostat target per room, falling back to the shared air target for rooms without a mapped radiator thermostat. HomeMatic setpoints and redundant older thermostat targets are excluded. Existing mappings and configuration imports are normalized automatically; heating controls are unchanged. See [Room climate guide](docs/room-climate.md).
+
 # Room summary tiles — 0.3.53, build 64
 
 RoomClimate opens with floor-grouped room tiles showing the average of valid temperatures updated within 24 hours, every target and target-minus-average differences. Inactive sensors move to a separate view and rejoin the averages when updates resume. Unchanged setpoints remain visible. Summary calculations use the existing delta feed. See [Room climate guide](docs/room-climate.md).

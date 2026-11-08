@@ -5,6 +5,10 @@
       "caption": "Room climate — all readings and targets by floor and room. Click a room to compare its recorded history."
     },
     {
+      "type": "Label",
+      "caption": "One target per room: use its associated radiator thermostat, otherwise the shared air target. HomeMatic target setpoints are excluded."
+    },
+    {
       "type": "CheckBox",
       "name": "WebEnabled",
       "caption": "Enable passkey-protected page"

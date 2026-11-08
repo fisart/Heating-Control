@@ -28,11 +28,6 @@
         "id": 46648,
         "kind": "target",
         "label": "Shelly radiator"
-      },
-      {
-        "id": 10232,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -65,11 +60,6 @@
         "id": 51537,
         "kind": "target",
         "label": "Shelly radiator"
-      },
-      {
-        "id": 58174,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -99,18 +89,8 @@
         "label": "Shelly radiator"
       },
       {
-        "id": 28798,
-        "kind": "target",
-        "label": "Shelly radiator"
-      },
-      {
         "id": 29639,
         "kind": "temperature",
-        "label": "FRITZ radiator"
-      },
-      {
-        "id": 43932,
-        "kind": "target",
         "label": "FRITZ radiator"
       },
       {
@@ -132,6 +112,11 @@
         "id": 34282,
         "kind": "temperature",
         "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 43932,
+        "kind": "target",
+        "label": "FRITZ radiator"
       }
     ]
   },
@@ -161,11 +146,6 @@
         "label": "Shelly radiator"
       },
       {
-        "id": 46731,
-        "kind": "target",
-        "label": "Shelly radiator"
-      },
-      {
         "id": 50081,
         "kind": "temperature",
         "label": "FRITZ radiator"
@@ -174,11 +154,6 @@
         "id": 12312,
         "kind": "target",
         "label": "FRITZ radiator"
-      },
-      {
-        "id": 27558,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -208,11 +183,6 @@
         "label": "Shelly radiator"
       },
       {
-        "id": 18363,
-        "kind": "target",
-        "label": "Shelly radiator"
-      },
-      {
         "id": 17086,
         "kind": "temperature",
         "label": "FRITZ radiator"
@@ -221,11 +191,6 @@
         "id": 35995,
         "kind": "target",
         "label": "FRITZ radiator"
-      },
-      {
-        "id": 16991,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -318,16 +283,6 @@
         "label": "KNX presence sensor"
       },
       {
-        "id": 12594,
-        "kind": "target",
-        "label": "Shared air target"
-      },
-      {
-        "id": 42211,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
-      },
-      {
         "id": 44816,
         "kind": "temperature",
         "label": "FRITZ socket sensor"
@@ -341,6 +296,11 @@
         "id": 55226,
         "kind": "temperature",
         "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 12594,
+        "kind": "target",
+        "label": "Shared air target"
       }
     ]
   },
@@ -372,14 +332,14 @@
         "label": "KNX presence sensor"
       },
       {
-        "id": 37341,
-        "kind": "target",
-        "label": "Shared air target"
-      },
-      {
         "id": 14900,
         "kind": "temperature",
         "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 37341,
+        "kind": "target",
+        "label": "Shared air target"
       }
     ]
   },
@@ -404,19 +364,14 @@
         "label": "KNX presence sensor"
       },
       {
-        "id": 37341,
-        "kind": "target",
-        "label": "Shared air target"
-      },
-      {
-        "id": 26861,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
-      },
-      {
         "id": 48084,
         "kind": "temperature",
         "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 37341,
+        "kind": "target",
+        "label": "Shared air target"
       }
     ]
   },
@@ -449,11 +404,6 @@
         "id": 54714,
         "kind": "target",
         "label": "Shelly radiator"
-      },
-      {
-        "id": 39084,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -493,11 +443,6 @@
         "id": 30481,
         "kind": "target",
         "label": "Shared air target"
-      },
-      {
-        "id": 38934,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -522,18 +467,8 @@
         "label": "Shelly radiator"
       },
       {
-        "id": 37223,
-        "kind": "target",
-        "label": "Shelly radiator"
-      },
-      {
         "id": 52019,
         "kind": "temperature",
-        "label": "Shelly radiator (small)"
-      },
-      {
-        "id": 19251,
-        "kind": "target",
         "label": "Shelly radiator (small)"
       },
       {
@@ -584,11 +519,6 @@
         "id": 40975,
         "kind": "target",
         "label": "Shared air target"
-      },
-      {
-        "id": 40482,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -616,11 +546,6 @@
         "id": 40975,
         "kind": "target",
         "label": "Shared air target"
-      },
-      {
-        "id": 40482,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   },
@@ -653,11 +578,6 @@
         "id": 35786,
         "kind": "target",
         "label": "Shelly radiator"
-      },
-      {
-        "id": 28554,
-        "kind": "target",
-        "label": "HomeMatic wall thermostat"
       }
     ]
   }

@@ -65,6 +65,7 @@ class RoomClimate extends IPSModule
     public function GetConfigurationForm()
     {
         $f=json_decode(file_get_contents(__DIR__.'/form.json'),true,64,JSON_THROW_ON_ERROR);
+        try{$rooms=$this->configuration();foreach($f['elements'] as &$element)if(($element['name']??'')==='Rooms')$element['values']=$rooms;unset($element);}catch(Throwable $e){}
         $f['actions'][]=['type'=>'Label','caption'=>'Page: '.$this->path().' — open using the native Secrets HTTPS address.'];
         return json_encode($f,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
     }
@@ -92,18 +93,39 @@ class RoomClimate extends IPSModule
         }
         if($total>1000)throw new InvalidArgumentException('Use at most 1000 mapped sources.');return $rooms;
     }
-    private function configuration(): array {return self::validate(json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR));}
+    /** Normalize older multi-target mappings without changing heating controllers or saved device values. */
+    private static function singleTargets(array $rooms): array
+    {
+        $homeMaticIDs=[10232,16991,26861,27558,28554,38934,39084,40482,42211,58174];
+        foreach($rooms as &$room){
+            $best=null;$rank=PHP_INT_MAX;
+            foreach($room['sources'] as $source){
+                if($source['kind']!=='target'||in_array($source['id'],$homeMaticIDs,true)||preg_match('/home[\s-]*matic/i',$source['label']))continue;
+                // FRITZ replaces the older Shelly mappings in the supplied Berlin inventory.
+                // Select deterministically, never switch targets based on timestamp or availability.
+                $candidate=preg_match('/FRITZ/i',$source['label'])?0:(preg_match('/Shelly|thermostat|radiator|TRV/i',$source['label'])?1:2);
+                if($candidate<$rank){$rank=$candidate;$best=$source;}
+            }
+            $room['sources']=array_values(array_filter($room['sources'],static fn($source)=>$source['kind']!=='target'));
+            if($best!==null)$room['sources'][]=$best;
+        }unset($room);return $rooms;
+    }
+    private function configuration(): array {return self::singleTargets(self::validate(json_decode(IPS_GetConfiguration($this->InstanceID),true,64,JSON_THROW_ON_ERROR)));}
+    private static function normalizedProperties(array $properties): array
+    {
+        $properties['Rooms']=json_encode(self::singleTargets(self::validate($properties)),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);return $properties;
+    }
     private static function canonical($v): string
     {
         $sort=function($x)use(&$sort){if(!is_array($x))return $x;if(!array_is_list($x))ksort($x,SORT_STRING);foreach($x as &$a)$a=$sort($a);return $x;};
         return json_encode($sort($v),JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
     }
-    public function ExportConfig(): string {return json_encode(['schema'=>'RoomClimate.v1','properties'=>json_decode(IPS_GetConfiguration($this->InstanceID),true)],JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);}
+    public function ExportConfig(): string {return json_encode(['schema'=>'RoomClimate.v1','properties'=>self::normalizedProperties(json_decode(IPS_GetConfiguration($this->InstanceID),true))],JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);}
     public function ImportConfig(string $JSON): string
     {
         if(strlen($JSON)>524288)throw new InvalidArgumentException('Import too large.');$v=json_decode($JSON,true,64,JSON_THROW_ON_ERROR);
         if(($v['schema']??'')!=='RoomClimate.v1'||!is_array($v['properties']??null)||array_diff(array_keys($v),['schema','properties']))throw new InvalidArgumentException('Unsupported configuration.');
-        self::validate($v['properties']);$v['properties']['WebEnabled']=false;
+        $v['properties']=self::normalizedProperties($v['properties']);$v['properties']['WebEnabled']=false;
         IPS_SetConfiguration($this->InstanceID,json_encode($v['properties'],JSON_THROW_ON_ERROR));IPS_ApplyChanges($this->InstanceID);
         return 'Imported; review variable IDs and native Secrets backend, then enable the page.';
     }
