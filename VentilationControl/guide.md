@@ -18,6 +18,14 @@ Dew point and vapour pressure use a matching temperature/humidity sensor pair. R
 
 Kitchen lacks its own humidity sensor in the mapped inventory. Its default explicitly uses the matching temperature/humidity pair from blue room, on the same central air branch. Review this proxy mapping in Admin. Heating room, basement hallway, entrance hall, dining room, storeroom and dressing room were removed because a required sensor was 0. Fifteen rooms remain.
 
+## Sensor reporting and heating status
+
+KNX temperature inputs are identified from their Symcon KNX module. They report when temperature changes by the configured device threshold; an old last-report timestamp alone is not a sensor failure. VentilationControl accepts a valid stored KNX temperature without applying the periodic-report age limit. The exact KNX change threshold is not assumed. Missing, invalid or never-reported temperature values still require attention.
+
+The maximum periodic-sensor age remains in effect for other climate sources, including periodic humidity readings. When interpreting HeatingControl's configured temperature inputs, the adapter follows that controller's own MaxSensorAgeSeconds setting; 0 means that HeatingControl does not impose an age limit. An explicitly configured HeatingControl age limit is preserved. The controller's settings are never changed by this logic.
+
+A room-input problem is shown separately from the heating controller's actual enabled/disabled state. It blocks ventilation when needed without labelling the whole heating connection unavailable. The selected cold point of each supplied ventilation room also gives heating priority when it reaches the existing heating target plus hysteresis, independently of HeatingControl's original temperature-sensor choices.
+
 ## Automatic and manual controls
 
 Enable module permits evaluation. Automatic enable permits automatic cycles. Manual start requests one cycle with an automatic, internal or external air choice and a finite duration. Stop cancels the cycle AND disables automatic mode so it does not immediately restart. Disabling Automatic also stops a current cycle. Every stop finishes the equipment handover to heating. Disabling the module allows only cleanup of equipment already borrowed; it never starts another cycle.

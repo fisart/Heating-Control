@@ -19,7 +19,8 @@ function IPS_SetProperty($id,$key,$value){if($id===700)$GLOBALS['vmc']->properti
 function IPS_GetProperty($id,$key){return $id===700?$GLOBALS['vmc']->properties[$key]:$GLOBALS['instances'][$id]['p'][$key];}
 function IPS_ApplyChanges($id){if($id===700)$GLOBALS['vmc']->ApplyChanges();}
 function IPS_InstanceExists($id){return $id===700||isset($GLOBALS['instances'][$id]);}
-function IPS_GetInstance($id){return ['ModuleInfo'=>['ModuleID'=>$GLOBALS['instances'][$id]['module']??VentilationControl::MODULE]];}
+function IPS_GetInstance($id){return ['ModuleInfo'=>['ModuleID'=>$GLOBALS['instances'][$id]['module']??VentilationControl::MODULE,'ModuleName'=>$GLOBALS['instances'][$id]['moduleName']??'Fixture']];}
+function IPS_GetParent($id){return $GLOBALS['parents'][$id]??0;}
 function IPS_GetInstanceListByModuleID($id){return array_keys(array_filter($GLOBALS['instances']??[],fn($v)=>$v['module']===$id));}
 function IPS_HasChanges($id){return $GLOBALS['pending'][$id]??false;}
 function IPS_VariableExists($id){return isset($GLOBALS['vars'][$id]);}function IPS_GetVariable($id){return $GLOBALS['vars'][$id];}function GetValue($id){return $GLOBALS['vars'][$id]['value'];}
@@ -36,7 +37,7 @@ function privateCall($m,$name,...$args){return(new ReflectionMethod($m,$name))->
 function v(int $id,$value,bool $action=false,int $updated=0){$GLOBALS['vars'][$id]=['VariableType'=>is_bool($value)?0:(is_int($value)?1:2),'VariableAction'=>$action?999:0,'VariableCustomAction'=>0,'VariableUpdated'=>$updated?:time(),'value'=>$value];}
 function fixture(): VentilationControl
 {
-    $GLOBALS['vars']=[];$GLOBALS['locks']=[];$GLOBALS['pending']=[];$GLOBALS['commands']=[];$GLOBALS['calls']=[];$GLOBALS['noAck']=[];unset($GLOBALS['failID'],$GLOBALS['onPause']);$GLOBALS['boot']=1234567;
+    $GLOBALS['vars']=[];$GLOBALS['locks']=[];$GLOBALS['pending']=[];$GLOBALS['commands']=[];$GLOBALS['calls']=[];$GLOBALS['noAck']=[];$GLOBALS['parents']=[];unset($GLOBALS['failID'],$GLOBALS['onPause']);$GLOBALS['boot']=1234567;
     $m=new VentilationControl();$GLOBALS['vmc']=$m;$m->Create();
     $h=['Enabled'=>true,'DryRun'=>false,'Rooms'=>json_encode([['name'=>'Room A','sensors'=>[301],'targetID'=>114,'flapID'=>201,'open'=>true,'closed'=>false],['name'=>'Room B','sensors'=>[303],'targetID'=>115,'flapID'=>202,'open'=>true,'closed'=>false]]),'HysteresisID'=>113,'FanOnID'=>100,'FanSpeedID'=>101,'HeatPumpOnID'=>102,'GasPumpID'=>103,'WinterID'=>108,'MasterDisableID'=>109,'OperatingModeID'=>110,'HolidayID'=>111,'NightDisableID'=>112,'CoolingModeValue'=>0];
     $GLOBALS['instances']=[500=>['module'=>'{8B333AC9-EE67-4D24-8CE7-433BBB391E6C}','p'=>$h],501=>['module'=>'{COOLING}','p'=>['VentilationActiveLink'=>106,'MainFanControlLink'=>100,'MainFanSpeedLink'=>101,'MainACOnOffLink'=>102,'WinterModeID'=>108]],900=>['module'=>'{52165EDD-B2C0-40EC-8A59-42A97319B6E2}','p'=>['Enabled'=>true,'FrontendInstanceID'=>901,'AdminOrigin'=>'https://native.example']],901=>['module'=>'{8D6AE8F7-EA3A-4513-AA14-C3F9613B0E83}','p'=>['Enabled'=>true,'BackendInstanceID'=>900,'AdminOrigin'=>'https://native.example']]];

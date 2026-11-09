@@ -2,12 +2,24 @@
 declare(strict_types=1);
 trait VentilationSensors
 {
+    private function knxTemperature(int $id): bool
+    {
+        try{
+            if(!function_exists('IPS_GetParent'))return false;$parent=IPS_GetParent($id);
+            if($parent<2||!IPS_InstanceExists($parent))return false;$module=IPS_GetInstance($parent)['ModuleInfo']??[];
+            return strtoupper((string)($module['ModuleID']??''))==='{95CDE37D-72CE-4360-BB91-573757C274A0}'||preg_match('/^KNX(?:[ -]|$)/i',(string)($module['ModuleName']??''))===1;
+        }catch(Throwable $e){return false;}
+    }
     private function reading(int $id,string $kind): array
     {
         try{
             if($id<2||!IPS_VariableExists($id))return ['value'=>null,'updated'=>0,'status'=>'missing'];$v=IPS_GetVariable($id);$n=GetValue($id);$u=(int)($v['VariableUpdated']??0);
             if(!in_array($v['VariableType'],[1,2],true)||!is_numeric($n)||!is_finite((float)$n)||($kind==='humidity'?($n<=0||$n>100):($n< -50||$n>80)))return ['value'=>null,'updated'=>$u,'status'=>'invalid'];
-            return ['value'=>(float)$n,'updated'=>$u,'status'=>($u<=0||$u>time()+60||time()-$u>$this->ReadPropertyInteger('MaxSensorAgeSeconds'))?'stale':'ok'];
+            $onChange=$kind==='temperature'&&$this->knxTemperature($id);
+            // A KNX value is sent when it changes by the device's threshold.
+            // Silence alone does not mean that its stored temperature is bad.
+            return ['value'=>(float)$n,'updated'=>$u,'reporting'=>$onChange?'on-change':'periodic',
+                'status'=>($u<=0||$u>time()+60||(!$onChange&&time()-$u>$this->ReadPropertyInteger('MaxSensorAgeSeconds')))?'stale':'ok'];
         }catch(Throwable $e){return ['value'=>null,'updated'=>0,'status'=>'unavailable'];}
     }
     private function measured(int $id,string $kind): float
@@ -73,19 +85,34 @@ trait VentilationSensors
         $c=json_decode(IPS_GetConfiguration($id),true,64,JSON_THROW_ON_ERROR);
         if(!is_string($c['Rooms']??null))throw new RuntimeException('Heating room configuration is unavailable.');
         $rooms=self::heatingRooms($c['Rooms']);
-        $demand=[];$h=GetValue((int)$c['HysteresisID']);if(!is_numeric($h)||!is_finite((float)$h)||$h<0||$h>5)throw new RuntimeException('Invalid heating hysteresis.');
+        $demand=[];$inputIssues=[];$sensorReports=[];$h=GetValue((int)$c['HysteresisID']);if(!is_numeric($h)||!is_finite((float)$h)||$h<0||$h>5)throw new RuntimeException('Invalid heating hysteresis.');
+        $maxHeatingAge=$c['MaxSensorAgeSeconds']??0;if(!is_int($maxHeatingAge)||$maxHeatingAge<0)throw new RuntimeException('Invalid HeatingControl sensor-age policy.');
+        $ventilationRooms=$this->rooms();
         foreach($rooms as $r){
-            $temps=[];foreach($r['sensors'] as $sensor)$temps[]=$this->measured((int)$sensor,'temperature');
-            if(!$temps)throw new RuntimeException('Heating room has no sensors.');
-            $actual=array_sum($temps)/count($temps);$target=$this->value((int)$r['targetID'],2);
-            if(!is_finite($target)||$target<5||$target>35)throw new RuntimeException('Invalid heating target.');
-            // Return equipment before a room crosses the normal heating-on threshold.
-            if($actual<=$target+(float)$h)$demand[]=$r['name'];
+            try{
+                $temps=[];
+                foreach($r['sensors'] as $sensor){
+                    $reading=$this->reading($sensor,'temperature');
+                    $sensorReports[]=['id'=>$sensor,'room'=>$r['name'],'updated'=>$reading['updated'],'reporting'=>$reading['reporting']??'periodic'];
+                    if($reading['value']===null||!in_array($reading['status'],['ok','stale'],true))throw new RuntimeException('sensor '.$sensor.' is '.$reading['status'].'.');
+                    // Respect the existing controller's own age policy when
+                    // interpreting its configured inputs; never change it.
+                    if($maxHeatingAge>0&&($reading['updated']<=0||time()-$reading['updated']>$maxHeatingAge))throw new RuntimeException('sensor '.$sensor.' exceeds HeatingControl\'s '.$maxHeatingAge.'-second age limit.');
+                    $temps[]=$reading['value'];
+                }
+                $actual=array_sum($temps)/count($temps);$target=$this->value((int)$r['targetID'],2);
+                if(!is_finite($target)||$target<5||$target>35)throw new RuntimeException('invalid heating target.');
+                // The selected cold points also protect the heating target,
+                // independently of the original controller's sensor choices.
+                $receiving=[];foreach($ventilationRooms as $vr)if($vr['flapID']===$r['flapID'])$receiving[]=$this->measured($vr['coldTemperatureID'],'temperature');
+                if($receiving)$actual=min($actual,min($receiving));
+                if($actual<=$target+(float)$h)$demand[]=$r['name'];
+            }catch(Throwable $e){$inputIssues[]=$r['name'].': '.$e->getMessage();}
         }
         $child=function(string $ident)use($id){$v=IPS_GetObjectIDByIdent($ident,$id);if(!$v||!IPS_VariableExists($v))throw new RuntimeException('Heating Control lacks '.$ident.'.');return GetValue($v);};
         $fingerprint=$c;unset($fingerprint['Enabled']);
         return ['id'=>$id,'enabled'=>$c['Enabled']===true,'dryRun'=>$c['DryRun']===true,'config'=>$c,'configHash'=>hash('sha256',self::canonical($fingerprint)),
-            'rooms'=>$rooms,'demand'=>$demand,'winter'=>$this->value((int)$c['WinterID'],0),'masterDisabled'=>$this->value((int)$c['MasterDisableID'],0),
+            'rooms'=>$rooms,'demand'=>$demand,'inputIssues'=>$inputIssues,'sensorReports'=>$sensorReports,'sensorAgePolicySeconds'=>$maxHeatingAge,'winter'=>$this->value((int)$c['WinterID'],0),'masterDisabled'=>$this->value((int)$c['MasterDisableID'],0),
             'mode'=>$this->value((int)$c['OperatingModeID'],1),'holiday'=>$this->value((int)$c['HolidayID'],0),'nightDisabled'=>$this->value((int)$c['NightDisableID'],0),
             'heatPumpOn'=>$this->value((int)$c['HeatPumpOnID'],0),'gasPumpOn'=>$this->value((int)$c['GasPumpID'],0),'fanOn'=>$this->value((int)$c['FanOnID'],0),
             'residual'=>$child('ResidualHeating')===true,'test'=>$child('HeatPumpTestActive')===true,'calibration'=>$child('FlapCalibrationActive')===true];
@@ -101,6 +128,7 @@ trait VentilationSensors
         if($h['nightDisabled']&&!$h['holiday'])return 'Night shutdown is active.';
         if($h['test']||$h['calibration'])return 'A heating test or flap calibration owns the equipment.';
         if($h['heatPumpOn']||$h['gasPumpOn']||$h['residual'])return 'Heating or residual heat recovery has priority.';
+        if($h['inputIssues'])return 'Ventilation waiting for heating input: '.implode(' ',$h['inputIssues']);
         if($h['demand'])return 'Heating priority: '.implode(', ',$h['demand']).'.';
         if(!$owning&&$h['fanOn'])return 'The shared fan is already running.';
         return '';
