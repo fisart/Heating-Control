@@ -1,0 +1,666 @@
+[
+  {
+    "key": "electronic-office",
+    "name": "Electronic office",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 33431,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 51709,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 42622,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 31185,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      }
+    ],
+    "temperatureID": 51709,
+    "humidityID": 33431,
+    "coldTemperatureID": 42622,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "penny-s-office",
+    "name": "Penny’s office",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 42464,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 58521,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 57967,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 56076,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      }
+    ],
+    "temperatureID": 42464,
+    "humidityID": 58521,
+    "coldTemperatureID": 42464,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "computer-room",
+    "name": "Computer room",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 15552,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 39947,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 29688,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 26654,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      },
+      {
+        "id": 29639,
+        "kind": "temperature",
+        "label": "FRITZ radiator"
+      },
+      {
+        "id": 26156,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 34282,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      }
+    ],
+    "temperatureID": 39947,
+    "humidityID": 15552,
+    "coldTemperatureID": 29639,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "gym",
+    "name": "Gym",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 31225,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 59723,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 27816,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 15718,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      },
+      {
+        "id": 50081,
+        "kind": "temperature",
+        "label": "FRITZ radiator"
+      }
+    ],
+    "temperatureID": 59723,
+    "humidityID": 31225,
+    "coldTemperatureID": 50081,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "washroom",
+    "name": "Washroom",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 35044,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 46685,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 37478,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 34067,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      },
+      {
+        "id": 17086,
+        "kind": "temperature",
+        "label": "FRITZ radiator"
+      }
+    ],
+    "temperatureID": 35044,
+    "humidityID": 46685,
+    "coldTemperatureID": 17086,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "heating-room",
+    "name": "Heating room",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 34331,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 54647,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      }
+    ],
+    "temperatureID": 54647,
+    "humidityID": 0,
+    "coldTemperatureID": 54647,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "basement-toilet",
+    "name": "Basement toilet",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 20878,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 33010,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 49909,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      }
+    ],
+    "temperatureID": 33010,
+    "humidityID": 20878,
+    "coldTemperatureID": 33010,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "basement-hallway",
+    "name": "Basement hallway",
+    "floor": "Basement",
+    "sources": [
+      {
+        "id": 26758,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      }
+    ],
+    "temperatureID": 0,
+    "humidityID": 0,
+    "coldTemperatureID": 0,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "entrance-hall",
+    "name": "Entrance hall",
+    "floor": "Ground floor",
+    "sources": [
+      {
+        "id": 18275,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      }
+    ],
+    "temperatureID": 0,
+    "humidityID": 0,
+    "coldTemperatureID": 0,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "living-room",
+    "name": "Living room",
+    "floor": "Ground floor",
+    "sources": [
+      {
+        "id": 34415,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 57694,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 44863,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 44816,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 53378,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 55226,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      }
+    ],
+    "temperatureID": 57694,
+    "humidityID": 34415,
+    "coldTemperatureID": 57694,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 36911,
+    "enabled": true
+  },
+  {
+    "key": "dining-room",
+    "name": "Dining room",
+    "floor": "Ground floor",
+    "sources": [
+      {
+        "id": 13307,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 34415,
+        "kind": "humidity",
+        "label": "Shared branch humidity: living-room"
+      },
+      {
+        "id": 57694,
+        "kind": "temperature",
+        "label": "Humidity reference: living-room"
+      }
+    ],
+    "temperatureID": 57694,
+    "humidityID": 34415,
+    "coldTemperatureID": 0,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 36911,
+    "enabled": true
+  },
+  {
+    "key": "kitchen",
+    "name": "Kitchen",
+    "floor": "Ground floor",
+    "sources": [
+      {
+        "id": 39592,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 14900,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      },
+      {
+        "id": 16813,
+        "kind": "humidity",
+        "label": "Shared branch humidity: blue-room"
+      },
+      {
+        "id": 57255,
+        "kind": "temperature",
+        "label": "Humidity reference: blue-room"
+      }
+    ],
+    "temperatureID": 57255,
+    "humidityID": 16813,
+    "coldTemperatureID": 14900,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 27527,
+    "enabled": true
+  },
+  {
+    "key": "blue-room",
+    "name": "Blue room",
+    "floor": "Ground floor",
+    "sources": [
+      {
+        "id": 16813,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 57255,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 57458,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 48084,
+        "kind": "temperature",
+        "label": "FRITZ socket sensor"
+      }
+    ],
+    "temperatureID": 57255,
+    "humidityID": 16813,
+    "coldTemperatureID": 48084,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 27527,
+    "enabled": true
+  },
+  {
+    "key": "guest-bathroom-gf",
+    "name": "Guest bathroom GF",
+    "floor": "Ground floor",
+    "sources": [
+      {
+        "id": 45558,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 56764,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 48964,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 23367,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      },
+      {
+        "id": 52709,
+        "kind": "temperature",
+        "label": "FRITZ radiator"
+      }
+    ],
+    "temperatureID": 45558,
+    "humidityID": 56764,
+    "coldTemperatureID": 45558,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "storeroom",
+    "name": "Storeroom",
+    "floor": "Ground floor",
+    "sources": [
+      {
+        "id": 40513,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      }
+    ],
+    "temperatureID": 0,
+    "humidityID": 0,
+    "coldTemperatureID": 0,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "master-bedroom",
+    "name": "Master bedroom",
+    "floor": "First floor",
+    "sources": [
+      {
+        "id": 42946,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 43002,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 15880,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      }
+    ],
+    "temperatureID": 42946,
+    "humidityID": 43002,
+    "coldTemperatureID": 42946,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 40259,
+    "enabled": true
+  },
+  {
+    "key": "master-bathroom",
+    "name": "Master bathroom",
+    "floor": "First floor",
+    "sources": [
+      {
+        "id": 44524,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 44964,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 59814,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      },
+      {
+        "id": 52019,
+        "kind": "temperature",
+        "label": "Shelly radiator (small)"
+      },
+      {
+        "id": 32551,
+        "kind": "temperature",
+        "label": "FRITZ radiator"
+      }
+    ],
+    "temperatureID": 44964,
+    "humidityID": 44524,
+    "coldTemperatureID": 59814,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "dressing-room",
+    "name": "Dressing room",
+    "floor": "First floor",
+    "sources": [
+      {
+        "id": 36671,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      }
+    ],
+    "temperatureID": 0,
+    "humidityID": 0,
+    "coldTemperatureID": 0,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  },
+  {
+    "key": "large-guest-bedroom",
+    "name": "Large guest bedroom",
+    "floor": "First floor",
+    "sources": [
+      {
+        "id": 44502,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 58427,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 49262,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      }
+    ],
+    "temperatureID": 44502,
+    "humidityID": 58427,
+    "coldTemperatureID": 44502,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 22150,
+    "enabled": true
+  },
+  {
+    "key": "small-guest-bedroom",
+    "name": "Small guest bedroom",
+    "floor": "First floor",
+    "sources": [
+      {
+        "id": 10190,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 25817,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 58330,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      }
+    ],
+    "temperatureID": 10190,
+    "humidityID": 25817,
+    "coldTemperatureID": 10190,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 22150,
+    "enabled": true
+  },
+  {
+    "key": "guest-bathroom-ff",
+    "name": "Guest bathroom FF",
+    "floor": "First floor",
+    "sources": [
+      {
+        "id": 19885,
+        "kind": "humidity",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 34297,
+        "kind": "temperature",
+        "label": "HomeMatic room sensor"
+      },
+      {
+        "id": 29029,
+        "kind": "temperature",
+        "label": "KNX presence sensor"
+      },
+      {
+        "id": 48780,
+        "kind": "temperature",
+        "label": "Shelly radiator"
+      }
+    ],
+    "temperatureID": 34297,
+    "humidityID": 19885,
+    "coldTemperatureID": 34297,
+    "surfaceTemperatureID": 0,
+    "minimumTemperature": 8.0,
+    "flapID": 0,
+    "enabled": false
+  }
+]

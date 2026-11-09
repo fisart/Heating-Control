@@ -1,0 +1,22 @@
+name: Ventilation module checks
+on: [push, pull_request]
+jobs:
+  ventilation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find VentilationControl -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Control, sensor selection and web security
+        run: |
+          php tests/ventilation-control.php
+          php tests/ventilation-web.php
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Browser dependencies
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Browser interaction and responsive page
+        run: node tests/ventilation-ui.cjs
