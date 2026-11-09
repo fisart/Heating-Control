@@ -38,13 +38,41 @@ trait VentilationSensors
         $heating=null;$heatingError='';try{$heating=$this->heating();}catch(Throwable $e){$heatingError=$e->getMessage();}
         return ['now'=>time(),'rooms'=>$result,'outside'=>$outside,'outsideError'=>$outsideError,'heating'=>$heating,'heatingError'=>$heatingError];
     }
+    /** Accept the same sensor rows and typed flap commands as HeatingControl. */
+    private static function heatingRooms(string $json): array
+    {
+        $rows=json_decode($json,true,64,JSON_THROW_ON_ERROR);
+        if(!is_array($rows)||!array_is_list($rows)||!$rows||count($rows)>100)throw new RuntimeException('Heating rooms must be a non-empty list.');
+        $rooms=[];
+        foreach($rows as $row){
+            if(!is_array($row)||!is_string($row['name']??null)||!is_array($row['sensors']??null)||!array_is_list($row['sensors'])||!$row['sensors']||count($row['sensors'])>32)throw new RuntimeException('Invalid heating room or temperature-sensor list.');
+            $sensors=[];
+            foreach($row['sensors'] as $sensor){
+                $id=is_array($sensor)?($sensor['id']??null):$sensor;
+                if(!is_int($id)||$id<2)throw new RuntimeException('Heating room '.$row['name'].' has an invalid temperature sensor ID.');
+                $sensors[]=$id;
+            }
+            foreach(['targetID','flapID'] as $key)if(!is_int($row[$key]??null)||$row[$key]<2)throw new RuntimeException('Heating room '.$row['name'].' has an invalid '.$key.'.');
+            $open=$row['open']??null;$closed=$row['closed']??null;
+            if(array_key_exists('flapType',$row)){
+                if(!in_array($row['flapType'],[0,1],true)||!is_int($open)||!is_int($closed))throw new RuntimeException('Heating room '.$row['name'].' has invalid typed flap commands.');
+                $max=$row['flapType']===0?1:100;
+                if($open<0||$open>$max||$closed<0||$closed>$max)throw new RuntimeException('Heating flap commands are outside the allowed range.');
+                if($row['flapType']===0){$open=(bool)$open;$closed=(bool)$closed;}
+            }
+            if(!((is_bool($open)&&is_bool($closed))||(is_int($open)&&is_int($closed)&&$open>=0&&$open<=100&&$closed>=0&&$closed<=100))||$open===$closed)throw new RuntimeException('Heating flap open/closed commands must have matching types and different values.');
+            $rooms[]=['name'=>$row['name'],'sensors'=>$sensors,'targetID'=>$row['targetID'],'flapID'=>$row['flapID'],'open'=>$open,'closed'=>$closed];
+        }
+        return $rooms;
+    }
     private function heating(): array
     {
         $id=$this->ReadPropertyInteger('HeatingInstanceID');
         if(!IPS_InstanceExists($id)||strtoupper(IPS_GetInstance($id)['ModuleInfo']['ModuleID']??'')!==self::HEATING)throw new RuntimeException('Select the HeatingControl instance.');
         if(IPS_HasChanges($id))throw new RuntimeException('Heating Control has unapplied configuration edits.');
-        $c=json_decode(IPS_GetConfiguration($id),true,64,JSON_THROW_ON_ERROR);$rooms=json_decode($c['Rooms'],true,32,JSON_THROW_ON_ERROR);
-        if(!is_array($rooms)||!$rooms)throw new RuntimeException('Heating rooms are unavailable.');
+        $c=json_decode(IPS_GetConfiguration($id),true,64,JSON_THROW_ON_ERROR);
+        if(!is_string($c['Rooms']??null))throw new RuntimeException('Heating room configuration is unavailable.');
+        $rooms=self::heatingRooms($c['Rooms']);
         $demand=[];$h=GetValue((int)$c['HysteresisID']);if(!is_numeric($h)||!is_finite((float)$h)||$h<0||$h>5)throw new RuntimeException('Invalid heating hysteresis.');
         foreach($rooms as $r){
             $temps=[];foreach($r['sensors'] as $sensor)$temps[]=$this->measured((int)$sensor,'temperature');
