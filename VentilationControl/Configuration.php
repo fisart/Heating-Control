@@ -23,7 +23,7 @@ trait VentilationConfiguration
         foreach(self::FLOATS as $k=>$_)if(!is_finite($p[$k]))throw new InvalidArgumentException('Invalid number: '.$k);
         if($p['StopHumidity']<20||$p['StartHumidity']>95||$p['StopHumidity']>=$p['StartHumidity']||$p['StartMoistureExcess']<0.5||$p['StartMoistureExcess']>10||$p['StopDryingPotential']<0.1||$p['StopDryingPotential']>=$p['StartMoistureExcess']||$p['MaximumColdHumidity']<50||$p['MaximumColdHumidity']>80||$p['MaximumTemperatureDrop']<0.5||$p['MaximumTemperatureDrop']>5||$p['MinimumOutsideTemperature']< -30||$p['MinimumOutsideTemperature']>30||$p['RecirculationSpread']<1||$p['RecirculationSpread']>10)throw new InvalidArgumentException('Invalid humidity or thermal thresholds.');
         if(strlen($p['Rooms'])>262144)throw new InvalidArgumentException('Room configuration too large.');
-        $rooms=json_decode($p['Rooms'],true,32,JSON_THROW_ON_ERROR);if(!is_array($rooms)||!array_is_list($rooms)||!$rooms||count($rooms)>100)throw new InvalidArgumentException('Configure 1 to 100 rooms.');
+        $rooms=json_decode($p['Rooms'],true,32,JSON_THROW_ON_ERROR);if(!is_array($rooms)||!array_is_list($rooms)||count($rooms)>100)throw new InvalidArgumentException('Configure at most 100 rooms.');
         $seen=[];
         foreach($rooms as $r){
             $keys=['key','name','floor','sources','temperatureID','humidityID','coldTemperatureID','surfaceTemperatureID','minimumTemperature','flapID','enabled'];
@@ -35,6 +35,10 @@ trait VentilationConfiguration
             $ids=[];foreach($r['sources'] as $s){if(!is_array($s)||array_diff(array_keys($s),['id','kind','label'])||!is_int($s['id']??null)||$s['id']<2||!in_array($s['kind']??'', ['temperature','humidity'],true)||!is_string($s['label']??null)||strlen($s['label'])>160||isset($ids[$s['id']]))throw new InvalidArgumentException('Invalid sensor candidate.');$ids[$s['id']]=$s['kind'];}
             foreach(['temperatureID'=>'temperature','humidityID'=>'humidity','coldTemperatureID'=>'temperature'] as $k=>$kind)if($r[$k]&&($ids[$r[$k]]??'')!==$kind)throw new InvalidArgumentException('Selected sensor must belong to its room and type.');
         }return $rooms;
+    }
+    private static function configuredRooms(array $rooms): array
+    {
+        return array_values(array_filter($rooms,static fn(array $room): bool=>$room['temperatureID']!==0&&$room['humidityID']!==0&&$room['coldTemperatureID']!==0));
     }
     private function rooms(): array {return self::validate($this->properties());}
     private function revision(): string {return hash('sha256',self::canonical($this->properties()));}

@@ -195,30 +195,6 @@
     "enabled": false
   },
   {
-    "key": "heating-room",
-    "name": "Heating room",
-    "floor": "Basement",
-    "sources": [
-      {
-        "id": 34331,
-        "kind": "temperature",
-        "label": "KNX presence sensor"
-      },
-      {
-        "id": 54647,
-        "kind": "temperature",
-        "label": "FRITZ socket sensor"
-      }
-    ],
-    "temperatureID": 54647,
-    "humidityID": 0,
-    "coldTemperatureID": 54647,
-    "surfaceTemperatureID": 0,
-    "minimumTemperature": 8.0,
-    "flapID": 0,
-    "enabled": false
-  },
-  {
     "key": "basement-toilet",
     "name": "Basement toilet",
     "floor": "Basement",
@@ -242,44 +218,6 @@
     "temperatureID": 33010,
     "humidityID": 20878,
     "coldTemperatureID": 33010,
-    "surfaceTemperatureID": 0,
-    "minimumTemperature": 8.0,
-    "flapID": 0,
-    "enabled": false
-  },
-  {
-    "key": "basement-hallway",
-    "name": "Basement hallway",
-    "floor": "Basement",
-    "sources": [
-      {
-        "id": 26758,
-        "kind": "temperature",
-        "label": "KNX presence sensor"
-      }
-    ],
-    "temperatureID": 0,
-    "humidityID": 0,
-    "coldTemperatureID": 0,
-    "surfaceTemperatureID": 0,
-    "minimumTemperature": 8.0,
-    "flapID": 0,
-    "enabled": false
-  },
-  {
-    "key": "entrance-hall",
-    "name": "Entrance hall",
-    "floor": "Ground floor",
-    "sources": [
-      {
-        "id": 18275,
-        "kind": "temperature",
-        "label": "KNX presence sensor"
-      }
-    ],
-    "temperatureID": 0,
-    "humidityID": 0,
-    "coldTemperatureID": 0,
     "surfaceTemperatureID": 0,
     "minimumTemperature": 8.0,
     "flapID": 0,
@@ -324,35 +262,6 @@
     "temperatureID": 57694,
     "humidityID": 34415,
     "coldTemperatureID": 57694,
-    "surfaceTemperatureID": 0,
-    "minimumTemperature": 8.0,
-    "flapID": 36911,
-    "enabled": true
-  },
-  {
-    "key": "dining-room",
-    "name": "Dining room",
-    "floor": "Ground floor",
-    "sources": [
-      {
-        "id": 13307,
-        "kind": "temperature",
-        "label": "KNX presence sensor"
-      },
-      {
-        "id": 34415,
-        "kind": "humidity",
-        "label": "Shared branch humidity: living-room"
-      },
-      {
-        "id": 57694,
-        "kind": "temperature",
-        "label": "Humidity reference: living-room"
-      }
-    ],
-    "temperatureID": 57694,
-    "humidityID": 34415,
-    "coldTemperatureID": 0,
     "surfaceTemperatureID": 0,
     "minimumTemperature": 8.0,
     "flapID": 36911,
@@ -466,25 +375,6 @@
     "enabled": false
   },
   {
-    "key": "storeroom",
-    "name": "Storeroom",
-    "floor": "Ground floor",
-    "sources": [
-      {
-        "id": 40513,
-        "kind": "temperature",
-        "label": "KNX presence sensor"
-      }
-    ],
-    "temperatureID": 0,
-    "humidityID": 0,
-    "coldTemperatureID": 0,
-    "surfaceTemperatureID": 0,
-    "minimumTemperature": 8.0,
-    "flapID": 0,
-    "enabled": false
-  },
-  {
     "key": "master-bedroom",
     "name": "Master bedroom",
     "floor": "First floor",
@@ -547,25 +437,6 @@
     "temperatureID": 44964,
     "humidityID": 44524,
     "coldTemperatureID": 59814,
-    "surfaceTemperatureID": 0,
-    "minimumTemperature": 8.0,
-    "flapID": 0,
-    "enabled": false
-  },
-  {
-    "key": "dressing-room",
-    "name": "Dressing room",
-    "floor": "First floor",
-    "sources": [
-      {
-        "id": 36671,
-        "kind": "temperature",
-        "label": "KNX presence sensor"
-      }
-    ],
-    "temperatureID": 0,
-    "humidityID": 0,
-    "coldTemperatureID": 0,
     "surfaceTemperatureID": 0,
     "minimumTemperature": 8.0,
     "flapID": 0,

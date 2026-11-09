@@ -37,7 +37,17 @@ class VentilationControl extends IPSModule
         // Applying configuration or restarting never continues a former cycle.
         if($this->ReadAttributeString('Lease')!=='')$this->markStop('Interrupted by configuration apply or restart; recovering original equipment state.');
         $this->WriteAttributeString('Qualification','');
-        try{self::validate($this->properties());$this->SetStatus(102);}
+        try{
+            $rooms=self::validate($this->properties());$configured=self::configuredRooms($rooms);
+            if(count($configured)!==count($rooms)){
+                // Persist this migration so Overview, Admin and native backups
+                // all use the same saved list, including existing instances.
+                IPS_SetProperty($this->InstanceID,'Rooms',self::json($configured));
+                $this->debug('Removed '.(count($rooms)-count($configured)).' rooms with an unconfigured required sensor.');
+                IPS_ApplyChanges($this->InstanceID);return;
+            }
+            $this->SetStatus(102);
+        }
         catch(Throwable $e){$this->SetStatus(200);$this->SetValue('Status',$e->getMessage());}
         $this->SetTimerInterval('Evaluate',$this->ReadAttributeString('Lease')!==''?5000:max(5,$this->ReadPropertyInteger('EvaluationSeconds'))*1000);
     }

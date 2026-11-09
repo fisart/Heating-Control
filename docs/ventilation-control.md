@@ -12,11 +12,11 @@ Verify the actual fresh-air supply and exhaust route, the return-air route, fan 
 
 ## Selecting room sensors
 
-Initial cold-sensor defaults were selected once from the 8 November 2026 settings snapshot. The lowest valid temperature in each room was used; sensors older than one hour and explicitly faulty sensors were excluded. A missing valid default remains unconfigured. The selection is a saved configuration value and does not change as temperatures change. Choose another sensor on Admin, or deliberately repeat Select lowest valid sensors now. Ties select the lower object ID. Stale, faulty and unavailable inputs cannot win the live selection.
+Initial cold-sensor defaults were selected once from the 8 November 2026 settings snapshot. The lowest valid temperature in each room was used; sensors older than one hour and explicitly faulty sensors were excluded. Rooms with a required temperature, humidity or cold-point sensor set to 0 are removed from the room list. This also cleans existing saved configurations when Apply Changes runs; optional wall-sensor and air-branch IDs may remain 0. The selection is a saved configuration value and does not change as temperatures change. Choose another sensor on Admin, or deliberately repeat Select lowest valid sensors now. Ties select the lower object ID. Stale, faulty and unavailable inputs cannot win the live selection.
 
 Dew point and vapour pressure use a matching temperature/humidity sensor pair. Relative humidity belongs to the temperature where it was measured. The selected colder sensor is used to calculate humidity at that colder point. It is not blindly paired with a humidity measurement from a warmer sensor. An optional surface-temperature variable improves the cold-point estimate. Without one, a cold air reading is a proxy and cannot prove the coldest wall is safe.
 
-Kitchen and dining room lack their own humidity sensor in the mapped inventory. Their defaults explicitly use the matching temperature/humidity pair from blue room and living room respectively, on the same central air branch. Review these proxy mappings in Admin. Other rooms without humidity remain incomplete for moisture calculations.
+Kitchen lacks its own humidity sensor in the mapped inventory. Its default explicitly uses the matching temperature/humidity pair from blue room, on the same central air branch. Review this proxy mapping in Admin. Heating room, basement hallway, entrance hall, dining room, storeroom and dressing room were removed because a required sensor was 0. Fifteen rooms remain.
 
 ## Automatic and manual controls
 
