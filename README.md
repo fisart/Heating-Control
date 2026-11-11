@@ -4,7 +4,7 @@ Version **0.3.63, build 74** brings the complete ventilation branch and the late
 
 The heating page links to the one registered ventilation page configured for that HeatingControl instance. The ventilation page links back to heating. Both pages retain their existing passkey authentication. The combined release includes the ventilation room-list migration, saved room-editor sensor/flap compatibility, and change-triggered KNX reporting fixes. [Ventilation setup and operating guide](docs/ventilation-control.md).
 
-This consolidation preserves exchanger-based fan control, immediate source transfers with command acknowledgements, module disable/release behavior, all calibration measurements and the expanded COP matrix/surface. New ventilation instances still start disabled, with automatic operation and live outputs off; existing saved settings are retained. Update the library from **main**, then review/apply the instance configuration. Publication to GitHub does not update the running Symcon installation automatically.
+The heating page also corrects its outdated transfer-delay description to match the existing control rules. This consolidation preserves exchanger-based fan control, immediate source transfers with command acknowledgements, module disable/release behavior, all calibration measurements and the expanded COP matrix/surface. New ventilation instances still start disabled, with automatic operation and live outputs off; existing saved settings are retained. Update the library from **main**, then review/apply the instance configuration. Publication to GitHub does not update the running Symcon installation automatically.
 
 # Calibration status banner — 0.3.59, build 70
 
