@@ -93,7 +93,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#flap-status').textContent.includes('Step 1/3'));
  d.querySelector('#flap-cancel').click();await settle();await settle();
  assert.equal(state.flapCalibration.active,false);assert.equal(d.querySelector('#test-start').disabled,false);
- assert.equal(d.querySelectorAll('#matrix-results tr').length,43,'Reviewed matrix is rendered on the protected page');
+ assert.equal(d.querySelectorAll('#matrix-results tr').length,51,'Reviewed matrix is rendered on the protected page');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('Dedicated HP circuit'),'New-test basis identifies the dedicated circuit');
  assert.ok(d.querySelector('#test-meter-basis').textContent.includes('28681')&&d.querySelector('#test-meter-basis').textContent.includes('22365'),'Configured meter IDs appear on the protected page');
  assert.equal(d.querySelector('#matrix-results tr').children.length,8,'Matrix row aligns with the meter-basis column');

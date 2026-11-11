@@ -130,6 +130,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: calibration-banner-screenshots
-          path: tests/artifacts/calibration-banner/*.png
+          path: |
+            tests/artifacts/calibration-banner/*.png
+            tests/artifacts/heatpump-charts/*.png
           if-no-files-found: ignore
 
