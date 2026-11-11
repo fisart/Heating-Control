@@ -1,5 +1,7 @@
 # Expanded heat-pump calibration — 23 October 2026
 
+Historical snapshot. The [11 November update](heatpump-calibration-20261111.md) preserves these records and adds eight measurements.
+
 Heating-Control **0.3.39, build 50** expands the existing matrix. Every original field in the 30 historical rows is preserved. Thirteen reviewed rows are appended; 39 counter-backed observations are eligible for the existing COP surface. Two additional thermal-only observations from the earliest interrupted run support independent capacity checks. All six archived runs are represented.
 
 ## What changed
@@ -60,3 +62,4 @@ At 3.6°C outside, 9.6°C actual inlet, room target 23°C, supply margin 5°C an
 Original raw files remain in the private archive and are never rewritten. The offline replay tool `libs/tools/replay-heatpump-raw.py` reconstructs candidate intervals from those originals; `libs/tools/expand-heatpump-surface.py` appends reviewed additions, asserts every historical field is unchanged, and verifies its coefficients against SciPy. The prior surface observations can be retrieved from Heating-Control commit `c83951e13e13934021b73c7fc2d0a26e6944b992`.
 
 Future tests keep their existing safety and automatic-learning checks; this is a reviewed expansion of the archived calibration, not a global removal of future fault checks. Updating this library does not start a test, enable automatic control, change the chosen COP method or alter live settings.
+

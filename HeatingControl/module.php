@@ -143,7 +143,17 @@ class HeatingControl extends IPSModule
     public function ApplyChanges()
     {
         parent::ApplyChanges();
-        try {$this->SetValue('HeatPumpModelJSON',json_encode(['schema'=>2,'points'=>$this->measuredMatrix()],JSON_THROW_ON_ERROR));} catch (Throwable $e) {$this->SetValue("HeatPumpPerformanceStatus",$e->getMessage());}
+        try {
+            $model=json_decode($this->ReadAttributeString('HeatPumpPerformanceModel')?:'{}',true,64,JSON_THROW_ON_ERROR);
+            $model=array_replace($model,['schema'=>2,'points'=>$this->measuredMatrix(),'calibrationVersion'=>HeatPumpSurface::definition()['version']]);
+            if(isset($model['runID']))$model['relationships']=HeatPumpPerformance::relationships(array_values(array_filter($model['points'],static fn($p)=>($p['runID']??null)===$model['runID'])));
+            $json=json_encode($model,JSON_THROW_ON_ERROR);
+            $this->WriteAttributeString('HeatPumpPerformanceModel',$json);$this->SetValue('HeatPumpModelJSON',$json);
+            // Refresh an existing model export only; raw recordings and reports
+            // remain original, and a running calibration owns its model export.
+            if($this->ReadAttributeString('HeatPumpTestState')===''&&is_file($this->testDirectory().'/model.json'))
+                $this->testSaveJSON($this->testDirectory().'/model.json',$json);
+        } catch (Throwable $e) {$this->SetValue("HeatPumpPerformanceStatus",$e->getMessage());}
         if (!$this->ReadPropertyBoolean('Enabled')) $this->releaseControlOwnership('Controller disabled');
         if ($this->ReadAttributeString('FlapCalibrationState') !== '') {
             $this->finishFlapCalibration('Interrupted by restart/configuration apply; start a new calibration');
@@ -836,6 +846,7 @@ class HeatingControl extends IPSModule
         return 'Configuration imported. Controller is disabled; verify IDs before enabling.';
     }
 }
+
 
 
 

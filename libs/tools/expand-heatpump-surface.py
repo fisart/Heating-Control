@@ -19,7 +19,7 @@ def fit(x,y):
     return np.linalg.solve(a,np.r_[y,np.zeros((3,y.shape[1]))])
 def predict(x,c,q):return np.column_stack((phi(distance.cdist(q,x)),np.ones(len(q)),q))@c
 def main():
-    a=argparse.ArgumentParser();a.add_argument('prior',type=Path);a.add_argument('observations',type=Path);a.add_argument('additions',type=Path);a.add_argument('out',type=Path);a=a.parse_args();a.out.mkdir(parents=True,exist_ok=True)
+    a=argparse.ArgumentParser();a.add_argument('prior',type=Path);a.add_argument('observations',type=Path);a.add_argument('additions',type=Path);a.add_argument('out',type=Path);a.add_argument('--date',default='2026-10-23');a.add_argument('--version',default='provisional-heatpump-surface-2026-10-23-v4');a=a.parse_args();a.out.mkdir(parents=True,exist_ok=True)
     prior=json.loads(a.prior.read_text());old_obs=json.loads(a.observations.read_text());add=json.loads(a.additions.read_text())
     rows=copy.deepcopy(prior['points']);old_runs={p['pointID']:p['runID'] for p in old_obs['points']}
     for p in rows:
@@ -28,9 +28,13 @@ def main():
     rows+=add['points'];ids=[p['pointID'] for p in rows];assert len(ids)==len(set(ids))
     for old,new in zip(prior['points'],rows):
         for k,v in old.items():assert new[k]==v,f'Historical field changed: {old["pointID"]}/{k}'
-    source=dict(schema=4,createdAtBerlin='2026-10-23',points=rows,thermalOnlyObservations=add['thermalOnlyObservations'],
-        sourceFiles=add['sourceFiles'],notes=add['notes'],preservedHistoricalRows=len(prior['points']))
-    dump(a.out/'heatpump-calibration.json',dict(schema=4,note='Existing 30 rows preserved; reviewed additions expand the matrix. Superseded rows remain auditable.',points=rows))
+    thermal={p['pointID']:p for p in old_obs.get('thermalOnlyObservations',[])}
+    thermal.update({p['pointID']:p for p in add['thermalOnlyObservations']})
+    sources={p['filename']:p for p in old_obs.get('sourceFiles',[])}
+    sources.update({p['filename']:p for p in add['sourceFiles']})
+    source=dict(schema=4,createdAtBerlin=a.date,points=rows,thermalOnlyObservations=list(thermal.values()),
+        sourceFiles=list(sources.values()),notes=old_obs.get('notes',[])+add['notes'],preservedHistoricalRows=len(prior['points']))
+    dump(a.out/'heatpump-calibration.json',dict(schema=4,note=f'Existing {len(prior["points"])} rows preserved; reviewed additions expand the matrix. Superseded rows remain auditable.',points=rows))
     dump(a.out/'heatpump-cop-surface-observations.json',source)
     points=[p for p in rows if p['stable'] and p['usable'] and not p.get('supersededBy')]
     x=norm([p['outside'] for p in points],[p['powerPercent'] for p in points]);y=np.array([[p['outgoing']-p['incoming'],p['systemInputKW'],p['incoming']] for p in points]);c=fit(x,y)
@@ -47,13 +51,13 @@ def main():
         cv.append(dict(heldOutRun=rid,points=int(te.sum()),rmseCOP=float(np.sqrt(np.mean(e**2))),rmseAirRiseC=float(np.sqrt(np.mean(er**2)))))
     model=json.loads((Path(__file__).resolve().parents[2]/'docs/data/heatpump-cop-surface.json').read_text())
     inside=Delaunay(x).find_simplex(q,tol=1e-10)>=0
-    model.update(version='provisional-heatpump-surface-2026-10-23-v4',centers_normalized=x.tolist(),coefficients=c.tolist(),
+    model.update(version=a.version,centers_normalized=x.tolist(),coefficients=c.tolist(),
         source_sha256=hashlib.sha256((a.out/'heatpump-cop-surface-observations.json').read_bytes()).hexdigest(),support_hull_normalized=x[ConvexHull(x).vertices].tolist())
     model['domain'].update(outside_min_C=3.25,outside_max_C=16)
     model['status']='Provisional expanded runtime surface; established zero-smoothing method retained; measured-point mode remains default'
     model['reference_basis']['incoming_air_range_C']=[min(p['incoming'] for p in points),max(p['incoming'] for p in points)]
     model['metrics']=dict(accepted_points=len(points),preserved_historical_rows=len(prior['points']),recorded_rows=len(rows),
-        fitted_runs=len(set(runids)),recorded_runs=6,thermal_only_points=len(add['thermalOnlyObservations']),
+        fitted_runs=len(set(runids)),recorded_runs=len(set(runids)|{p['runID'] for p in thermal.values()}),thermal_only_points=len(thermal),
         dedicated_meter_points=sum(p['electricalMethod']=='dedicated-heatpump-import-counter' for p in points),
         legacy_house_meter_points=sum(p['electricalMethod']=='house-counter-minus-pretest-baseline' for p in points),
         leave_one_run_out_rmse_COP=float(np.sqrt(np.mean(np.square(errors)))),leave_one_run_out_rmse_air_rise_C=float(np.sqrt(np.mean(np.square(rise_errors)))),
@@ -66,3 +70,4 @@ def main():
         descriptive_reference_inlet_C=inlet.tolist(),support=np.where(inside.reshape(t.shape),'interpolation','extrapolation').tolist()))
     print(json.dumps(model['metrics'],indent=2))
 if __name__=='__main__':main()
+

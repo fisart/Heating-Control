@@ -9,7 +9,7 @@ $matrix=json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-surface-ma
 foreach($matrix['outside_temperature_C'] as $i=>$outside)foreach($matrix['power_percent'] as $j=>$power) {
     $v=HeatPumpSurface::evaluate((float)$outside,$power);
     foreach(['estimatedSystemCOP'=>'estimated_COP','airRise'=>'estimated_air_rise_C','estimatedHeatKW'=>'estimated_heat_kW','systemInputKW'=>'estimated_electrical_input_kW','referenceIncoming'=>'descriptive_reference_inlet_C'] as $field=>$saved)
-        check(abs($v[$field]-$matrix[$saved][$i][$j])<0.000001,'PHP evaluates the saved expanded v4 surface: '.$outside.'C / '.$power.'% / '.$field);
+        check(abs($v[$field]-$matrix[$saved][$i][$j])<0.000001,'PHP evaluates the saved expanded v5 surface: '.$outside.'C / '.$power.'% / '.$field);
     check($v['surfaceSupport']===$matrix['support'][$i][$j],'Interpolation/extrapolation labels match the saved hull');
 }
 foreach(HeatPumpSurface::observations() as $p) {
@@ -22,13 +22,13 @@ foreach([[3.24,50],[16.01,50],[12,29],[12,101],[NAN,50]] as [$t,$p]) {
     try {HeatPumpSurface::cop($t,$p);check(false,'Out-of-domain COP must fail');}catch(InvalidArgumentException $e){check(true,'Surface domain is not extended');}
 }
 $candidate=HeatPumpSurface::choose(12,23,23,5,5,90,2000,3,40259);
-check($candidate['powerPercent']===43&&$candidate['modeled']&&$candidate['copMethod']==='surface','Warm-intake surface selects the eligible intermediate power');
-check(abs($candidate['estimatedSystemCOP']-3.676975217462489)<1e-10,'Runtime uses the exact expanded v4 coefficients');
+check($candidate['powerPercent']===44&&$candidate['modeled']&&$candidate['copMethod']==='surface','Warm-intake surface selects the eligible intermediate power');
+check(abs($candidate['estimatedSystemCOP']-3.6742044931747717)<1e-10,'Runtime uses the exact expanded v5 coefficients');
 check($candidate['predictedOutgoing']>=28&&$candidate['airRise']>=5&&23+$candidate['capacityAirRise']>=28,'Modeled and independently supported capacity both meet supply requirements');
 check(!isset($candidate['stable'])&&!isset($candidate['usable']),'Modeled candidates do not acquire measured flags');
 try {HeatPumpMatrix::validate([$candidate]);check(false,'Modeled row must not enter measured history');}catch(InvalidArgumentException $e){check(true,'Modeled candidate cannot masquerade as a measurement');}
 $observed=HeatPumpSurface::observations();
-check(count($observed)===39&&count(array_filter($observed,static fn($p)=>$p['electricalMethod']==='dedicated-heatpump-import-counter'))===16,'Surface includes sixteen dedicated-meter points alongside twenty-three household-counter points');
+check(count($observed)===47&&count(array_filter($observed,static fn($p)=>$p['electricalMethod']==='dedicated-heatpump-import-counter'))===24,'Surface includes twenty-four dedicated-meter points alongside twenty-three household-counter points');
 check(!in_array('20261015-211706-139c48ad9dc5-90',array_column($observed,'pointID'),true),'The defrost-like 90% point never enters the fitted observations');
 check($candidate['electricalMethod']==='reviewed-house-increment-and-dedicated-heatpump-fit'&&count($candidate['electricalSourceMethods'])===2,'Mixed fitted provenance is explicit, not relabelled as a dedicated reading');
 foreach([[2,23,23,5,5,90,2000,3,40259],[17,23,23,5,5,90,2000,3,40259],[12,-20,23,5,5,90,2000,3,40259],
@@ -47,8 +47,8 @@ check($low['powerPercent']===$candidate['powerPercent']&&$low['estimatedSystemCO
 $colder=HeatPumpSurface::choose(12,10,23,5,5,90,2000,3,40259);
 check($colder['powerPercent']===58&&$colder['airRise']>=18&&$colder['capacityAirRise']>=18,'Colder inlet increases required rise without an absolute intake rejection');
 $snapshot=HeatPumpSurface::choose(8.6,20.7,23,5,5,90,2000,3,40259);
-check($snapshot['powerPercent']===35&&abs($snapshot['requiredAirRise']-7.3)<1e-10,'Reported production snapshot qualifies at 35 percent and requires 7.3C rise');
-check(abs($snapshot['estimatedSystemCOP']-4.023634688885064)<1e-10&&$snapshot['capacityAirRise']>=7.3,'Reported snapshot uses expanded 2D fit and independently supported air rise');
+check($snapshot['powerPercent']===34&&abs($snapshot['requiredAirRise']-7.3)<1e-10,'Reported production snapshot qualifies at 34 percent and requires 7.3C rise');
+check(abs($snapshot['estimatedSystemCOP']-4.012017100508933)<1e-10&&$snapshot['capacityAirRise']>=7.3,'Reported snapshot uses expanded 2D fit and independently supported air rise');
 
 $m=fixture();check($m->properties['HeatPumpCOPMethod']==='measured','Upgrade default retains measured-point mode');
 $reason='';$fn=new ReflectionMethod(HeatingControl::class,'measuredEconomicChoice');
@@ -56,15 +56,15 @@ check($fn->invokeArgs($m,[&$reason])===50,'Default warm path still selects its e
 $measured=json_decode($m->values['HeatPumpEconomicsJSON'],true);
 check($measured['copMethod']==='measured'&&abs($measured['point']['estimatedSystemCOP']-3.612368428301706)<1e-10,'Historical exact measured COP is unchanged');
 $m->properties['HeatPumpCOPMethod']='surface';
-check($fn->invokeArgs($m,[&$reason])===43,'Automatic source calculation uses the new surface');
+check($fn->invokeArgs($m,[&$reason])===44,'Automatic source calculation uses the new surface');
 $surface=json_decode($m->values['HeatPumpEconomicsJSON'],true);
-check($surface['copMethod']==='surface'&&$surface['surfaceVersion']===HeatPumpSurface::definition()['version'],'Economic snapshot identifies method and expanded v4 version');
+check($surface['copMethod']==='surface'&&$surface['surfaceVersion']===HeatPumpSurface::definition()['version'],'Economic snapshot identifies method and expanded v5 version');
 $sourceChoice=new ReflectionMethod(HeatingControl::class,'sourceChoice');$queue=[];
-check($sourceChoice->invokeArgs($m,[2,&$queue])===[1,43]&&$queue[$m->properties['OperatingModeID']]===1,'Actual automatic path accepts intermediate surface power and mirrors source');
+check($sourceChoice->invokeArgs($m,[2,&$queue])===[1,44]&&$queue[$m->properties['OperatingModeID']]===1,'Actual automatic path accepts intermediate surface power and mirrors source');
 check(str_contains($reason,'COP surface (modeled)'),'Operating reason distinguishes modeled COP');
 check(abs($surface['breakEvenCt']-10.48*$surface['point']['estimatedSystemCOP'])<1e-9,'Surface COP defines the break-even');
 check(abs($surface['exitCt']-$surface['breakEvenCt']*.75)<1e-9&&abs($surface['entryCt']-($surface['exitCt']-2))<1e-9,'Existing configured margin/hysteresis still apply once');
-check(str_contains($surface['assumptions'],'39 reviewed points'),'Surface assumptions identify the new calibration');
+check(str_contains($surface['assumptions'],'47 reviewed points'),'Surface assumptions identify the new calibration');
 
 // New intake context: exact measured and continuous modeled modes both drive
 // the real source-choice path, using the owner's 5% price margin unchanged.
@@ -90,14 +90,14 @@ $q=json_decode($GLOBALS['variables'][82001]['value'],true);$q['priceCt']=46.98;$
 $GLOBALS['variables'][82001]['value']=json_encode($q);
 check($fn->invokeArgs($m,[&$reason])===0,'Reported expensive quote selects gas');
 $reported=json_decode($m->values['HeatPumpEconomicsJSON'],true);
-check($reported['valid']&&$reported['powerPercent']===35&&$m->values['HeatPumpBreakEvenEuro']>0,'Gas selection retains visible thresholds for the reported conditions');
-check(abs($reported['breakEvenCt']-42.167691539515474)<1e-8&&abs($reported['entryCt']-39.0593069625397)<1e-8&&abs($reported['exitCt']-40.0593069625397)<1e-8,'Actual 5 percent safety and 1ct hysteresis are applied once');
+check($reported['valid']&&$reported['powerPercent']===34&&$m->values['HeatPumpBreakEvenEuro']>0,'Gas selection retains visible thresholds for the reported conditions');
+check(abs($reported['breakEvenCt']-42.04593921333362)<1e-8&&abs($reported['entryCt']-38.94364225266693)<1e-8&&abs($reported['exitCt']-39.94364225266693)<1e-8,'Actual 5 percent safety and 1ct hysteresis are applied once');
 $q['priceCt']=30;$GLOBALS['variables'][82001]['value']=json_encode($q);
-check($fn->invokeArgs($m,[&$reason])===35,'A cheap verified quote permits the qualifying surface power');
+check($fn->invokeArgs($m,[&$reason])===34,'A cheap verified quote permits the qualifying surface power');
 
 // Both methods use the same real selection path with different calibration settings.
 $m->properties['HeatPumpTestAirflowM3h']=1500.0;$m->properties['HeatPumpTestExcludedFlapID']=999;
-check($fn->invokeArgs($m,[&$reason])===35,'Surface economic path does not exclude changed airflow/flap settings');
+check($fn->invokeArgs($m,[&$reason])===34,'Surface economic path does not exclude changed airflow/flap settings');
 $m->properties['HeatPumpCOPMethod']='measured';
 $GLOBALS['variables'][$m->properties['OutsideTempID']]['value']=12;
 $GLOBALS['variables'][$m->properties['IncomingAirTempID']]['value']=23;
@@ -131,4 +131,5 @@ check(response($m,'POST',[],['control'=>'HeatPumpCOPMethod','value'=>'measured']
 $m->attributes['HeatPumpTestState']='';$m->properties['DryRun']=true;
 check(response($m,'POST',[],['control'=>'HeatPumpCOPMethod','value'=>'measured'])['status']===422,'Dry-run page remains read-only');
 echo 'PASS: '.($checks-$startChecks)." COP surface, method selection, threshold and control checks\n";
+
 

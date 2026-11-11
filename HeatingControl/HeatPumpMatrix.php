@@ -11,6 +11,19 @@ final class HeatPumpMatrix
     /** Apply only exact reviewed measurements; never relax future-run stability gates. */
     public static function applyPointReview(array $point): array
     {
+        // Exact reviewed November measurements; custom/future rows keep their checks.
+        static $november=null;
+        if($november===null)$november=json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-calibration-additions-20261111.json'),true,64,JSON_THROW_ON_ERROR)['points'];
+        foreach($november as $review) {
+            if(($point['pointID']??'')!==$review['pointID']||($point['runID']??'')!==$review['runID'])continue;
+            foreach($review['reviewedOriginal'] as $key=>$value) {
+                if(!array_key_exists($key,$point))continue 2;
+                if(is_float($value)) {
+                    if(!is_numeric($point[$key])||!is_finite((float)$point[$key])||abs($point[$key]-$value)>1e-8)continue 2;
+                } elseif($point[$key]!==$value)continue 2;
+            }
+            return $review;
+        }
         if(($point['electricalMethod']??'')!=='house-counter-minus-pretest-baseline'
             ||!is_bool($point['stable']??null)||!is_bool($point['usable']??null))return $point;
         foreach(json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-calibration-20261016.json'),true,64,JSON_THROW_ON_ERROR)['points'] as $review) {
@@ -123,7 +136,7 @@ final class HeatPumpMatrix
             'safetyMarginPercent'=>$safety,'hysteresisCt'=>$band,'currentPriceCt'=>$price,
             'electricalMethod'=>$point['electricalMethod']??'unknown','meterScope'=>$point['meterScope']??'household increment above baseline',
             'assumptions'=>($point['copMethod']??'')==='surface'
-                ?'Provisional modeled COP from 39 reviewed points including dedicated-meter and historical household increments; full-step heat/electric interpolation with observed capacity checks; estimated airflow; gas auxiliary electricity receives no credit.'
+                ?'Provisional modeled COP from '.HeatPumpSurface::definition()['metrics']['accepted_points'].' reviewed points including dedicated-meter and historical household increments; full-step heat/electric interpolation with observed capacity checks; estimated airflow; gas auxiliary electricity receives no credit.'
                 :(($point['electricalMethod']??'')==='dedicated-heatpump-import-counter'
                 ?'Estimated airflow; dedicated circuit only, no household/standby subtraction; shared fan and other equipment outside this circuit are excluded; gas auxiliary electricity receives no credit.'
                 :'Estimated airflow; gas auxiliary electricity receives no credit; changing other house loads affects baseline subtraction.')];
@@ -160,4 +173,5 @@ final class HeatPumpMatrix
         throw new RuntimeException('Electricity counter boundary missing, reset or gap exceeds 90 seconds');
     }
 }
+
 

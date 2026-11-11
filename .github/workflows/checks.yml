@@ -73,6 +73,7 @@ jobs:
           php tests/heatpump-decision-audit.php
           php tests/heatpump-surface.php
           php tests/heatpump-expansion.php
+          php tests/heatpump-november.php
           php tests/form-audit.php
           php tests/measured-links.php
           php tests/source-selection.php
@@ -123,6 +124,7 @@ jobs:
       - run: node tests/room-climate-ui.cjs
       - name: Calibration banner desktop and mobile
         run: node tests/calibration-banner-ui.cjs
+          node tests/heatpump-charts-ui.cjs
       - name: Save calibration banner screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -130,3 +132,4 @@ jobs:
           name: calibration-banner-screenshots
           path: tests/artifacts/calibration-banner/*.png
           if-no-files-found: ignore
+

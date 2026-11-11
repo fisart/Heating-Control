@@ -1,6 +1,6 @@
 # Current calibration — 0.3.39 build 50
 
-The existing 30 measured rows are preserved and expanded with 13 reviewed additions. The current default contains 43 stored rows and 39 eligible COP observations, plus thermal-only evidence from the earliest run. Only evidenced event intervals are removed. See [current tables and event windows](heatpump-calibration-20261023.md) and [expanded surface](heatpump-cop-surface.md). Older release notes and tables below describe their historical snapshots.
+The current default contains **51 stored rows and 47 eligible COP observations**, including all eight 11 November steps. The preceding 43 rows are preserved unchanged. Original stability warnings remain attached; only evidenced event intervals are removed. See [current measurements and model](heatpump-calibration-20261111.md), [interactive charts and surface](heatpump-cop-surface.md), and the historical release notes below.
 
 ---
 
@@ -410,4 +410,5 @@ as a transient observation, excluding it from steady normal-heating selection.
 A longer fixed-power test including complete defrost/recovery cycles is needed
 to measure cycle-inclusive efficiency and avoid treating normal-heating COP
 as a guarantee of cold-weather average performance.
+
 

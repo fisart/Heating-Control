@@ -49,7 +49,7 @@ trait HeatingControlHeatPumpEconomics
             'powerStepPercent'=>1,'electricalMethod'=>$m['reference_basis']['electrical_method'],
             'validationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],'acceptedPointCount'=>$m['metrics']['accepted_points'],
             'dedicatedPointCount'=>$m['metrics']['dedicated_meter_points'],'legacyPointCount'=>$m['metrics']['legacy_house_meter_points'],
-            'note'=>'Expanded 39-point surface including 16 dedicated-meter measurements and 23 household-counter points. All 30 original rows are preserved; six runs supply calibration or thermal-only capacity evidence. Surface mode qualifies air rise against target plus supply margin minus intake; absolute intake matching is retained only in measured mode.'];
+            'note'=>sprintf('Expanded %d-point surface including %d dedicated-meter measurements and %d household-counter points. Historical rows are preserved; %d runs supply calibration or thermal-only capacity evidence. Surface mode qualifies air rise against target plus supply margin minus intake; absolute intake matching is retained only in measured mode.',$m['metrics']['accepted_points'],$m['metrics']['dedicated_meter_points'],$m['metrics']['legacy_house_meter_points'],$m['metrics']['recorded_runs'])];
     }
     private function measuredMatrix(): array
     {
@@ -69,6 +69,7 @@ trait HeatingControlHeatPumpEconomics
             if(isset($reviewed['reviewNote'])&&(($report['modelQualified']??false)===true||$partialReviewed))
                 $rows=HeatPumpMatrix::merge($rows,[$reviewed]);
         }
+        $rows=array_map([HeatPumpMatrix::class,'applyPointReview'],$rows);
         $rows=HeatPumpMatrix::validate(HeatPumpMatrix::applySupersessions($rows));
         return $rows;
     }
@@ -154,4 +155,5 @@ trait HeatingControlHeatPumpEconomics
         }
     }
 }
+
 

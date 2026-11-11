@@ -1,3 +1,11 @@
+# Updated calibration and 3D charts — 0.3.64, build 75
+
+All eight completed **11 November 2026** power steps are added, including the reviewed 90% point with its original stability warning. The previous 43 stored rows are unchanged: the default matrix now has **51 rows**, with **47 counter-backed observations** in the refitted v5 surface. Two thermal-only observations remain available for capacity support. The house was unoccupied with a **10°C target**; low exchanger temperatures do not exclude otherwise valid measurements.
+
+The protected heating page has separate **Heating overview** and **3D charts** tabs. Rotate/zoom the charts and select COP, air-temperature rise, heat output or electrical input. Exact observations are overlaid, all eight latest points are highlighted, and original stability warnings and excluded seconds remain visible. Chart data loads only when its tab opens and uses the same passkey/origin protection as heating status. The calibration banner remains visible in both tabs.
+
+Update the Heating-Control library from **main**, then apply the HeatingControl instance and refresh its HTML page. Apply refreshes the effective stored model/JSON and an existing model.json export while preserving raw test recordings, original summaries, custom settings and the selected COP method. It does not start a test or enable automatic heating. See [November measurements and model audit](docs/heatpump-calibration-20261111.md) and [COP surface guide](docs/heatpump-cop-surface.md).
+
 # Consolidated heating and ventilation — 0.3.63, build 74
 
 Version **0.3.63, build 74** brings the complete ventilation branch and the latest heating calibration display together on **main**. The ventilation page now keeps equipment ownership visible above every tab: heat-pump test, air-flap calibration, ventilation cycle, handover, idle or unavailable status. Active heating calibrations block its Start button; backend priority checks remain authoritative. A failed connection or status older than 30 seconds is shown as unavailable. Open the heating page for detailed calibration progress and stop controls.
@@ -511,4 +519,5 @@ It does not replace a visual check of the native popup in the Symcon console.
 ## Controlled heat-pump test — 0.3.23
 
 Start/cancel an eight-step 30–100% capacity test from the form or protected heating page; default 15 minutes per step. Master-bedroom flap stays closed. Raw readings, stable-point relationships and estimated COP persist. Occupied exchanger minimum is 40°C; holiday requirements follow configured room targets with an adjustable lower floor. See [test setup and local model limits](docs/heatpump-capacity-test.md).
+
 

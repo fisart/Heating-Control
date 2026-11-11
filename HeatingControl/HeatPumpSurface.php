@@ -62,6 +62,25 @@ final class HeatPumpSurface
     {
         return self::evaluate($outside,$power)['estimatedSystemCOP'];
     }
+    /** Bounded read-only chart payload, requested only when its tab opens. */
+    public static function chartData(): array
+    {
+        $m=self::definition();$temperatures=[];$powers=range(30,100,5);$grid=[];
+        for($t=$m['domain']['outside_min_C'];$t<$m['domain']['outside_max_C'];$t+=0.5)$temperatures[]=$t;
+        $temperatures[]=$m['domain']['outside_max_C'];
+        foreach($temperatures as $outside) {
+            $row=[];foreach($powers as $power)$row[]=self::evaluate($outside,$power);
+            $grid[]=$row;
+        }
+        $points=[];foreach(self::observations() as $p)$points[]=[
+            'pointID'=>$p['pointID'],'runID'=>$p['runID'],'outside'=>$p['outside'],'powerPercent'=>$p['powerPercent'],
+            'incoming'=>$p['incoming'],'airRise'=>$p['outgoing']-$p['incoming'],'estimatedHeatKW'=>$p['estimatedHeatKW'],
+            'systemInputKW'=>$p['systemInputKW'],'estimatedSystemCOP'=>$p['estimatedSystemCOP'],
+            'originalStable'=>$p['originalStable']??$p['stable'],'excludedSeconds'=>$p['excludedSeconds']??0];
+        return ['version'=>$m['version'],'metrics'=>$m['metrics'],'temperatures'=>$temperatures,'powers'=>$powers,
+            'grid'=>$grid,'points'=>$points,'latestRunID'=>'20261111-163534-83da3a7115b8',
+            'assumptions'=>'Estimated airflow 2,000 m³/h; fan command 90% (full speed). Mixed historical household increments and dedicated heat-pump circuit readings. Normal-heating intervals exclude recorded defrost-like brackets. Surface is provisional; faded cells are outside the observation hull.'];
+    }
     /** Qualify air rise from observed within-run power brackets, then weather.
      * Absolute observed inlet is descriptive; current inlet determines required rise.
      * A nearest weather endpoint requires the existing temperature tolerance. */
@@ -123,7 +142,7 @@ final class HeatPumpSurface
             $best=$surface+['powerPercent'=>$power,'outside'=>$outside,'incoming'=>$incoming,'predictedOutgoing'=>$incoming+$surface['airRise'],
                 'requiredAirRise'=>max($minRise,$target+$margin-$incoming),'airflowM3h'=>$basis['airflow_m3h'],'configuredAirflowM3h'=>$airflow,'fanSpeed'=>$fan,'modeled'=>true,'copMethod'=>'surface','surfaceVersion'=>$m['version'],
                 'electricalMethod'=>$basis['electrical_method'],'electricalSourceMethods'=>$basis['electrical_source_methods'],
-                'meterScope'=>'reviewed fit: 23 historical house-baseline points and 16 dedicated heat-pump import points; modeled input, not a meter reading',
+                'meterScope'=>sprintf('reviewed fit: %d historical house-baseline points and %d dedicated heat-pump import points; modeled input, not a meter reading',$m['metrics']['legacy_house_meter_points'],$m['metrics']['dedicated_meter_points']),
                 'modelValidationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],
                 'sourcePointIDs'=>array_column($observations,'pointID'),'capacitySourcePointIDs'=>$capacity['sourcePointIDs'],
                 'capacityReferenceIncoming'=>$capacity['referenceIncoming'],'capacityAirRise'=>$capacity['airRise'],'thermalSupport'=>$capacity['thermalSupport']];
@@ -138,4 +157,5 @@ final class HeatPumpSurface
         return sprintf('No supported surface candidate meets modeled and observed air-rise requirements at %.1f°C intake, target %.1f°C + %.1f°C supply margin',$incoming,$target,$margin);
     }
 }
+
 

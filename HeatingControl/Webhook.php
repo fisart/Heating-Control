@@ -462,6 +462,7 @@ trait HeatingControlWebhook
             if (($query['view'] ?? '') === 'state') return $reply(200,array_merge($this->webState(),[
                 'csrf'=>$this->webCSRF($server,$vault,(int)floor(time()/3600))]));
             if (($query['view'] ?? '') === 'history') return $reply(200,$this->webHistory($query));
+            if (($query['view'] ?? '') === 'heatpump-surface') return $reply(200,HeatPumpSurface::chartData());
             if (in_array($query['view']??'',['heatpump-costs','heatpump-costs-csv','heatpump-costs-json'],true)) {
                 if(!is_string($query['from']??null)||!is_string($query['through']??null))throw new InvalidArgumentException('Select start and end dates for the cost analysis');
                 if(!is_string($query['excluded']??''))throw new InvalidArgumentException('Invalid excluded periods');
@@ -491,7 +492,8 @@ trait HeatingControlWebhook
             $template = file_get_contents(__DIR__.'/page.html');
             if ($template === false) throw new RuntimeException('Page template missing.');
             return $reply(200,strtr($template,['{{NONCE}}'=>$escape($nonce),'{{PATH}}'=>$escape($this->webPath()),
-                '{{CSRF}}'=>$escape($this->webCSRF($server,$vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape($this->webPortalPath($vault)), '{{VENTILATION}}'=>$escape($this->webVentilationPath())]),[
+                '{{CSRF}}'=>$escape($this->webCSRF($server,$vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape($this->webPortalPath($vault)), '{{VENTILATION}}'=>$escape($this->webVentilationPath()),
+                '{{SURFACE_SCRIPT}}'=>file_get_contents(__DIR__.'/HeatPumpCharts.js')]),[
                 'Content-Type'=>'text/html; charset=utf-8',
                 'Content-Security-Policy'=>"default-src 'none'; script-src 'nonce-$nonce'; style-src 'nonce-$nonce'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"]);
         } catch (JsonException|InvalidArgumentException $e) { return $reply(422,['error'=>$e->getMessage()]); }
@@ -501,6 +503,7 @@ trait HeatingControlWebhook
         }
     }
 }
+
 
 
 
