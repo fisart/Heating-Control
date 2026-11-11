@@ -1,0 +1,11 @@
+{
+  "id": "{E4197119-D932-4CF2-86BC-FA27E9FC76F1}",
+  "name": "VentilationControl",
+  "type": 3,
+  "vendor": "Artur Fischer",
+  "aliases": ["Ventilation and Moisture Control"],
+  "parentRequirements": [],
+  "childRequirements": [],
+  "implemented": [],
+  "prefix": "VMC"
+}

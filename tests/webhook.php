@@ -17,6 +17,22 @@ check(!str_contains($page['body'],'{{'),'All template substitutions resolved');
 check(str_contains($page['headers']['Content-Security-Policy'],"frame-ancestors 'none'")&&str_contains($page['headers']['Content-Security-Policy'],"script-src 'nonce-"),'Restrictive nonce CSP');
 check($page['headers']['Cache-Control']==='private, no-store, max-age=0','Sensitive page never cached');
 check($page['headers']['Content-Security-Policy']!==response($m)['headers']['Content-Security-Policy'],'Fresh CSP nonce');
+// Related ventilation navigation is read-only, registered and unique.
+$GLOBALS['instanceModules'][70]='{E4197119-D932-4CF2-86BC-FA27E9FC76F1}';
+$GLOBALS['instanceProperties'][70]=['WebEnabled'=>true,'HeatingInstanceID'=>$m->InstanceID];
+check(str_contains(response($m)['body'],'href="" target="_top" id="ventilation-link" hidden'),'Unregistered ventilation page is not linked');
+$GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/ventilation_70","TargetID":70}]';
+check(str_contains(response($m)['body'],'href="/hook/ventilation_70" target="_top" id="ventilation-link" hidden'),'Matching ventilation page is linked');
+$GLOBALS['instanceProperties'][70]['HeatingInstanceID']=99;
+check(!str_contains(response($m)['body'],'href="/hook/ventilation_70"'),'Unrelated heating controller is not linked');
+$GLOBALS['instanceProperties'][70]['HeatingInstanceID']=$m->InstanceID;
+$GLOBALS['instanceModules'][71]='{E4197119-D932-4CF2-86BC-FA27E9FC76F1}';
+$GLOBALS['instanceProperties'][71]=$GLOBALS['instanceProperties'][70];
+$GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/ventilation_70","TargetID":70},{"Hook":"/hook/ventilation_71","TargetID":71}]';
+check(str_contains(response($m)['body'],'href="" target="_top" id="ventilation-link" hidden'),'Ambiguous ventilation pages are not guessed');
+unset($GLOBALS['instanceModules'][70],$GLOBALS['instanceModules'][71]);
+$GLOBALS['instanceProperties'][5]['Hooks']='[{"Hook":"/hook/other","TargetID":88}]';
+check(!$GLOBALS['commands']&&!$GLOBALS['directWrites'],'Related-page discovery operated equipment');
 // Navigation targets the registered System Portal, not the vault login/admin page.
 check(str_contains($page['body'],'href="" target="_top" id="portal" hidden'),'No portal produces a browser-Back fallback');
 $GLOBALS['instanceModules'][10]='{922E5A10-A048-463D-A973-97B4BBD9096B}';

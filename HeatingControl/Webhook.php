@@ -68,6 +68,28 @@ trait HeatingControlWebhook
         } catch (Throwable $e) { return ''; }
     }
 
+    /** Link only to one registered ventilation page bound to this controller. */
+    private function webVentilationPath(): string
+    {
+        try {
+            $controls = IPS_GetInstanceListByModuleID(self::WEBHOOK_CONTROL);
+            if (count($controls) !== 1) return '';
+            $hooks = json_decode((string)IPS_GetProperty((int)$controls[0], 'Hooks'), true, 32, JSON_THROW_ON_ERROR);
+            if (!is_array($hooks) || !array_is_list($hooks)) return '';
+            $eligible = [];
+            foreach (IPS_GetInstanceListByModuleID('{E4197119-D932-4CF2-86BC-FA27E9FC76F1}') as $id) {
+                $id = (int)$id;
+                if (!IPS_InstanceExists($id) || IPS_HasChanges($id)
+                    || IPS_GetProperty($id, 'WebEnabled') !== true
+                    || (int)IPS_GetProperty($id, 'HeatingInstanceID') !== $this->InstanceID) continue;
+                $path = '/hook/ventilation_'.$id;
+                $matches = array_values(array_filter($hooks, static fn($hook) => is_array($hook) && ($hook['Hook'] ?? '') === $path));
+                if (count($matches) === 1 && (int)($matches[0]['TargetID'] ?? 0) === $id) $eligible[$id] = $path;
+            }
+            return count($eligible) === 1 ? array_values($eligible)[0] : '';
+        } catch (Throwable $e) { return ''; }
+    }
+
     public function SetupHook(): void
     {
         $this->SetTimerInterval('HookSetup', 0);
@@ -469,7 +491,7 @@ trait HeatingControlWebhook
             $template = file_get_contents(__DIR__.'/page.html');
             if ($template === false) throw new RuntimeException('Page template missing.');
             return $reply(200,strtr($template,['{{NONCE}}'=>$escape($nonce),'{{PATH}}'=>$escape($this->webPath()),
-                '{{CSRF}}'=>$escape($this->webCSRF($server,$vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape($this->webPortalPath($vault))]),[
+                '{{CSRF}}'=>$escape($this->webCSRF($server,$vault,(int)floor(time()/3600))), '{{INSTANCE}}'=>(string)$this->InstanceID, '{{PORTAL}}'=>$escape($this->webPortalPath($vault)), '{{VENTILATION}}'=>$escape($this->webVentilationPath())]),[
                 'Content-Type'=>'text/html; charset=utf-8',
                 'Content-Security-Policy'=>"default-src 'none'; script-src 'nonce-$nonce'; style-src 'nonce-$nonce'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"]);
         } catch (JsonException|InvalidArgumentException $e) { return $reply(422,['error'=>$e->getMessage()]); }

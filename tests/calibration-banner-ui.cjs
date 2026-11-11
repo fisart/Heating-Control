@@ -14,6 +14,7 @@ const {chromium}=require('playwright');
  });
  await page.goto('https://heating.example:46900/hook/heating_1');
  await page.locator('#calibration-status[data-state="idle"]').waitFor();
+ assert.equal(await page.locator('#ventilation-link').getAttribute('href'),'/hook/ventilation_70');assert(await page.locator('#ventilation-link').isVisible());
  await page.screenshot({path:path.join(screenshots,'desktop-idle.png')});
  state.heatPumpTest={...state.heatPumpTest,active:true,phase:'step',powerPercent:50,cleanMeasurementSeconds:420,stepMinutes:15,status:'Step 3/8: 50%; measuring; clean 420/900 seconds; excluded 0 seconds; master bedroom closed'};
  await page.locator('#refresh').click();await page.locator('#calibration-status[data-state="active"]').waitFor();
