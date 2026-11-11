@@ -123,7 +123,8 @@ jobs:
           fi
       - run: node tests/room-climate-ui.cjs
       - name: Calibration banner desktop and mobile
-        run: node tests/calibration-banner-ui.cjs
+        run: |
+          node tests/calibration-banner-ui.cjs
           node tests/heatpump-charts-ui.cjs
       - name: Save calibration banner screenshots
         if: always()
