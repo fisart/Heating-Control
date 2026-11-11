@@ -4,16 +4,17 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=require('jsdom');
 (async()=>{
  const fixture=JSON.parse(execFileSync(process.env.PHP_BIN||'php',[path.join(__dirname,'webhook-ui-fixture.php')],{encoding:'utf8'}));
- const errors=[],calls=[];let state=fixture.state,empty=false,expired=false,resolveHistory=null;
+ const errors=[],calls=[];let state=fixture.state,empty=false,expired=false,resolveHistory=null,resolveTestStart=null,stateUnavailable=false,intervalTick=null;
  const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(fixture.page.body,{url:'https://heating.example:46900/hook/heating_1',runScripts:'outside-only',virtualConsole:vc});
  const w=dom.window,d=w.document;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
  w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
- w.setInterval=()=>0;
+ w.setInterval=callback=>{intervalTick=callback;return 0;};Object.defineProperty(d,'hidden',{value:false});
  const stamp=Math.floor(Date.now()/3600000)*3600;
  w.fetch=async(url,options={})=>{
   calls.push({url,options});const u=new URL(url,w.location.href);
+  if(u.searchParams.get('view')==='state'&&stateUnavailable)return {ok:false,status:503,json:async()=>({error:'Status unavailable'})};
   if(u.searchParams.get('view')==='history'){
    if(resolveHistory)return new Promise(resolve=>{resolveHistory.resolve=resolve;});
    return {ok:!expired,status:expired?401:200,json:async()=>expired?{error:'Passkey session expired.'}:{name:'Outside temperature · Outdoor sensor',range:u.searchParams.get('range'),aggregation:u.searchParams.get('resolution')==='auto'?(u.searchParams.get('range')==='1h'?'recorded':'hourly'):u.searchParams.get('resolution'),from:stamp-86400,to:stamp+1,truncated:false,points:empty?[]:[{time:stamp-7200,value:19,min:18.8,max:19.2,duration:3600},{time:stamp-3600,value:20,min:19.8,max:20.2,duration:3600},{time:stamp,value:21,min:20.8,max:21.2,duration:3600}]}};
@@ -22,6 +23,11 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
   if(options.method==='POST'&&JSON.parse(options.body).control==='HeatPumpCOPMethod'){state.heatPumpTest.copMethod.selected=JSON.parse(options.body).value;return {ok:true,status:200,json:async()=>({ok:true,confirmed:true,state})};}
   if(options.method==='POST'){
    const {control,value}=JSON.parse(options.body);
+   if(control==='HeatPumpTestStart'){
+    const complete=()=>{state.heatPumpTest.active=true;state.heatPumpTest.phase='prepare';state.heatPumpTest.status='Preparing test; normal heating suspended';return {ok:true,status:200,json:async()=>({ok:true,confirmed:true,state})};};
+    if(resolveTestStart)return new Promise(resolve=>{resolveTestStart.resolve=()=>resolve(complete());});
+    return complete();
+   }
    if(control==='ModuleEnabled'){state.enabled=value;state.editable=value&&!state.dryRun;state.flapCalibration.active=false;}
    else if(control==='FlapCalibrationWaitSeconds')state.flapCalibration.waitSeconds=value;
    else if(control==='FlapCalibrationStart'){state.flapCalibration.active=true;state.flapCalibration.status='Step 1/3: all flaps OPEN; 120s remaining';}
@@ -31,7 +37,43 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
   return {ok:true,status:200,json:async()=>state};
  };
  w.eval(d.querySelector('script').textContent);
- const settle=()=>new Promise(r=>setTimeout(r,20));await settle();
+ const settle=()=>new Promise(r=>setTimeout(r,20));const redraw=async()=>{d.querySelector('#refresh').click();await settle();await settle();};await settle();
+ // The current active flags, not saved status/results or COP-method wording, own the banner.
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'idle');
+ assert.equal(d.querySelector('#calibration-title').textContent,'No calibration running');
+ state.heatPumpTest.status='Step 3/8: 50%; measuring (saved old status)';await redraw();
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'idle','Saved status is never treated as an active test');
+ const focusedWait=d.querySelector('#flap-wait');focusedWait.value='217';focusedWait.focus();
+ state.heatPumpTest.active=true;state.heatPumpTest.phase='baseline';state.heatPumpTest.status='Test baseline';intervalTick();await settle();await settle();
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'active','Status stays current while an input is being edited');
+ assert.equal(focusedWait.value,'217','A status refresh preserves the focused input');
+ focusedWait.blur();state.heatPumpTest.active=false;await redraw();
+ resolveTestStart={};d.querySelector('#test-start').click();await settle();
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'pending','A click is shown as a request until confirmed');
+ assert.ok(d.querySelector('#calibration-detail').textContent.includes('confirm'));
+ resolveTestStart.resolve();resolveTestStart=null;await settle();await settle();
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'active');
+ assert.ok(d.querySelector('#calibration-title').textContent.includes('Heat-pump'));
+ assert.ok(d.querySelector('#calibration-context').textContent.includes('Preparing'));
+ for(const phase of ['baseline','reboot_wait','stopping']){
+  state.heatPumpTest.phase=phase;await redraw();
+  assert.equal(d.querySelector('#calibration-status').dataset.state,'active',phase+' retains active ownership');
+  assert.equal(d.querySelector('#calibration-progress').hidden,true);
+ }
+ state.heatPumpTest.phase='step';state.heatPumpTest.powerPercent=50;state.heatPumpTest.cleanMeasurementSeconds=420;state.heatPumpTest.stepMinutes=15;state.heatPumpTest.status='Step 3/8: 50%; measuring; clean 420/900 seconds';await redraw();
+ assert.equal(d.querySelector('#calibration-progress').max,900);assert.equal(d.querySelector('#calibration-progress').value,420);
+ assert.equal(d.querySelector('#calibration-progress').hidden,false);
+ assert.ok(d.querySelector('#calibration-detail').textContent.includes('Step 3/8'));
+ assert.ok(d.querySelector('#calibration-context').textContent.includes('50%'));
+ state.heatPumpTest.transientActive=true;await redraw();
+ assert.ok(d.querySelector('#calibration-context').textContent.includes('temperature recovery'));
+ stateUnavailable=true;await redraw();
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'unknown','Connection loss never claims idle');
+ assert.ok(d.querySelector('#calibration-context').textContent.includes('Last confirmed: heat-pump calibration active'));
+ stateUnavailable=false;await redraw();assert.equal(d.querySelector('#calibration-status').dataset.state,'active');
+ state.heatPumpTest.active=false;state.heatPumpTest.phase='idle';state.heatPumpTest.status='Completed: saved results';state.heatPumpTest.transientActive=false;await redraw();
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'idle');
+ assert.equal(d.querySelector('#calibration-progress').hidden,true);
  assert.equal(d.querySelector('#module-enabled').textContent,'Disable heating module');
  d.querySelector('#module-enabled').click();await settle();await settle();
  assert.equal(state.enabled,false);assert.equal(d.querySelector('#module-enabled').disabled,false);
@@ -44,6 +86,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.equal(state.flapCalibration.waitSeconds,9);
  d.querySelector('#flap-start').click();await settle();await settle();
  assert.equal(state.flapCalibration.active,true);assert.equal(d.querySelector('#flap-cancel').disabled,false);
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'active');assert.ok(d.querySelector('#calibration-title').textContent.includes('Air-flap'));assert.equal(d.querySelector('#calibration-link').getAttribute('href'),'#module-control');
  assert.equal(d.querySelector('#module-enabled').disabled,false,'Disable remains available during calibration');
  assert.equal(d.querySelector('#test-start').disabled,true,'Heat-pump test cannot overlap');
  assert.equal(d.querySelectorAll('#rooms .edit button:enabled,#automatic-control button:enabled').length,0);
@@ -201,7 +244,7 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.ok(d.querySelector('#message a').textContent.includes('Sign in again'));
  assert.equal(d.querySelectorAll('#rooms button:enabled:not(.sensor-value),#automatic-control button:enabled,#controls button:enabled').length,0);
  assert.deepEqual(errors,[]);
- dom.window.close();console.log('Page DOM: device groups, archived-only links, sensor names, chart periods and resolutions, empty results, multi-sensor values, escaping and expired sessions passed.');
+ dom.window.close();console.log('Page DOM: prominent calibration running/paused/idle/pending/unavailable states, device groups, archived-only links, sensor names, chart periods and resolutions, empty results, multi-sensor values, escaping and expired sessions passed.');
 })().catch(e=>{console.error(e);process.exit(1);});
 
 

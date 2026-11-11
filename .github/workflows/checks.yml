@@ -112,5 +112,21 @@ jobs:
         with:
           node-version: "22"
       - run: npm install --no-save playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
+      - name: Select browser
+        run: |
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "CHROMIUM_BIN=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - run: node tests/room-climate-ui.cjs
+      - name: Calibration banner desktop and mobile
+        run: node tests/calibration-banner-ui.cjs
+      - name: Save calibration banner screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calibration-banner-screenshots
+          path: tests/artifacts/calibration-banner/*.png
+          if-no-files-found: ignore

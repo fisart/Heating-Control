@@ -1,4 +1,11 @@
+# Calibration status banner — 0.3.59, build 70
+
+Version **0.3.59, build 70** adds an always-visible calibration banner immediately below the page header. It distinguishes active heat-pump and air-flap calibration from idle, shows the current phase/status and heat-pump measurement progress, and links to the relevant controls. Start requests remain marked as unconfirmed until the controller replies. Paused/stopping tests remain active; retained results and the selected COP method do not imply a running test. Missing, disconnected or stale status is explicitly unavailable. Heating behavior and calibration rules are unchanged.
+
 # Per-source room climate settings — 0.3.58, build 69
+
+
+
 
 RoomClimate has a **Source settings** tab with on/off switches grouped by floor and room. Selections affect readings, averages and charts and are included in configuration backup. By default Shelly sources are disabled where a FRITZ thermostat is mapped, except in the first-floor master bathroom; they can be re-enabled. See [Room climate guide](docs/room-climate.md).
 
