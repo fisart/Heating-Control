@@ -108,17 +108,19 @@ function renderSourceSelection(s){
  const link=document.querySelector('#price-provider-link');link.hidden=!/^\/hook\/lichtblick_[1-9][0-9]*$/.test(provider.path||'');if(!link.hidden)link.href=provider.path;else link.removeAttribute('href');
  document.querySelector('#source-selection').textContent=[choice.automatic?'Automatic selection':'Manual selection',choice.status,choice.transfer].filter(Boolean).join(' · ');
 }
+let lastCalibration=null;
 function calibrationUnavailable(message){
  const box=document.querySelector('#calibration-status');box.dataset.state='unknown';
  document.querySelector('#calibration-state').textContent='STATUS UNAVAILABLE';
  document.querySelector('#calibration-title').textContent='Calibration status unavailable';
  document.querySelector('#calibration-detail').textContent=message;
- document.querySelector('#calibration-context').textContent=state?.heatPumpTest?.active?'Last confirmed: heat-pump calibration active.':state?.flapCalibration?.active?'Last confirmed: air-flap calibration active.':'Refresh to confirm whether a calibration is running.';
+ document.querySelector('#calibration-context').textContent=lastCalibration?.heat?'Last confirmed: heat-pump calibration active.':lastCalibration?.flap?'Last confirmed: air-flap calibration active.':'Refresh to confirm whether a calibration is running.';
  document.querySelector('#calibration-progress').hidden=true;
 }
 function renderCalibrationStatus(s){
  const t=s.heatPumpTest,f=s.flapCalibration;
  if(typeof t?.active!=='boolean'||typeof f?.active!=='boolean'){calibrationUnavailable('A complete calibration status has not been received.');return;}
+ lastCalibration={heat:t.active,flap:f.active};
  const active=t.active||f.active,box=document.querySelector('#calibration-status'),link=document.querySelector('#calibration-link'),progress=document.querySelector('#calibration-progress');
  box.dataset.state=active?'active':'idle';progress.hidden=true;
  document.querySelector('#calibration-state').textContent=active?'CALIBRATION ACTIVE':'IDLE';
@@ -216,7 +218,7 @@ document.querySelector('#test-start').addEventListener('click',()=>testCommand('
 document.querySelector('#test-cancel').addEventListener('click',()=>testCommand('HeatPumpTestCancel',true));
 document.querySelector('#test-duration').addEventListener('click',()=>{const input=document.querySelector('#test-minutes');if(input.reportValidity()&&input.value!=='')testCommand('HeatPumpTestMinutes',Number(input.value));});
 async function api(url,options){const r=await fetch(url,{credentials:'same-origin',cache:'no-store',...options});let data;try{data=await r.json();}catch{throw Error('Unexpected response. Refresh or sign in again.');}if(!r.ok){const e=Error(data.error||'Request failed.');e.login=r.status===401;throw e;}return data;}
-async function refresh(){if(busy||polling)return;polling=true;try{const s=await api(path+'?view=state');lastFetch=Date.now();if(s.csrf)csrf=s.csrf;if(!document.querySelector('input:focus,select:focus')&&!busy){render(s);if(s.csrf)csrf=s.csrf;}}catch(e){disableControls();calibrationUnavailable('The connection failed. The last known status may have changed.');document.querySelector('#status').textContent='Disconnected';notify(e.message,true,e.login);}finally{polling=false;}}
+async function refresh(){if(busy||polling)return;polling=true;try{const s=await api(path+'?view=state');lastFetch=Date.now();if(s.csrf)csrf=s.csrf;if(!document.querySelector('input:focus,select:focus')&&!busy){render(s);if(s.csrf)csrf=s.csrf;}else{renderCalibrationStatus(s);}}catch(e){disableControls();calibrationUnavailable('The connection failed. The last known status may have changed.');document.querySelector('#status').textContent='Disconnected';notify(e.message,true,e.login);}finally{polling=false;}}
 async function command(control,value){if(busy||!state?.editable)return;busy=true;disableControls();try{const result=await api(path,{method:'POST',headers:{'Content-Type':'application/json','X-Heating-CSRF':csrf},body:JSON.stringify({control,value})});render(result.state);notify(result.confirmed?'Setting updated.':'Command sent. Waiting for the linked variable to confirm.');}catch(e){notify(e.message,true,e.login);}finally{busy=false;await refresh();}}
 
 let costReport=null,costSequence=0;const costShown={hp:true,gas:true};

@@ -4,13 +4,13 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=require('jsdom');
 (async()=>{
  const fixture=JSON.parse(execFileSync(process.env.PHP_BIN||'php',[path.join(__dirname,'webhook-ui-fixture.php')],{encoding:'utf8'}));
- const errors=[],calls=[];let state=fixture.state,empty=false,expired=false,resolveHistory=null,resolveTestStart=null,stateUnavailable=false;
+ const errors=[],calls=[];let state=fixture.state,empty=false,expired=false,resolveHistory=null,resolveTestStart=null,stateUnavailable=false,intervalTick=null;
  const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(fixture.page.body,{url:'https://heating.example:46900/hook/heating_1',runScripts:'outside-only',virtualConsole:vc});
  const w=dom.window,d=w.document;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
  w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
- w.setInterval=()=>0;
+ w.setInterval=callback=>{intervalTick=callback;return 0;};Object.defineProperty(d,'hidden',{value:false});
  const stamp=Math.floor(Date.now()/3600000)*3600;
  w.fetch=async(url,options={})=>{
   calls.push({url,options});const u=new URL(url,w.location.href);
@@ -43,6 +43,11 @@ const {execFileSync}=require('node:child_process'),{JSDOM,VirtualConsole}=requir
  assert.equal(d.querySelector('#calibration-title').textContent,'No calibration running');
  state.heatPumpTest.status='Step 3/8: 50%; measuring (saved old status)';await redraw();
  assert.equal(d.querySelector('#calibration-status').dataset.state,'idle','Saved status is never treated as an active test');
+ const focusedWait=d.querySelector('#flap-wait');focusedWait.value='217';focusedWait.focus();
+ state.heatPumpTest.active=true;state.heatPumpTest.phase='baseline';state.heatPumpTest.status='Test baseline';intervalTick();await settle();await settle();
+ assert.equal(d.querySelector('#calibration-status').dataset.state,'active','Status stays current while an input is being edited');
+ assert.equal(focusedWait.value,'217','A status refresh preserves the focused input');
+ focusedWait.blur();state.heatPumpTest.active=false;await redraw();
  resolveTestStart={};d.querySelector('#test-start').click();await settle();
  assert.equal(d.querySelector('#calibration-status').dataset.state,'pending','A click is shown as a request until confirmed');
  assert.ok(d.querySelector('#calibration-detail').textContent.includes('confirm'));
