@@ -7,7 +7,7 @@
  let data=null,loading=false,yaw=-.72,pitch=.63,zoom=1,drag=null,screenPoints=[];
  const number=(v,n=2)=>Number(v).toLocaleString(undefined,{maximumFractionDigits:n});
  function tab(index,focus=false){
-  tabs.forEach((t,i)=>{t.setAttribute('aria-selected',String(i===index));t.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
+  tabs.forEach((t,i)=>{t.setAttribute('aria-selected',String(i===index));t.tabIndex=i===index?0:-1;t.classList.toggle('secondary',i!==index);panels[i].hidden=i!==index;});
   if(focus)tabs[index].focus();if(index===1){load();requestAnimationFrame(draw);}
  }
  tabs.forEach((t,i)=>{t.addEventListener('click',()=>tab(i));t.addEventListener('keydown',e=>{
@@ -34,11 +34,15 @@
   const box=canvas.getBoundingClientRect(),width=Math.max(280,box.width),height=box.height||560,dpr=window.devicePixelRatio||1;
   canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
   const key=$('#surface-metric').value,all=data.grid.flat().map(p=>p[key]).concat(data.points.map(p=>p[key])),min=Math.min(...all),max=Math.max(...all),range=max-min||1;
-  const tmin=data.temperatures[0],tmax=data.temperatures.at(-1),scale=Math.min(width*.32,height*.48)*zoom;
-  function project(t,p,value){const x=(t-tmin)/(tmax-tmin)*2-1,y=(p-30)/70*2-1,z=(value-min)/range*1.65;
+  const tmin=data.temperatures[0],tmax=data.temperatures.at(-1);
+  function raw(t,p,value){const x=(t-tmin)/(tmax-tmin)*2-1,y=(p-30)/70*2-1,z=(value-min)/range*1.65;
    const xx=x*Math.cos(yaw)-y*Math.sin(yaw),yy=x*Math.sin(yaw)+y*Math.cos(yaw);
-   return {x:width/2+xx*scale,y:height*.62+(yy*Math.sin(pitch)-z*Math.cos(pitch))*scale,depth:yy*Math.cos(pitch)+z*Math.sin(pitch)};
+   return {x:xx,y:yy*Math.sin(pitch)-z*Math.cos(pitch),depth:yy*Math.cos(pitch)+z*Math.sin(pitch)};
   }
+  const corners=[tmin,tmax].flatMap(t=>[30,100].flatMap(p=>[min,max].map(v=>raw(t,p,v))));
+  const xmin=Math.min(...corners.map(p=>p.x)),xmax=Math.max(...corners.map(p=>p.x)),ymin=Math.min(...corners.map(p=>p.y)),ymax=Math.max(...corners.map(p=>p.y));
+  const scale=Math.min((width-90)/(xmax-xmin),(height-100)/(ymax-ymin))*zoom,ox=width/2-(xmin+xmax)*scale/2,oy=height/2-(ymin+ymax)*scale/2;
+  function project(t,p,v){const q=raw(t,p,v);return {x:ox+q.x*scale,y:oy+q.y*scale,depth:q.depth};}
   const line=(a,b,color='#b8c9c3')=>{ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=color;ctx.lineWidth=1;ctx.stroke();};
   const label=(text,p,align='center')=>{ctx.fillStyle='#334b43';ctx.font='12px system-ui';ctx.textAlign=align;ctx.fillText(text,p.x,p.y);};
   for(let p=30;p<=100;p+=10)line(project(tmin,p,min),project(tmax,p,min),'#dfe7e1');
@@ -59,9 +63,9 @@
   line(project(tmin,30,min),project(tmax,30,min),'#758c82');line(project(tmin,30,min),project(tmin,100,min),'#758c82');line(project(tmin,30,min),project(tmin,30,max),'#758c82');
   for(const t of [tmin,6,10,14,tmax]){const p=project(t,30,min);label(number(t,1),{x:p.x,y:p.y+18});}
   for(const power of [30,50,70,100]){const p=project(tmin,power,min);label(power+'%',{x:p.x-10,y:p.y},'right');}
-  for(let n=0;n<=4;n++){const v=min+range*n/4,p=project(tmin,30,v);label(number(v,1),{x:p.x-12,y:p.y},'right');}
+  for(let n=1;n<=4;n++){const v=min+range*n/4,p=project(tmin,30,v);label(number(v,1),{x:p.x-12,y:p.y},'right');}
   ctx.fillStyle='#23352f';ctx.font='600 14px system-ui';ctx.textAlign='left';ctx.fillText($('#surface-metric').selectedOptions[0].textContent,18,25);
-  ctx.font='12px system-ui';ctx.fillText('Outside temperature (°C) × heat-pump power (%)',18,height-17);
+  ctx.font='12px system-ui';ctx.fillText('Outside temperature (°C)',18,height-27);ctx.fillText('Heat-pump power (%)',18,height-10);
  }
  function inspect(event){if(!data||drag)return;const box=canvas.getBoundingClientRect(),x=event.clientX-box.left,y=event.clientY-box.top;
   let nearest=null,dist=18;for(const p of screenPoints){const d=Math.hypot(x-p.x,y-p.y);if(d<dist){nearest=p.p;dist=d;}}
