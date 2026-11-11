@@ -1,0 +1,62 @@
+[
+  {
+    "closed": 100,
+    "flapID": 36911,
+    "flapType": 1,
+    "legacyGroupID": 25055,
+    "name": "Living and Dining Room",
+    "open": 0,
+    "sensors": [
+      {
+        "id": 57694
+      }
+    ],
+    "statusID": 43898,
+    "targetID": 12594
+  },
+  {
+    "closed": 0,
+    "flapID": 22150,
+    "flapType": 0,
+    "legacyGroupID": 38782,
+    "name": "Guest Bedrooms",
+    "open": 1,
+    "sensors": [
+      {
+        "id": 44502
+      }
+    ],
+    "statusID": 50623,
+    "targetID": 40975
+  },
+  {
+    "closed": 0,
+    "flapID": 40259,
+    "flapType": 0,
+    "legacyGroupID": 16188,
+    "name": "Master Bedroom",
+    "open": 1,
+    "sensors": [
+      {
+        "id": 15880
+      }
+    ],
+    "statusID": 36744,
+    "targetID": 30481
+  },
+  {
+    "closed": 100,
+    "flapID": 27527,
+    "flapType": 1,
+    "legacyGroupID": 36698,
+    "name": "Blue Room and Kitchen",
+    "open": 0,
+    "sensors": [
+      {
+        "id": 57255
+      }
+    ],
+    "statusID": 53400,
+    "targetID": 37341
+  }
+]

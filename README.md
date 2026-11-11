@@ -1,3 +1,11 @@
+# Consolidated heating and ventilation — 0.3.63, build 74
+
+Version **0.3.63, build 74** brings the complete ventilation branch and the latest heating calibration display together on **main**. The ventilation page now keeps equipment ownership visible above every tab: heat-pump test, air-flap calibration, ventilation cycle, handover, idle or unavailable status. Active heating calibrations block its Start button; backend priority checks remain authoritative. A failed connection or status older than 30 seconds is shown as unavailable. Open the heating page for detailed calibration progress and stop controls.
+
+The heating page links to the one registered ventilation page configured for that HeatingControl instance. The ventilation page links back to heating. Both pages retain their existing passkey authentication. The combined release includes the ventilation room-list migration, saved room-editor sensor/flap compatibility, and change-triggered KNX reporting fixes. [Ventilation setup and operating guide](docs/ventilation-control.md).
+
+The heating page also corrects its outdated transfer-delay description to match the existing control rules. This consolidation preserves exchanger-based fan control, immediate source transfers with command acknowledgements, module disable/release behavior, all calibration measurements and the expanded COP matrix/surface. New ventilation instances still start disabled, with automatic operation and live outputs off; existing saved settings are retained. Update the library from **main**, then review/apply the instance configuration. Publication to GitHub does not update the running Symcon installation automatically.
+
 # Calibration status banner — 0.3.59, build 70
 
 Version **0.3.59, build 70** adds an always-visible calibration banner immediately below the page header. It distinguishes active heat-pump and air-flap calibration from idle, shows the current phase/status and heat-pump measurement progress, and links to the relevant controls. Start requests remain marked as unconfirmed until the controller replies. Paused/stopping tests remain active; retained results and the selected COP method do not imply a running test. Missing, disconnected or stale status is explicitly unavailable. Heating behavior and calibration rules are unchanged.

@@ -1,0 +1,38 @@
+name: Ventilation module checks
+on: [push, pull_request]
+jobs:
+  ventilation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find VentilationControl -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Control, sensor selection and web security
+        run: |
+          php tests/ventilation-control.php
+          php tests/ventilation-web.php
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Browser dependencies
+        run: |
+          npm install --no-save playwright@1.56.1
+      - name: Select browser
+        run: |
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "CHROMIUM_BIN=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Browser interaction and responsive page
+        run: node tests/ventilation-ui.cjs
+        env:
+          VMC_SCREENSHOTS: tests/artifacts/ventilation
+      - name: Save ventilation screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ventilation-screenshots
+          path: tests/artifacts/ventilation/*.png
+          if-no-files-found: ignore

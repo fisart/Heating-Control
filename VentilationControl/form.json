@@ -1,0 +1,271 @@
+{
+  "elements": [
+    {
+      "type": "Label",
+      "caption": "Ventilation & moisture is independent of HeatingControl. New instances start disabled with live outputs off. Open the passkey page to configure fixed room sensors, operating limits and equipment handover."
+    },
+    {
+      "type": "CheckBox",
+      "name": "Enabled",
+      "caption": "Enabled"
+    },
+    {
+      "type": "CheckBox",
+      "name": "WebEnabled",
+      "caption": "WebEnabled"
+    },
+    {
+      "type": "CheckBox",
+      "name": "DebugEnabled",
+      "caption": "DebugEnabled"
+    },
+    {
+      "type": "CheckBox",
+      "name": "LiveOutputs",
+      "caption": "LiveOutputs"
+    },
+    {
+      "type": "CheckBox",
+      "name": "AutomaticEnabled",
+      "caption": "AutomaticEnabled"
+    },
+    {
+      "type": "CheckBox",
+      "name": "AutomaticRecirculation",
+      "caption": "AutomaticRecirculation"
+    },
+    {
+      "type": "CheckBox",
+      "name": "AirSelectorVerified",
+      "caption": "AirSelectorVerified"
+    },
+    {
+      "type": "CheckBox",
+      "name": "AirPathVerified",
+      "caption": "AirPathVerified"
+    },
+    {
+      "type": "CheckBox",
+      "name": "AllowHoliday24h",
+      "caption": "AllowHoliday24h"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "HeatingInstanceID",
+      "caption": "HeatingInstanceID"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "BackendInstanceID",
+      "caption": "BackendInstanceID"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "PortalInstanceID",
+      "caption": "PortalInstanceID"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "DocumentationInstanceID",
+      "caption": "DocumentationInstanceID"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "BackupInstanceID",
+      "caption": "BackupInstanceID"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "OutsideTemperatureID",
+      "caption": "OutsideTemperatureID"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "OutsideHumidityID",
+      "caption": "OutsideHumidityID"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "AirSelectorID",
+      "caption": "AirSelectorID"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "AirSelectorFeedbackID",
+      "caption": "AirSelectorFeedbackID"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "AirSelectorLockID",
+      "caption": "AirSelectorLockID"
+    },
+    {
+      "type": "SelectVariable",
+      "name": "VentilationActiveID",
+      "caption": "VentilationActiveID"
+    },
+    {
+      "type": "SelectInstance",
+      "name": "CoolingInstanceID",
+      "caption": "CoolingInstanceID"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MaxSensorAgeSeconds",
+      "caption": "MaxSensorAgeSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "EvaluationSeconds",
+      "caption": "EvaluationSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "QualificationSeconds",
+      "caption": "QualificationSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "CycleSeconds",
+      "caption": "CycleSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MaxCycleSeconds",
+      "caption": "MaxCycleSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "CooldownSeconds",
+      "caption": "CooldownSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "DamperWaitSeconds",
+      "caption": "DamperWaitSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "FeedbackTimeoutSeconds",
+      "caption": "FeedbackTimeoutSeconds"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "FanPercent",
+      "caption": "FanPercent"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "StartMinute",
+      "caption": "StartMinute"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "EndMinute",
+      "caption": "EndMinute"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "StartHumidity",
+      "caption": "StartHumidity",
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "StopHumidity",
+      "caption": "StopHumidity",
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "StartMoistureExcess",
+      "caption": "StartMoistureExcess",
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "StopDryingPotential",
+      "caption": "StopDryingPotential",
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MaximumColdHumidity",
+      "caption": "MaximumColdHumidity",
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MaximumTemperatureDrop",
+      "caption": "MaximumTemperatureDrop",
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "MinimumOutsideTemperature",
+      "caption": "MinimumOutsideTemperature",
+      "digits": 1
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "RecirculationSpread",
+      "caption": "RecirculationSpread",
+      "digits": 1
+    },
+    {
+      "type": "ValidationTextBox",
+      "name": "Rooms",
+      "caption": "Room configuration JSON (edit on the Admin tab)"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Button",
+      "caption": "Register / repair page",
+      "onClick": "VMC_Setup($id);"
+    },
+    {
+      "type": "Button",
+      "caption": "Register Portal link",
+      "onClick": "echo VMC_RegisterPortalPage($id);"
+    },
+    {
+      "type": "Button",
+      "caption": "Evaluate now",
+      "onClick": "VMC_Tick($id);"
+    },
+    {
+      "type": "Button",
+      "caption": "Stop and disable automatic",
+      "onClick": "VMC_Stop($id);"
+    },
+    {
+      "type": "Button",
+      "caption": "Export configuration",
+      "onClick": "VMC_ExportToForm($id);"
+    },
+    {
+      "type": "ValidationTextBox",
+      "name": "BackupJSON",
+      "caption": "Configuration export / import",
+      "value": ""
+    },
+    {
+      "type": "Button",
+      "caption": "Import configuration (control and web disabled)",
+      "onClick": "echo VMC_ImportConfig($id, $BackupJSON);"
+    }
+  ],
+  "status": [
+    {
+      "code": 102,
+      "icon": "active",
+      "caption": "Ready"
+    },
+    {
+      "code": 200,
+      "icon": "error",
+      "caption": "Configuration requires attention"
+    }
+  ]
+}

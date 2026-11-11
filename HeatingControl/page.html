@@ -15,7 +15,7 @@
 </style>
 </head>
 <body><main data-path="{{PATH}}" data-csrf="{{CSRF}}">
-<header><div><div class="eyebrow">Home climate · Heating Control</div><h1>Warmth, under control.</h1><p class="subtitle">Rooms, heat sources and recovered warmth in one view.</p></div><div class="tools"><a href="{{PORTAL}}" target="_top" id="portal" hidden>← System portal</a><button class="secondary" id="portal-back" hidden>Back</button><button class="secondary" id="refresh">Refresh</button><span id="status" aria-live="polite">Connecting…</span></div></header>
+<header><div><div class="eyebrow">Home climate · Heating Control</div><h1>Warmth, under control.</h1><p class="subtitle">Rooms, heat sources and recovered warmth in one view.</p></div><div class="tools"><a href="{{VENTILATION}}" target="_top" id="ventilation-link" hidden>Ventilation &amp; moisture</a><a href="{{PORTAL}}" target="_top" id="portal" hidden>← System portal</a><button class="secondary" id="portal-back" hidden>Back</button><button class="secondary" id="refresh">Refresh</button><span id="status" aria-live="polite">Connecting…</span></div></header>
 <div id="message" role="status" aria-live="polite"></div>
 <section id="calibration-status" class="calibration-status" data-state="unknown" role="status" aria-live="polite" aria-atomic="true"><div><span id="calibration-state" class="calibration-state">CHECKING STATUS</span><h2 id="calibration-title">Checking calibration status…</h2><p id="calibration-detail">Waiting for a current status from the heating controller.</p><progress id="calibration-progress" hidden aria-label="Current heat-pump calibration step measurement"></progress><p id="calibration-context" class="tiny"></p></div><a id="calibration-link" href="#heatpump-test">Calibration controls ↓</a></section>
 <section id="decision" class="banner"><strong>Reading heating status…</strong><p>Controls become available after authentication and a successful status refresh.</p></section>
@@ -28,7 +28,7 @@
 </section>
 <section id="automatic-source" class="card" aria-label="Automatic heat source selection">
 <div class="automatic-head"><h2>Automatic heat source selection</h2><span id="automatic-mode" class="badge off">Manual</span></div>
-<p class="tiny">On: compare verified electricity prices with the measured matrix to select gas or heat pump and its power. Off: retain the selected source and use manual desired power. Heating demand and transfer delays still apply.</p>
+<p class="tiny">On: compare verified electricity prices with the configured COP matrix or surface to select gas or heat pump and its power. Off: retain the selected source and use manual desired power. Heating demand and source-command acknowledgements still apply; there are no timed source-transfer or compressor-restart delays.</p>
 <div class="automatic-grid"><div><div id="automatic-control" class="controls"></div><div id="automatic-selected" class="equipment"></div></div><div><h3>Verified electricity-price supply</h3><div id="price-provider" class="equipment"></div><p id="price-provider-reason" class="tiny"></p><a id="price-provider-link" hidden>Open consumption, costs and price settings</a></div></div>
 <p id="source-selection" class="tiny" aria-live="polite"></p>
 </section>
@@ -307,6 +307,8 @@ document.querySelector('#refresh').addEventListener('click',()=>{document.active
 const portal=document.querySelector('#portal'),portalBack=document.querySelector('#portal-back');
 if(/^\/hook\/portal$/.test(portal.getAttribute('href')||'')){portal.hidden=false;}else{portal.removeAttribute('href');portalBack.hidden=false;}
 portalBack.addEventListener('click',()=>history.back());
+const ventilationLink=document.querySelector('#ventilation-link');
+if(/^\/hook\/ventilation_[1-9]\d*$/.test(ventilationLink.getAttribute('href')||'')){ventilationLink.hidden=false;}else{ventilationLink.removeAttribute('href');}
 refresh();setInterval(()=>{if(!document.hidden)refresh();if(lastFetch&&Date.now()-lastFetch>30000){disableControls();calibrationUnavailable('No fresh status for more than 30 seconds. Refresh to verify.');document.querySelector('#status').textContent='Status stale — refresh';}},10000);
 </script></body></html>
 
