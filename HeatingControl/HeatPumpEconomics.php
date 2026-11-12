@@ -46,10 +46,11 @@ trait HeatingControlHeatPumpEconomics
         $m=HeatPumpSurface::definition();
         return ['selected'=>$this->ReadPropertyString('HeatPumpCOPMethod'),'measuredToleranceC'=>$this->ReadPropertyFloat('HeatPumpMatrixTemperatureToleranceC'),
             'surfaceVersion'=>$m['version'],'outsideMinC'=>$m['domain']['outside_min_C'],'outsideMaxC'=>$m['domain']['outside_max_C'],
+            'incomingMinC'=>$m['domain']['incoming_min_C'],'incomingMaxC'=>$m['domain']['incoming_max_C'],
             'powerStepPercent'=>1,'electricalMethod'=>$m['reference_basis']['electrical_method'],
             'validationRMSECOP'=>$m['metrics']['leave_one_run_out_rmse_COP'],'acceptedPointCount'=>$m['metrics']['accepted_points'],
             'dedicatedPointCount'=>$m['metrics']['dedicated_meter_points'],'legacyPointCount'=>$m['metrics']['legacy_house_meter_points'],
-            'note'=>sprintf('Expanded %d-point surface including %d dedicated-meter measurements and %d household-counter points. Historical rows are preserved; %d runs supply calibration or thermal-only capacity evidence. Surface mode qualifies air rise against target plus supply margin minus intake; absolute intake matching is retained only in measured mode.',$m['metrics']['accepted_points'],$m['metrics']['dedicated_meter_points'],$m['metrics']['legacy_house_meter_points'],$m['metrics']['recorded_runs'])];
+            'note'=>sprintf('Smooth intake-aware %d-point fit including %d dedicated-meter and %d household-counter observations. All raw rows are preserved; %d runs supply COP or thermal-only evidence. Actual intake changes modeled COP and air rise; it is not matched to an individual point. Capacity evidence and target-plus-margin checks remain. Absolute COP is provisional.',$m['metrics']['accepted_points'],$m['metrics']['dedicated_meter_points'],$m['metrics']['legacy_house_meter_points'],$m['metrics']['recorded_runs'])];
     }
     private function measuredMatrix(): array
     {

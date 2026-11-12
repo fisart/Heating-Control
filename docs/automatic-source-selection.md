@@ -1,3 +1,5 @@
+> **Current surface (0.3.65 build 76):** Predictions include actual intake temperature in a smooth constrained fit. [Current domains, capacity checks, validation and limitations](heatpump-cop-surface.md). Measured-point mode and safety/hysteresis settings are preserved.
+
 # Automatic gas / heat-pump switchover — 0.3.26
 
 Heating Control is the sole source/power decision maker. LichtBlick supplies a

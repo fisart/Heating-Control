@@ -20,14 +20,20 @@
   try{
    const response=await fetch(document.querySelector('main').dataset.path+'?view=heatpump-surface',{credentials:'same-origin',cache:'no-store',signal:abort.signal});
    const result=await response.json();if(!response.ok)throw Error(result.error||'Chart data unavailable.');
-   if(!Array.isArray(result.grid)||!Array.isArray(result.points)||!result.metrics)throw Error('Incomplete chart data.');
-   data=result;$('#surface-status').textContent=result.metrics.accepted_points+' fitted observations · '+result.metrics.recorded_rows+' stored calibration rows · '+result.metrics.recorded_runs+' recorded runs · '+result.version;
+   if(!Array.isArray(result.grid)||!Array.isArray(result.points)||!result.metrics||!Array.isArray(result.slices)||result.slices.length!==4)throw Error('Incomplete chart data.');
+   data=result;selectSlice();
    $('#surface-assumptions').textContent=result.assumptions;
    const body=$('#surface-measurements');body.replaceChildren();
    for(const p of result.points){const tr=document.createElement('tr');for(const value of [p.runID,p.powerPercent,number(p.outside),number(p.incoming),number(p.airRise),number(p.estimatedHeatKW),number(p.systemInputKW),number(p.estimatedSystemCOP),p.originalStable?'Stable':'Warning retained',p.excludedSeconds]){const td=document.createElement('td');td.textContent=value;tr.append(td);}body.append(tr);}
    draw();
   }catch(error){$('#surface-status').textContent='Could not load charts: '+(error.name==='AbortError'?'Request timed out.':error.message);$('#surface-retry').hidden=false;}
   finally{loading=false;clearTimeout(timeout);}
+ }
+ function selectSlice(){
+  if(!data)return;const incoming=Number($('#surface-intake').value),slice=data.slices.find(s=>s.incoming===incoming);
+  if(!slice)return;data.grid=slice.grid;
+  $('#surface-status').textContent=data.metrics.accepted_points+' fitted observations · '+data.metrics.recorded_rows+' stored calibration rows · Mesh intake '+number(incoming,0)+'°C · Whole-run error '+number(data.metrics.leave_one_run_out_rmse_COP,2)+' COP · Provisional · '+data.version;
+  draw();
  }
  function draw(){
   if(!data||panels[1].hidden)return;ctx=ctx||canvas.getContext('2d');if(!ctx)return;
@@ -64,8 +70,8 @@
   for(const t of [tmin,6,10,14,tmax]){const p=project(t,30,min);label(number(t,1),{x:p.x,y:p.y+18});}
   for(const power of [30,50,70,100]){const p=project(tmin,power,min);label(power+'%',{x:p.x-10,y:p.y},'right');}
   for(let n=1;n<=4;n++){const v=min+range*n/4,p=project(tmin,30,v);label(number(v,1),{x:p.x-12,y:p.y},'right');}
-  ctx.fillStyle='#23352f';ctx.font='600 14px system-ui';ctx.textAlign='left';ctx.fillText($('#surface-metric').selectedOptions[0].textContent,18,25);
-  ctx.font='12px system-ui';ctx.fillText('Outside temperature (°C)',18,height-27);ctx.fillText('Heat-pump power (%)',18,height-10);
+  ctx.fillStyle='#23352f';ctx.font='600 14px system-ui';ctx.textAlign='left';ctx.fillText($('#surface-metric').selectedOptions[0].textContent+' · intake '+number($('#surface-intake').value,0)+'°C',18,25);
+  ctx.font='12px system-ui';ctx.fillText('Outside temperature (°C)',18,height-27);ctx.fillText('Heat-pump command (%)',18,height-10);
  }
  function inspect(event){if(!data||drag)return;const box=canvas.getBoundingClientRect(),x=event.clientX-box.left,y=event.clientY-box.top;
   let nearest=null,dist=18;for(const p of screenPoints){const d=Math.hypot(x-p.x,y-p.y);if(d<dist){nearest=p.p;dist=d;}}
@@ -76,7 +82,7 @@
  canvas.addEventListener('pointerup',event=>{const moved=drag?.moved;drag=null;if(!moved)inspect(event);});canvas.addEventListener('pointercancel',()=>{drag=null;});
  canvas.addEventListener('wheel',event=>{event.preventDefault();zoom=Math.max(.6,Math.min(1.7,zoom-event.deltaY*.001));draw();},{passive:false});
  canvas.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-'].includes(event.key))return;event.preventDefault();if(event.key==='ArrowLeft')yaw-=.12;if(event.key==='ArrowRight')yaw+=.12;if(event.key==='ArrowUp')pitch=Math.min(1.3,pitch+.08);if(event.key==='ArrowDown')pitch=Math.max(.2,pitch-.08);if(['+','='].includes(event.key))zoom=Math.min(1.7,zoom+.1);if(event.key==='-')zoom=Math.max(.6,zoom-.1);draw();});
- $('#surface-metric').addEventListener('change',draw);$('#surface-points').addEventListener('change',draw);
+ $('#surface-metric').addEventListener('change',draw);$('#surface-points').addEventListener('change',draw);$('#surface-intake').addEventListener('change',selectSlice);
  $('#surface-reset').addEventListener('click',()=>{yaw=-.72;pitch=.63;zoom=1;draw();});$('#surface-retry').addEventListener('click',()=>load(true));
  $('#refresh').addEventListener('click',()=>{if(!panels[1].hidden)load(true);});window.addEventListener('resize',()=>requestAnimationFrame(draw));
  if(location.hash==='#3d-charts')tab(1);

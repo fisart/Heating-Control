@@ -1,3 +1,13 @@
+# Smooth intake-aware heat-pump model — 0.3.65, build 76
+
+The calculated COP surface now uses actual intake temperature as well as outdoor temperature and heat-pump command. A constrained smooth fit replaces exact interpolation; all 51 recorded rows and 47 eligible fit observations are unchanged. The separate 3D tab offers intake slices at 10, 15, 20 and 25°C.
+
+Nested complete-run holdout COP RMSE improves **0.582 → 0.399**; air-rise error improves **2.807 → 1.867°C**. Absolute COP remains provisional because airflow is estimated and electrical scopes differ. Independent Shelly/pulse comparison supports measured high input power; no numerical meter correction or generic defrost/cycling penalty is invented.
+
+[Model, validation, electrical evidence and reproduction](docs/heatpump-cop-surface.md). Existing method selection and automatic/manual settings are preserved; measured points remain the default. Update from consolidated **main**, apply HeatingControl and refresh the page.
+
+## Previous calibration release (historical)
+
 # Updated calibration and 3D charts — 0.3.64, build 75
 
 All eight completed **11 November 2026** power steps are added, including the reviewed 90% point with its original stability warning. The previous 43 stored rows are unchanged: the default matrix now has **51 rows**, with **47 counter-backed observations** in the refitted v5 surface. Two thermal-only observations remain available for capacity support. The house was unoccupied with a **10°C target**; low exchanger temperatures do not exclude otherwise valid measurements.

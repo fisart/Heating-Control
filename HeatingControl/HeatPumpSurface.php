@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/HeatPumpMatrix.php';
 
-/** Reviewed thin-plate surface; modeled candidates never become measurement rows. */
+/** Reviewed intake-aware smooth model; predictions never become measured rows. */
 final class HeatPumpSurface
 {
     public static function definition(): array
@@ -10,10 +10,12 @@ final class HeatPumpSurface
         static $model=null;
         if($model===null) {
             $model=json_decode(file_get_contents(__DIR__.'/../docs/data/heatpump-cop-surface.json'),true,64,JSON_THROW_ON_ERROR);
-            if(($model['schema']??0)!==2||count($model['centers_normalized']??[])!==($model['metrics']['accepted_points']??0)
-                ||count($model['coefficients']??[])!==count($model['centers_normalized'])+3)
+            if(($model['schema']??0)!==3||($model['feature_exponents']??[])!==[[0,0,0],[1,0,0],[0,1,0],[0,2,0],[0,3,0],[0,0,1],[1,1,0],[0,1,1]]
+                ||count($model['coefficients']??[])!==8||count($model['support_hull_equations_normalized']??[])<4)
                 throw new RuntimeException('Invalid bundled COP surface');
-            foreach(array_merge($model['centers_normalized'],$model['coefficients']) as $row)
+            foreach($model['coefficients'] as $row)if(count($row)!==2)throw new RuntimeException('Invalid surface response columns');
+            foreach($model['support_hull_equations_normalized'] as $row)if(count($row)!==4)throw new RuntimeException('Invalid surface support plane');
+            foreach(array_merge($model['coefficients'],$model['support_hull_equations_normalized']) as $row)
                 foreach($row as $v)if(!is_numeric($v)||!is_finite((float)$v))throw new RuntimeException('Invalid surface coefficient');
         }
         return $model;
@@ -30,47 +32,51 @@ final class HeatPumpSurface
         }
         return $points;
     }
-    /** Established thin-plate basis, expanded 52 x 71 analysis matrix. */
-    public static function evaluate(float $outside,int $power): array
+    /** The optional inlet is only a documented reference for offline chart callers.
+     * Runtime selection always supplies the actual measured intake temperature. */
+    public static function evaluate(float $outside,int $power,?float $incoming=null): array
     {
         $m=self::definition();$d=$m['domain'];$norm=$m['normalization'];
         if(!is_finite($outside)||$outside<$d['outside_min_C']||$outside>$d['outside_max_C']||$power<$d['power_min_percent']||$power>$d['power_max_percent'])
             throw new InvalidArgumentException('COP surface supports 3.25–16°C outside and 30–100% power only');
+        $incoming??=$m['reference_basis']['chart_incoming_C'];
+        if(!is_finite($incoming)||$incoming<$d['incoming_min_C']||$incoming>$d['incoming_max_C'])
+            throw new InvalidArgumentException('COP surface supports 9.5–25.25°C intake only');
         self::observations();
         $x=($outside-$norm['outside_center_C'])/$norm['outside_scale_C'];
         $y=($power-$norm['power_center_percent'])/$norm['power_scale_percent'];
-        $n=count($m['centers_normalized']);$values=[0.0,0.0,0.0];
-        foreach($m['centers_normalized'] as $i=>[$cx,$cy]) {
-            $r2=($x-$cx)**2+($y-$cy)**2;
-            $basis=$r2>0?0.5*$r2*log($r2):0.0;
-            for($j=0;$j<3;$j++)$values[$j]+=$basis*$m['coefficients'][$i][$j];
+        $z=($incoming-$norm['incoming_center_C'])/$norm['incoming_scale_C'];$values=[0.0,0.0];
+        foreach($m['feature_exponents'] as $i=>[$a,$b,$c]) {
+            $basis=$x**$a*$y**$b*$z**$c;
+            for($j=0;$j<2;$j++)$values[$j]+=$basis*$m['coefficients'][$i][$j];
         }
-        foreach([1.0,$x,$y] as $i=>$basis)for($j=0;$j<3;$j++)$values[$j]+=$basis*$m['coefficients'][$n+$i][$j];
-        [$rise,$electric,$reference]=$values;$heat=0.000335*$m['reference_basis']['airflow_m3h']*$rise;
-        $cop=$electric>0?$heat/$electric:NAN;
-        foreach(array_merge($values,[$cop]) as $v)if(!is_finite($v))throw new RuntimeException('Nonfinite surface evaluation');
+        [$cop,$electric]=array_map('exp',$values);$heat=$cop*$electric;
+        $rise=$heat/(0.000335*$m['reference_basis']['airflow_m3h']);
+        foreach([$rise,$electric,$cop] as $v)if(!is_finite($v))throw new RuntimeException('Nonfinite surface evaluation');
         if($rise<=0||$electric<=0.05||$cop<0.5||$cop>10)throw new RuntimeException('Nonphysical COP surface evaluation');
-        $inside=true;$hull=$m['support_hull_normalized'];
-        foreach($hull as $i=>[$ax,$ay]) {
-            [$bx,$by]=$hull[($i+1)%count($hull)];
-            if(($bx-$ax)*($y-$ay)-($by-$ay)*($x-$ax)<-1e-10){$inside=false;break;}
+        $inside=true;
+        foreach($m['support_hull_equations_normalized'] as [$a,$b,$c,$offset]) {
+            if($a*$x+$b*$y+$c*$z+$offset>1e-9){$inside=false;break;}
         }
         return ['airRise'=>$rise,'systemInputKW'=>$electric,'estimatedHeatKW'=>$heat,'estimatedSystemCOP'=>$cop,
-            'referenceIncoming'=>$reference,'surfaceSupport'=>$inside?'interpolation':'extrapolation'];
+            'referenceIncoming'=>$incoming,'surfaceSupport'=>$inside?'interpolation':'extrapolation'];
     }
-    public static function cop(float $outside,int $power): float
+    public static function cop(float $outside,int $power,?float $incoming=null): float
     {
-        return self::evaluate($outside,$power)['estimatedSystemCOP'];
+        return self::evaluate($outside,$power,$incoming)['estimatedSystemCOP'];
     }
     /** Bounded read-only chart payload, requested only when its tab opens. */
     public static function chartData(): array
     {
-        $m=self::definition();$temperatures=[];$powers=range(30,100,5);$grid=[];
+        $m=self::definition();$temperatures=[];$powers=range(30,100,5);$slices=[];
         for($t=$m['domain']['outside_min_C'];$t<$m['domain']['outside_max_C'];$t+=0.5)$temperatures[]=$t;
         $temperatures[]=$m['domain']['outside_max_C'];
-        foreach($temperatures as $outside) {
-            $row=[];foreach($powers as $power)$row[]=self::evaluate($outside,$power);
-            $grid[]=$row;
+        foreach([10.0,15.0,20.0,25.0] as $incoming) {
+            $grid=[];foreach($temperatures as $outside) {
+                $row=[];foreach($powers as $power)$row[]=self::evaluate($outside,$power,$incoming);
+                $grid[]=$row;
+            }
+            $slices[]=['incoming'=>$incoming,'grid'=>$grid];
         }
         $points=[];foreach(self::observations() as $p)$points[]=[
             'pointID'=>$p['pointID'],'runID'=>$p['runID'],'outside'=>$p['outside'],'powerPercent'=>$p['powerPercent'],
@@ -78,8 +84,9 @@ final class HeatPumpSurface
             'systemInputKW'=>$p['systemInputKW'],'estimatedSystemCOP'=>$p['estimatedSystemCOP'],
             'originalStable'=>$p['originalStable']??$p['stable'],'excludedSeconds'=>$p['excludedSeconds']??0];
         return ['version'=>$m['version'],'metrics'=>$m['metrics'],'temperatures'=>$temperatures,'powers'=>$powers,
-            'grid'=>$grid,'points'=>$points,'latestRunID'=>'20261111-163534-83da3a7115b8',
-            'assumptions'=>'Estimated airflow 2,000 m³/h; fan command 90% (full speed). Mixed historical household increments and dedicated heat-pump circuit readings. Normal-heating intervals exclude recorded defrost-like brackets. Surface is provisional; faded cells are outside the observation hull.'];
+            'grid'=>$slices[1]['grid'],'slices'=>$slices,'selectedIncoming'=>$m['reference_basis']['chart_incoming_C'],
+            'points'=>$points,'latestRunID'=>'20261111-163534-83da3a7115b8',
+            'assumptions'=>'Select the intake temperature for the mesh. Measurement markers retain their own recorded intake and do not all lie on that slice. Bundled reviewed fit; custom matrices affect measured-point mode. Airflow is assumed 2,000 m³/h; fan command 90% (full speed). Mixed electrical scopes. Recorded interruption/recovery intervals remain excluded; no generic defrost or cycling correction is applied. Absolute COP is provisional. Faded cells are outside the three-input observation hull.'];
     }
     /** Qualify air rise from observed within-run power brackets, then weather.
      * Absolute observed inlet is descriptive; current inlet determines required rise.
@@ -130,11 +137,11 @@ final class HeatPumpSurface
     {
         $m=self::definition();$d=$m['domain'];$basis=$m['reference_basis'];
         foreach([$outside,$incoming,$target,$margin,$minRise,$airflow,$tolerance] as $v)if(!is_finite($v))throw new InvalidArgumentException('Nonfinite surface input');
-        if($outside<$d['outside_min_C']||$outside>$d['outside_max_C']||$fan!==$basis['fan_command']
+        if($outside<$d['outside_min_C']||$outside>$d['outside_max_C']||$incoming<$d['incoming_min_C']||$incoming>$d['incoming_max_C']||$fan!==$basis['fan_command']
             ||$tolerance<0||$tolerance>3)return null;
         $observations=self::observations();$best=null;
         for($power=30;$power<=100;$power++) {
-            $surface=self::evaluate($outside,$power);
+            $surface=self::evaluate($outside,$power,$incoming);
             if($surface['airRise']<$minRise||$incoming+$surface['airRise']<$target+$margin)continue;
             $capacity=self::capacity($power,$outside,$tolerance);
             if(!$capacity||$capacity['airRise']<$minRise||$incoming+$capacity['airRise']<$target+$margin)continue;
@@ -153,6 +160,7 @@ final class HeatPumpSurface
     {
         $m=self::definition();
         if($outside<$m['domain']['outside_min_C']||$outside>$m['domain']['outside_max_C'])return sprintf('COP surface supports 3.25–16°C outside; current outside air %.1f°C',$outside);
+        if($incoming<$m['domain']['incoming_min_C']||$incoming>$m['domain']['incoming_max_C'])return sprintf('COP surface supports 9.5–25.25°C intake; current intake %.1f°C',$incoming);
         if($fan!==90)return 'COP surface requires tested fan command 90% (full physical speed)';
         return sprintf('No supported surface candidate meets modeled and observed air-rise requirements at %.1f°C intake, target %.1f°C + %.1f°C supply margin',$incoming,$target,$margin);
     }

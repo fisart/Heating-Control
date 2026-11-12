@@ -1,3 +1,5 @@
+> **Model update 12 November:** Measurements and exclusions below remain unchanged. The v5 fit and numeric examples describe the historical 0.3.64 release. [0.3.65 uses smooth intake-aware v6 and nested run validation](heatpump-cop-surface.md).
+
 # Heat-pump calibration — 11 November 2026
 
 Heating-Control **0.3.64, build 75** adds all eight completed steps from run `20261111-163534-83da3a7115b8`. Recorded 17:35:34–20:03:09 Europe/Berlin. The house was unoccupied, target **10°C**, outside approximately **4.1–4.4°C**, intake approximately **14–15°C**.

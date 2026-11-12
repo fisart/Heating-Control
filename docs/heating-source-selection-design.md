@@ -1,3 +1,5 @@
+> **Current surface (0.3.65 build 76):** Predictions include actual intake temperature in a smooth constrained fit. [Current domains, capacity checks, validation and limitations](heatpump-cop-surface.md). Measured-point mode and safety/hysteresis settings are preserved.
+
 # Automatic selection of heat pump or gas — proposed design
 
 Prepared 11 October 2026. Revised to include domestic hot water, the separate radiator circuit, holiday protection and the supplemental January–February 2025 radiator/eBUS validation. Status: wider building strategy remains a design proposal. Version 0.3.5 also mirrors the automatic source into the existing manual source selector (retaining it on handback), and includes a dedicated heating-page automatic switch/provider status alongside the opt-in air-source switch with controlled transfer, an editable provisional outside-temperature power/COP model, normalized reference learning and a protected LichtBlick dashboard with portal discovery. No live heating changes have been made.

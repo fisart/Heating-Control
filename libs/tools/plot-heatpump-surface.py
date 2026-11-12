@@ -8,9 +8,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--date',default='2026-11-11');a=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--date',default='2026-11-12');a=ap.parse_args()
     root=Path(__file__).resolve().parents[2];data=root/'docs/data';out=root/'docs/assets';out.mkdir(exist_ok=True)
-    grid=json.loads((data/'heatpump-surface-matrix.json').read_text());source=json.loads((data/'heatpump-cop-surface-observations.json').read_text())
+    matrix=json.loads((data/'heatpump-surface-matrix.json').read_text());source=json.loads((data/'heatpump-cop-surface-observations.json').read_text())
+    grid={**matrix,**next(s for s in matrix['slices'] if s['incoming_C']==15)}
     points=[p for p in source['points'] if p['stable'] and p['usable'] and not p.get('supersededBy')]
     t,p=np.meshgrid(grid['outside_temperature_C'],grid['power_percent'],indexing='ij')
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'axes.titleweight':'bold','figure.facecolor':'#fafbf8'})
@@ -19,7 +20,7 @@ def main():
         for latest,color,marker in [(False,'#183d5e','o'),(True,'#b75c21','D')]:
             rows=[r for r in points if r['runID'].startswith('20261111')==latest]
             ax.scatter([r['outside'] for r in rows],[r['powerPercent'] for r in rows],[r[pointfield] if pointfield else r['outgoing']-r['incoming'] for r in rows],c=color,marker=marker,s=30,depthshade=False,label='11 Nov · target 10°C' if latest else 'Earlier measurements')
-        ax.set(xlabel='Outside temperature (°C)',ylabel='Heat-pump command (%)',zlabel=label,title=f'{label} · {len(points)} reviewed observations');ax.view_init(elev=26,azim=-55);ax.legend(loc='upper left');fig.text(.08,.035,'Provisional thin-plate surface · airflow assumed 2,000 m³/h · normal-heating intervals\nMixed electricity-meter scopes; mesh outside the observation hull is extrapolation.',fontsize=9,color='#56645c');fig.subplots_adjust(bottom=.13,top=.91)
+        ax.set(xlabel='Outside temperature (°C)',ylabel='Heat-pump command (%)',zlabel=label,title=f'{label} · mesh intake 15°C · {len(points)} observations');ax.view_init(elev=26,azim=-55);ax.legend(loc='upper left');fig.text(.08,.035,'Smooth intake-aware model · airflow assumed 2,000 m³/h · provisional COP\nMarkers retain recorded intake; they need not lie on the 15°C mesh. Outside its 3D support is extrapolation.',fontsize=9,color='#56645c');fig.subplots_adjust(bottom=.13,top=.91)
         fig.savefig(out/f'heatpump-{name}-{a.date}.png',dpi=160);plt.close(fig)
     fig,ax=plt.subplots(figsize=(11,6.5));runs=list(dict.fromkeys(r['runID'] for r in points))
     for run in runs:

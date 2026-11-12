@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "extraction": "media/heatpump-power-validation/20261112-042139-9d3542",
+  "createdAtBerlin": "2026-11-12 04:21:40 +01:00",
+  "report_sha256": "09e72521dfccbe3720a1ab42b4cdf18907b59caf4a6dde33a5a62c595bdf4850",
+  "raw_sha256": "04a35c7dde1bbcaec28b7a30a6641a757f1e36f11945523282d88b6a8cf09f91",
+  "pulseKWh": 0.001,
+  "periods": [
+    {
+      "window": {
+        "name": "2026-10-23 calibration",
+        "from": "2026-10-23 05:45:00",
+        "through": "2026-10-23 08:35:00",
+        "fromTimestamp": 1792727100,
+        "throughTimestamp": 1792737300
+      },
+      "shellyKWh": 9.6001245,
+      "pulseMeterKWh": 9.644399999999907,
+      "shellyDifferencePercent": -0.45907988055148286,
+      "signedPowerIntegralKWh": 9.597286980000005
+    },
+    {
+      "window": {
+        "name": "2026-11-11 calibration",
+        "from": "2026-11-11 17:20:00",
+        "through": "2026-11-11 20:20:00",
+        "fromTimestamp": 1794414000,
+        "throughTimestamp": 1794424800
+      },
+      "shellyKWh": 11.197772166666653,
+      "pulseMeterKWh": 11.264050000000047,
+      "shellyDifferencePercent": -0.5884014482658961,
+      "signedPowerIntegralKWh": 11.192971531111109
+    }
+  ],
+  "retainedModelIntervalChecks": [
+    {
+      "pointID": "20261023-035751-5129d11e966f-30",
+      "retainedSeconds": 901,
+      "reextractedKWh": 0.3184219999999982,
+      "modelRecordedKWh": 0.3184219999999982,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-40",
+      "retainedSeconds": 901,
+      "reextractedKWh": 0.5335546666666673,
+      "modelRecordedKWh": 0.5335546666666673,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-50",
+      "retainedSeconds": 901,
+      "reextractedKWh": 0.7866736666666654,
+      "modelRecordedKWh": 0.7866736666666654,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-60",
+      "retainedSeconds": 795,
+      "reextractedKWh": 0.86031366666667,
+      "modelRecordedKWh": 0.86031366666667,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-70",
+      "retainedSeconds": 210,
+      "reextractedKWh": 0.2728446666666642,
+      "modelRecordedKWh": 0.2728446666666642,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-80",
+      "retainedSeconds": 901,
+      "reextractedKWh": 1.3575916666666714,
+      "modelRecordedKWh": 1.3575916666666714,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-90",
+      "retainedSeconds": 901,
+      "reextractedKWh": 1.263335833333329,
+      "modelRecordedKWh": 1.263335833333329,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-100",
+      "retainedSeconds": 907,
+      "reextractedKWh": 1.9622567650273268,
+      "modelRecordedKWh": 1.9622567650273268,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-30",
+      "retainedSeconds": 900,
+      "reextractedKWh": 0.3279933333333247,
+      "modelRecordedKWh": 0.3279933333333247,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-40",
+      "retainedSeconds": 901,
+      "reextractedKWh": 0.5487660000000005,
+      "modelRecordedKWh": 0.5487660000000005,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-50",
+      "retainedSeconds": 901,
+      "reextractedKWh": 0.7845370000000003,
+      "modelRecordedKWh": 0.7845370000000003,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-60",
+      "retainedSeconds": 901,
+      "reextractedKWh": 1.00640466666664,
+      "modelRecordedKWh": 1.00640466666664,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-70",
+      "retainedSeconds": 907,
+      "reextractedKWh": 1.1673573333333707,
+      "modelRecordedKWh": 1.1673573333333707,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-80",
+      "retainedSeconds": 902,
+      "reextractedKWh": 1.4693791666666414,
+      "modelRecordedKWh": 1.4693791666666414,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-90",
+      "retainedSeconds": 901,
+      "reextractedKWh": 1.6372541666666507,
+      "modelRecordedKWh": 1.6372541666666507,
+      "differenceKWh": 0.0
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-100",
+      "retainedSeconds": 906,
+      "reextractedKWh": 2.020836000000031,
+      "modelRecordedKWh": 2.020836000000031,
+      "differenceKWh": 0.0
+    }
+  ],
+  "november100Percent": {
+    "shellyRetainedMeanKW": 8.029811920529925,
+    "pulseRetainedMeanKW": 8.060794701986632,
+    "retainedSeconds": 906,
+    "fullStepMeanKW": 7.196005310802723,
+    "excludedSeconds": 751
+  },
+  "conclusion": "Independent pulse meter and Shelly agree within 0.6% on both complete windows. All 16 retained model energy totals reproduce from the native counter records. No electrical correction is justified. Circuit coverage and actual equipment nameplate remain unresolved; measured airflow and absolute COP are not validated by this comparison."
+}

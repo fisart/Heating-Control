@@ -1,0 +1,575 @@
+{
+  "schema": 1,
+  "modelVersion": "provisional-heatpump-surface-2026-11-12-v6",
+  "source_sha256": "046b29137c5009e16c4da98512861f2ac1181f5ed7b202843a1c64959ccc6bee",
+  "protocol": "Outer leave-one-complete-run-out; alpha selected only from the other five runs using inner whole-run holdouts. Internal validation of six existing runs, not an independent field trial.",
+  "selectedAlpha": 0.3,
+  "alphaCandidates": [
+    0.01,
+    0.1,
+    0.3,
+    1.0,
+    3.0,
+    10.0
+  ],
+  "tuning": [
+    {
+      "alpha": 0.01,
+      "rmse_COP": 0.3973186339319029,
+      "rmse_electrical_kW": 0.6049890377736925,
+      "rmse_air_rise_C": 2.1378933588725224,
+      "mean_error_COP": -0.039711221017043274,
+      "maximum_absolute_error_COP": 1.3785657121121866
+    },
+    {
+      "alpha": 0.1,
+      "rmse_COP": 0.3954727379146814,
+      "rmse_electrical_kW": 0.6008493740640285,
+      "rmse_air_rise_C": 2.0734097835984167,
+      "mean_error_COP": -0.0397788722655572,
+      "maximum_absolute_error_COP": 1.364710810222891
+    },
+    {
+      "alpha": 0.3,
+      "rmse_COP": 0.39332222772184794,
+      "rmse_electrical_kW": 0.5979885878584612,
+      "rmse_air_rise_C": 1.9646301010017302,
+      "mean_error_COP": -0.03920129907979155,
+      "maximum_absolute_error_COP": 1.3397633943182425
+    },
+    {
+      "alpha": 1.0,
+      "rmse_COP": 0.39366397435666206,
+      "rmse_electrical_kW": 0.6002260929418701,
+      "rmse_air_rise_C": 1.8062021750026638,
+      "mean_error_COP": -0.03646027148578276,
+      "maximum_absolute_error_COP": 1.2840776032625256
+    },
+    {
+      "alpha": 3.0,
+      "rmse_COP": 0.4079713869207931,
+      "rmse_electrical_kW": 0.6433887324888754,
+      "rmse_air_rise_C": 1.8934946990588353,
+      "mean_error_COP": -0.03677996210315913,
+      "maximum_absolute_error_COP": 1.2388243794185594
+    },
+    {
+      "alpha": 10.0,
+      "rmse_COP": 0.43571171775428713,
+      "rmse_electrical_kW": 0.8340205207798821,
+      "rmse_air_rise_C": 2.5357883857172165,
+      "mean_error_COP": -0.04896190651857359,
+      "maximum_absolute_error_COP": 1.2541344194272845
+    }
+  ],
+  "previous_v5": {
+    "rmse_COP": 0.5819455606297046,
+    "rmse_electrical_kW": 1.1747774749055655,
+    "rmse_air_rise_C": 2.807378412424229,
+    "mean_error_COP": -0.08715359281119646,
+    "maximum_absolute_error_COP": 1.5626869229803666
+  },
+  "nested": {
+    "rmse_COP": 0.3991372582929133,
+    "rmse_electrical_kW": 0.6129639958871204,
+    "rmse_air_rise_C": 1.8669472037979928,
+    "mean_error_COP": -0.03608474815663295,
+    "maximum_absolute_error_COP": 1.2840776032625256
+  },
+  "in_sample": {
+    "rmse_COP": 0.2851714994977076,
+    "rmse_electrical_kW": 0.37695899772895214,
+    "rmse_air_rise_C": 1.2965324170700985,
+    "mean_error_COP": -0.01608559791394899,
+    "maximum_absolute_error_COP": 0.9563514625851259
+  },
+  "folds": [
+    {
+      "heldOutRun": "2026-10-14 afternoon",
+      "points": 8,
+      "selectedAlpha": 1.0,
+      "rmse_COP": 0.2642829855008685,
+      "rmse_electrical_kW": 0.36716810517389925,
+      "rmse_air_rise_C": 1.7495403907936045,
+      "mean_error_COP": 0.13384494681310605,
+      "maximum_absolute_error_COP": 0.48620276349531855
+    },
+    {
+      "heldOutRun": "2026-10-14 morning",
+      "points": 8,
+      "selectedAlpha": 3.0,
+      "rmse_COP": 0.3401201887492639,
+      "rmse_electrical_kW": 0.4150813436017394,
+      "rmse_air_rise_C": 1.822139293556815,
+      "mean_error_COP": -0.17104848884791912,
+      "maximum_absolute_error_COP": 0.5620955845576119
+    },
+    {
+      "heldOutRun": "2026-10-15 night",
+      "points": 7,
+      "selectedAlpha": 1.0,
+      "rmse_COP": 0.45955747461252117,
+      "rmse_electrical_kW": 0.5004604794134637,
+      "rmse_air_rise_C": 1.0348880055306837,
+      "mean_error_COP": -0.21358043276216554,
+      "maximum_absolute_error_COP": 0.7274613113789976
+    },
+    {
+      "heldOutRun": "20261015-211706-139c48ad9dc5",
+      "points": 8,
+      "selectedAlpha": 1.0,
+      "rmse_COP": 0.2861321933574478,
+      "rmse_electrical_kW": 0.8179010101206703,
+      "rmse_air_rise_C": 2.1608665697716685,
+      "mean_error_COP": -0.03838268121855365,
+      "maximum_absolute_error_COP": 0.6224653895152139
+    },
+    {
+      "heldOutRun": "20261023-035751-5129d11e966f",
+      "points": 8,
+      "selectedAlpha": 1.0,
+      "rmse_COP": 0.5527771490996818,
+      "rmse_electrical_kW": 0.8612072954517727,
+      "rmse_air_rise_C": 2.4830870378482746,
+      "mean_error_COP": -0.3505942645198511,
+      "maximum_absolute_error_COP": 1.2840776032625256
+    },
+    {
+      "heldOutRun": "20261111-163534-83da3a7115b8",
+      "points": 8,
+      "selectedAlpha": 0.3,
+      "rmse_COP": 0.4221304307914718,
+      "rmse_electrical_kW": 0.5200821489051514,
+      "rmse_air_rise_C": 1.5244661025659083,
+      "mean_error_COP": 0.40106547101989415,
+      "maximum_absolute_error_COP": 0.6339567073327919
+    }
+  ],
+  "predictions": [
+    {
+      "pointID": "reviewed-calibration-30",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 2.866299238771079,
+      "heldOutCOP": 3.150435481858201,
+      "observedElectricalKW": 1.477333333335817,
+      "heldOutElectricalKW": 1.6427238632781456,
+      "fittedCOP": 3.0844629211766343
+    },
+    {
+      "pointID": "reviewed-calibration-50",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 3.612368428301706,
+      "heldOutCOP": 3.0502728437440942,
+      "observedElectricalKW": 3.0577333333343266,
+      "heldOutElectricalKW": 3.1781368834447807,
+      "fittedCOP": 3.2950066979573838
+    },
+    {
+      "pointID": "reviewed-calibration-60",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 3.411570626066259,
+      "heldOutCOP": 2.977933924117861,
+      "observedElectricalKW": 3.653333333332091,
+      "heldOutElectricalKW": 3.743009455854024,
+      "fittedCOP": 3.1531460102096935
+    },
+    {
+      "pointID": "reviewed-calibration-70",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 3.0704179936780363,
+      "heldOutCOP": 2.8757553945147145,
+      "observedElectricalKW": 4.429066666666419,
+      "heldOutElectricalKW": 4.183604036931584,
+      "fittedCOP": 2.9289914303356483
+    },
+    {
+      "pointID": "reviewed-calibration-80",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 2.6867677758653645,
+      "heldOutCOP": 2.7330127896416094,
+      "observedElectricalKW": 5.2797333333343275,
+      "heldOutElectricalKW": 4.636355975928093,
+      "fittedCOP": 2.6814960393941454
+    },
+    {
+      "pointID": "reviewed-calibration-90",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 2.427657357541154,
+      "heldOutCOP": 2.542781610443513,
+      "observedElectricalKW": 6.1889333333335825,
+      "heldOutElectricalKW": 5.323082014736849,
+      "fittedCOP": 2.4562603548927058
+    },
+    {
+      "pointID": "reviewed-calibration-100",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 2.406335469122524,
+      "heldOutCOP": 2.310302877382584,
+      "observedElectricalKW": 6.326266666669399,
+      "heldOutElectricalKW": 6.607192516316441,
+      "fittedCOP": 2.2922197586781943
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-30",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 2.8099948678387876,
+      "heldOutCOP": 3.296197631334106,
+      "observedElectricalKW": 1.4307306049508575,
+      "heldOutElectricalKW": 1.7161107208327404,
+      "fittedCOP": 3.18213630604881
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-40",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 3.568275877639185,
+      "heldOutCOP": 3.3785337716553645,
+      "observedElectricalKW": 2.2186974754911817,
+      "heldOutElectricalKW": 2.6179086913383283,
+      "fittedCOP": 3.4001046531853527
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-50",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 3.5111982498122565,
+      "heldOutCOP": 3.372236390844078,
+      "observedElectricalKW": 3.060259662683662,
+      "heldOutElectricalKW": 3.433301568676436,
+      "fittedCOP": 3.413375527149648
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-60",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 3.3379564819818217,
+      "heldOutCOP": 3.283520549055956,
+      "observedElectricalKW": 3.6268817806652534,
+      "heldOutElectricalKW": 4.050709613222843,
+      "fittedCOP": 3.266996731597048
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-70",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 2.9939599311024114,
+      "heldOutCOP": 3.141728385572422,
+      "observedElectricalKW": 4.435415782053673,
+      "heldOutElectricalKW": 4.50527572892733,
+      "fittedCOP": 3.0410278036161875
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-80",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 2.662611783298779,
+      "heldOutCOP": 2.959757914685403,
+      "observedElectricalKW": 5.144528986327918,
+      "heldOutElectricalKW": 4.927237603432827,
+      "fittedCOP": 2.793314888331654
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-90",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 2.391169957944346,
+      "heldOutCOP": 2.7456018565480442,
+      "observedElectricalKW": 6.130249484937645,
+      "heldOutElectricalKW": 5.52813062883231,
+      "fittedCOP": 2.5657635617908503
+    },
+    {
+      "pointID": "reviewed-calibration-20261014-afternoon-100",
+      "runID": "2026-10-14 afternoon",
+      "observedCOP": 2.3387093830657975,
+      "heldOutCOP": 2.507059607492859,
+      "observedElectricalKW": 6.327943498240918,
+      "heldOutElectricalKW": 6.650828252982582,
+      "fittedCOP": 2.388177627418834
+    },
+    {
+      "pointID": "reviewed-calibration-20261015-night-30",
+      "runID": "2026-10-15 night",
+      "observedCOP": 2.2971671664652855,
+      "heldOutCOP": 3.024628477844283,
+      "observedElectricalKW": 1.4888816864572945,
+      "heldOutElectricalKW": 1.3303500761856006,
+      "fittedCOP": 2.850348842685055
+    },
+    {
+      "pointID": "reviewed-calibration-20261015-night-40",
+      "runID": "2026-10-15 night",
+      "observedCOP": 3.172384704906853,
+      "heldOutCOP": 2.960633389501699,
+      "observedElectricalKW": 2.1946797523123815,
+      "heldOutElectricalKW": 2.137048386486584,
+      "fittedCOP": 2.998082874624609
+    },
+    {
+      "pointID": "reviewed-calibration-20261015-night-50",
+      "runID": "2026-10-15 night",
+      "observedCOP": 3.238021795405828,
+      "heldOutCOP": 2.8464732034022036,
+      "observedElectricalKW": 2.939060921707957,
+      "heldOutElectricalKW": 2.9803319794104914,
+      "fittedCOP": 2.984607579222409
+    },
+    {
+      "pointID": "reviewed-calibration-20261015-night-60",
+      "runID": "2026-10-15 night",
+      "observedCOP": 3.1513015560984083,
+      "heldOutCOP": 2.6836957203869214,
+      "observedElectricalKW": 3.43080709049683,
+      "heldOutElectricalKW": 3.7400512672883206,
+      "fittedCOP": 2.838867301247808
+    },
+    {
+      "pointID": "reviewed-calibration-20261015-night-70",
+      "runID": "2026-10-15 night",
+      "observedCOP": 2.9036624967547144,
+      "heldOutCOP": 2.493034983917891,
+      "observedElectricalKW": 4.068683230007953,
+      "heldOutElectricalKW": 4.403941563316752,
+      "fittedCOP": 2.6231852341264807
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-30",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 3.933976914320628,
+      "heldOutCOP": 3.311511524805414,
+      "observedElectricalKW": 1.399726991150443,
+      "heldOutElectricalKW": 1.472497817467202,
+      "fittedCOP": 3.4087090094062638
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-40",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 3.8542042662569855,
+      "heldOutCOP": 3.4435429699755917,
+      "observedElectricalKW": 2.3744463928967807,
+      "heldOutElectricalKW": 2.3033549740764836,
+      "fittedCOP": 3.5981407802231327
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-50",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 3.206805467273722,
+      "heldOutCOP": 3.3849622134390556,
+      "observedElectricalKW": 3.5686201997780254,
+      "heldOutElectricalKW": 3.130294912596791,
+      "fittedCOP": 3.5133951388022875
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-60",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 3.1462460289493714,
+      "heldOutCOP": 3.2055154855309533,
+      "observedElectricalKW": 4.296476548672565,
+      "heldOutElectricalKW": 3.8531633042499345,
+      "fittedCOP": 3.2688274473418395
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-70",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 2.876902030081012,
+      "heldOutCOP": 2.955401070859016,
+      "observedElectricalKW": 5.121536071032185,
+      "heldOutElectricalKW": 4.471385916000263,
+      "fittedCOP": 2.9512101269446527
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-80",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 2.5025710273730564,
+      "heldOutCOP": 2.668809523860899,
+      "observedElectricalKW": 6.20822730299667,
+      "heldOutElectricalKW": 5.098839841668657,
+      "fittedCOP": 2.6203859790356727
+    },
+    {
+      "pointID": "reviewed-calibration-40-owner-review-20261023",
+      "runID": "2026-10-14 morning",
+      "observedCOP": 3.6333660352435393,
+      "heldOutCOP": 3.105900092103732,
+      "observedElectricalKW": 2.2914360655769705,
+      "heldOutElectricalKW": 2.4515708828105907,
+      "fittedCOP": 3.2918174538596756
+    },
+    {
+      "pointID": "20261014-225748-bbb31f50d001-80-defrost-filtered-20261023",
+      "runID": "2026-10-15 night",
+      "observedCOP": 2.456177443607352,
+      "heldOutCOP": 2.296867320401,
+      "observedElectricalKW": 4.916035442111201,
+      "heldOutElectricalKW": 5.069430843835057,
+      "fittedCOP": 2.3965051238869077
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-90-defrost-filtered-20261023",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 2.2680045637730886,
+      "heldOutCOP": 2.3839057867246476,
+      "observedElectricalKW": 6.876414165936686,
+      "heldOutElectricalKW": 5.943711411196629,
+      "fittedCOP": 2.3277032872516648
+    },
+    {
+      "pointID": "20261015-211706-139c48ad9dc5-100-defrost-filtered-20261023",
+      "runID": "20261015-211706-139c48ad9dc5",
+      "observedCOP": 2.001158179978284,
+      "heldOutCOP": 2.1291584530621415,
+      "observedElectricalKW": 8.916818696149447,
+      "heldOutElectricalKW": 7.358190763108329,
+      "fittedCOP": 2.1065864477417833
+    },
+    {
+      "pointID": "20261014-225748-bbb31f50d001-90",
+      "runID": "2026-10-15 night",
+      "observedCOP": 2.6625263774704204,
+      "heldOutCOP": 2.080845415919705,
+      "observedElectricalKW": 4.742908660828097,
+      "heldOutElectricalKW": 5.964181617211986,
+      "fittedCOP": 2.1788099845041113
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-30",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 4.339495700756968,
+      "heldOutCOP": 3.0554180974944427,
+      "observedElectricalKW": 1.2722743618201926,
+      "heldOutElectricalKW": 1.4826413755805012,
+      "fittedCOP": 3.3831442381718424
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-40",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 4.000836598401439,
+      "heldOutCOP": 3.1890225261881584,
+      "observedElectricalKW": 2.131849944506107,
+      "heldOutElectricalKW": 2.3995458105542258,
+      "fittedCOP": 3.563658060885897
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-50",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 3.310973161042674,
+      "heldOutCOP": 3.1426066431467103,
+      "observedElectricalKW": 3.143202219755822,
+      "heldOutElectricalKW": 3.351605055534412,
+      "fittedCOP": 3.443051447148247
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-60",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 2.963269623188145,
+      "heldOutCOP": 2.9790207526999306,
+      "observedElectricalKW": 3.895760000000015,
+      "heldOutElectricalKW": 4.2355676466104795,
+      "fittedCOP": 3.17157098608413
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-70",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 2.923267643859664,
+      "heldOutCOP": 2.750346802781174,
+      "observedElectricalKW": 4.6773371428571,
+      "heldOutElectricalKW": 5.056521140811996,
+      "fittedCOP": 2.844403797839178
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-80",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 2.6053857784455863,
+      "heldOutCOP": 2.4681152479782633,
+      "observedElectricalKW": 5.424339622641528,
+      "heldOutElectricalKW": 5.894699344596051,
+      "fittedCOP": 2.495915052037687
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-90",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 2.1829692683575095,
+      "heldOutCOP": 2.180339385254864,
+      "observedElectricalKW": 5.047734739178673,
+      "heldOutElectricalKW": 7.048381962862489,
+      "fittedCOP": 2.189616663655422
+    },
+    {
+      "pointID": "20261023-035751-5129d11e966f-100",
+      "runID": "20261023-035751-5129d11e966f",
+      "observedCOP": 2.164754753383267,
+      "heldOutCOP": 1.9213289557329012,
+      "observedElectricalKW": 7.788450225025774,
+      "heldOutElectricalKW": 8.924671868942891,
+      "fittedCOP": 1.9590715319111962
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-30",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 2.7836350391951092,
+      "heldOutCOP": 3.417591746527901,
+      "observedElectricalKW": 1.3119733333332988,
+      "heldOutElectricalKW": 1.409475173582741,
+      "fittedCOP": 3.246830711689757
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-40",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 3.2163632231963546,
+      "heldOutCOP": 3.5424778591040074,
+      "observedElectricalKW": 2.1926277469478377,
+      "heldOutElectricalKW": 2.2344101871242166,
+      "fittedCOP": 3.3791106227182084
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-50",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 2.9260115690464525,
+      "heldOutCOP": 3.4404353926984026,
+      "observedElectricalKW": 3.134665038845728,
+      "heldOutElectricalKW": 3.0845437529694997,
+      "fittedCOP": 3.2917952445222056
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-60",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 2.659897704808104,
+      "heldOutCOP": 3.192992031042448,
+      "observedElectricalKW": 4.021150721420537,
+      "heldOutElectricalKW": 3.843351529027365,
+      "fittedCOP": 3.0601459234334922
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-70",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 2.5124710401319637,
+      "heldOutCOP": 2.880167681117069,
+      "observedElectricalKW": 4.633391841234988,
+      "heldOutElectricalKW": 4.489224496651528,
+      "fittedCOP": 2.761945373018358
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-80",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 2.2518120288041135,
+      "heldOutCOP": 2.5634915317921108,
+      "observedElectricalKW": 5.864484478935597,
+      "heldOutElectricalKW": 5.096016323429112,
+      "fittedCOP": 2.4581283741810567
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-90",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 2.0352208835820895,
+      "heldOutCOP": 2.288153393798283,
+      "observedElectricalKW": 6.541748057713588,
+      "heldOutElectricalKW": 5.837158504877875,
+      "fittedCOP": 2.1926311625601262
+    },
+    {
+      "pointID": "20261111-163534-83da3a7115b8-100",
+      "runID": "20261111-163534-83da3a7115b8",
+      "observedCOP": 1.8115028149470929,
+      "heldOutCOP": 2.080128435790211,
+      "observedElectricalKW": 8.029811920529925,
+      "heldOutElectricalKW": 7.024459997883574,
+      "fittedCOP": 1.9909310926350399
+    }
+  ],
+  "input_minimum_normalized_power_derivative": 0.3611118618638885,
+  "heat_minimum_normalized_power_derivative": 0.035693971856739726
+}

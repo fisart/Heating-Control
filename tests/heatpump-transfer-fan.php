@@ -17,7 +17,7 @@ function fanTransferFixture(): TimedHeating
     }
     $m->attributes['SourceTransfer']=json_encode(['target'=>1,'since'=>$m->clock-177]);
     $m->attributes['HeatPumpStoppedAt']=(string)($m->clock-177);
-    plan($m,1,34,['priceCt'=>36.09,'safetyMarginPercent'=>5,'hysteresisCt'=>1,'validUntil'=>strtotime('2026-10-23T10:30:00+02:00')]);
+    plan($m,1,34,['priceCt'=>28.09,'safetyMarginPercent'=>5,'hysteresisCt'=>1,'validUntil'=>strtotime('2026-10-23T10:30:00+02:00')]);
     return $m;
 }
 $m=fanTransferFixture();run($m);
@@ -26,12 +26,12 @@ check(value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Acknowledged stop permit
 check(str_contains($m->values['SourceTransferStatus'],'no timed delay'),'No compressor/transfer countdown is applied');
 check(!commanded($m,'FanOnID',false)&&!commanded($m,'FanSpeedID',0),'A source transfer itself sends no fan stop');
 
-// Reproduce the supplied log without its temporary gas switch at price rollover.
+// Exercise price rollover at prices that remain economical under the reviewed model.
 $m->clock=strtotime('2026-10-23T10:30:02+02:00');run($m);
 check(value($m,'OperatingModeID')===1&&value($m,'FanOnID')&&value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Previous price keeps heating and airflow running during rollover');
 check(!commanded($m,'HeatPumpOnID',false)&&!commanded($m,'GasPumpID',true),'Rollover causes no unnecessary heat-source commands');
 $m->clock=strtotime('2026-10-23T10:30:42+02:00');
-plan($m,1,34,['priceCt'=>34.94,'safetyMarginPercent'=>5,'hysteresisCt'=>1,'validUntil'=>strtotime('2026-10-23T10:45:00+02:00')]);run($m);
+plan($m,1,34,['priceCt'=>26.94,'safetyMarginPercent'=>5,'hysteresisCt'=>1,'validUntil'=>strtotime('2026-10-23T10:45:00+02:00')]);run($m);
 check(value($m,'OperatingModeID')===1&&value($m,'FanOnID'),'Fresh cheap price keeps warm-air delivery running');
 check(value($m,'HeatPumpOnID')&&!value($m,'GasPumpID'),'Replacement cheap quote requires no source transfer');
 
@@ -45,7 +45,7 @@ $GLOBALS['variables'][$guest['targetID']]['value']=30.0;foreach($guest['sensors'
 check(value($m,'FanOnID')&&GetValue($guest['flapID'])===$guest['closed'],'A closed room with no demand does not set the shared fan target');
 
 // Once the transfer finishes, normal heating uses exactly the same exchanger rule.
-$m->clock+=120;plan($m,1,34,['priceCt'=>34.94,'safetyMarginPercent'=>5,'hysteresisCt'=>1]);
+$m->clock+=120;plan($m,1,34,['priceCt'=>26.94,'safetyMarginPercent'=>5,'hysteresisCt'=>1]);
 // Restore the unused guest target to keep the economic capacity test supported.
 $GLOBALS['variables'][$guest['targetID']]['value']=21.0;
 run($m);check(value($m,'HeatPumpOnID')&&value($m,'FanOnID'),'Normal HP heating retains the exchanger fan rule after protected start');

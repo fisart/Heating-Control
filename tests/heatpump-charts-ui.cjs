@@ -19,6 +19,11 @@ const {execFileSync}=require('node:child_process'),{chromium}=require('playwrigh
  assert.equal(await page.locator('#surface-measurements tr').filter({hasText:charts.latestRunID}).count(),8);
  assert.equal(await page.locator('#calibration-status').isVisible(),true,'Calibration status stays visible in the chart tab');
  const first=await page.locator('#surface-canvas').evaluate(c=>c.toDataURL());
+ await page.selectOption('#surface-intake','10');assert.notEqual(await page.locator('#surface-canvas').evaluate(c=>c.toDataURL()),first,'Intake selection redraws the model at fixed intake');
+ assert.equal(loads,1,'Intake changes use the loaded read-only slices');
+ assert.match(await page.locator('#surface-status').textContent(),/Mesh intake 10°C/);
+ assert.equal(await page.locator('#surface-measurements tr').count(),47,'Intake selection preserves every recorded observation');
+ await page.selectOption('#surface-intake','15');
  await page.selectOption('#surface-metric','systemInputKW');assert.notEqual(await page.locator('#surface-canvas').evaluate(c=>c.toDataURL()),first,'Metric change redraws exact electrical input grid');
  await page.locator('#surface-canvas').focus();await page.keyboard.press('ArrowRight');await page.keyboard.press('+');
  await page.screenshot({path:path.join(out,'desktop.png'),fullPage:true});

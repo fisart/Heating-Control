@@ -4,6 +4,7 @@
 python expand-heatpump-surface.py PRIOR_CALIBRATION PRIOR_SURFACE_OBSERVATIONS ADDITIONS OUTPUT_DIRECTORY
 ADDITIONS contains reviewed points, thermal-only observations, evidence and supersessions.
 Dependencies: numpy, scipy. No actuator or live-system access.
+Historical v5 generator only. The reviewed current fit is fit-heatpump-surface.py.
 """
 import argparse, copy, hashlib, json
 from pathlib import Path
@@ -49,7 +50,11 @@ def main():
         assert pred[:,1].min()>.05
         e=.67*pred[:,0]/pred[:,1]-.67*obs[:,0]/obs[:,1];er=pred[:,0]-obs[:,0];errors.extend(e);rise_errors.extend(er)
         cv.append(dict(heldOutRun=rid,points=int(te.sum()),rmseCOP=float(np.sqrt(np.mean(e**2))),rmseAirRiseC=float(np.sqrt(np.mean(er**2)))))
-    model=json.loads((Path(__file__).resolve().parents[2]/'docs/data/heatpump-cop-surface.json').read_text())
+    data=Path(__file__).resolve().parents[2]/'docs/data'
+    baseline=data/'heatpump-cop-surface-v5.json'
+    if not baseline.exists():baseline=data/'heatpump-cop-surface.json'
+    model=json.loads(baseline.read_text())
+    assert model['schema']==2,'Legacy expansion requires the archived v5 schema-2 template'
     inside=Delaunay(x).find_simplex(q,tol=1e-10)>=0
     model.update(version=a.version,centers_normalized=x.tolist(),coefficients=c.tolist(),
         source_sha256=hashlib.sha256((a.out/'heatpump-cop-surface-observations.json').read_bytes()).hexdigest(),support_hull_normalized=x[ConvexHull(x).vertices].tolist())

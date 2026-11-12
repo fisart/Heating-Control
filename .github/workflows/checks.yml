@@ -100,6 +100,7 @@ jobs:
         run: |
           node tests/page-dom.cjs
           node tests/heatpump-cost-page-dom.cjs
+          node tests/heatpump-charts-dom.cjs
           node tests/lichtblick-page-dom.cjs
 
 
